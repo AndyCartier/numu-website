@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Playfair Display';
+  --font-sans: 'Inter';
+  --hero-size: 11.5vw;
+  --hero-lh: 0.86;
+  --nav-h: 80px;
+  --grid-margin: 48px;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --hero-size: 13.5vw;
+    --nav-h: 64px;
+    --grid-margin: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --hero-size: 16.5vw;
+    --grid-margin: 24px;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #1A1714;
+  color: #F4EFE8;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.75;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-display {
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-wrap: balance;
+}
+
+::selection {
+  background: rgba(178,155,127,0.3);
+  color: #F4EFE8;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #1A1714; }
+::-webkit-scrollbar-thumb { background: #4A3F34; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9C8E7F; }
+
+:focus-visible { outline: 1px solid #C9B89F; outline-offset: 3px; }
+
+/* ─── CTA success fade-in ────────────────────────────────────────────────── */
+
+@keyframes cta-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Process diagram ──────────────────────────────────────────────────────── */
+
+/* Flowing dashed connector line — uses background-position animation */
+.process-connector {
+  height: 1px;
+  background-image: linear-gradient(
+    to right,
+    rgba(128,128,128,0.22) 50%,
+    transparent 50%
+  );
+  background-size: 8px 1px;
+  background-repeat: repeat-x;
+  animation: dash-march 1.8s linear infinite;
+}
+
+@keyframes dash-march {
+  from { background-position-x: 0; }
+  to   { background-position-x: 8px; }
+}
+
+/* Pulse rings on active step */
+.process-pulse {
+  animation: process-pulse 2.6s ease-out infinite;
+  opacity: 0;
+}
+.process-pulse--delay {
+  animation-delay: 0.9s;
+}
+
+@keyframes process-pulse {
+  0%   { transform: scale(1);   opacity: 0.35; }
+  100% { transform: scale(2);   opacity: 0; }
+}
