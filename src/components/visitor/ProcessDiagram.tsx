@@ -1,135 +1,311 @@
 'use client'
 
-import { Fragment } from 'react'
-
-// ─── SVG Icons ────────────────────────────────────────────────────────────────
-
-function WheatIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}
-      strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
-      <line x1="12" y1="21" x2="12" y2="6" />
-      <path d="M12 16 C12 16 7 15 6.5 10 C9 9.5 12 13 12 16" />
-      <path d="M12 11 C12 11 17 10 17.5 5 C15 4.5 12 8 12 11" />
-    </svg>
-  )
-}
-
-function DropletIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}
-      strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
-      <path d="M12 2 C12 2 5 10 5 14 a7 7 0 0 0 14 0 C19 10 12 2 12 2 Z" />
-    </svg>
-  )
-}
-
-function ExpandIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}
-      strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
-      <polyline points="15,3 21,3 21,9" />
-      <polyline points="9,21 3,21 3,15" />
-      <line x1="21" y1="3" x2="14" y2="10" />
-      <line x1="3" y1="21" x2="10" y2="14" />
-    </svg>
-  )
-}
-
-function MoldIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}
-      strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <rect x="8" y="8" width="8" height="8" rx="1" />
-    </svg>
-  )
-}
-
-function CubeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}
-      strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
-      <path d="M12 3 L20.5 7.5 L20.5 16.5 L12 21 L3.5 16.5 L3.5 7.5 Z" />
-      <path d="M3.5 7.5 L12 12 L20.5 7.5" />
-      <line x1="12" y1="12" x2="12" y2="21" />
-    </svg>
-  )
-}
-
 // ─── Step definitions ─────────────────────────────────────────────────────────
 
 const STEPS = [
-  { index: '01', label: 'Raw Fiber',       Icon: WheatIcon,   active: false },
-  { index: '02', label: 'Inoculation',     Icon: DropletIcon, active: false },
-  { index: '03', label: 'Growth',          Icon: ExpandIcon,  active: false },
-  { index: '04', label: 'Shaping',         Icon: MoldIcon,    active: false },
-  { index: '05', label: 'Final Material',  Icon: CubeIcon,    active: true  },
+  {
+    index: '01',
+    title: 'Agricultural inputs',
+    sub: 'Crops, waste fibres, regional by-products',
+    angle: -90, // top
+  },
+  {
+    index: '02',
+    title: 'Substrate preparation',
+    sub: 'Fibres processed and sterilised',
+    angle: -38,
+  },
+  {
+    index: '03',
+    title: 'Mycelium growth',
+    sub: 'Biological binding phase',
+    angle: 14,
+  },
+  {
+    index: '04',
+    title: 'Forming & shaping',
+    sub: 'Panels and products take shape',
+    angle: 66,
+  },
+  {
+    index: '05',
+    title: 'Use phase',
+    sub: 'Installed in buildings and interiors',
+    angle: 118,
+  },
+  {
+    index: '06',
+    title: 'End of life',
+    sub: 'Biodegradation and compost',
+    angle: 170,
+  },
+  {
+    index: '07',
+    title: 'Back to soil',
+    sub: 'Nutrients return to agricultural land',
+    angle: 222,
+  },
 ]
 
-// ─── Dashed connector ─────────────────────────────────────────────────────────
-
-function Connector() {
-  return (
-    <div className="hidden md:block flex-1" style={{ paddingTop: '25px' }}>
-      <div className="process-connector" />
-    </div>
-  )
+// Convert polar → cartesian
+function polar(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = (angleDeg * Math.PI) / 180
+  return {
+    x: cx + r * Math.cos(rad),
+    y: cy + r * Math.sin(rad),
+  }
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export function ProcessDiagram() {
+  const cx = 300
+  const cy = 300
+  const ringR = 180      // radius of the orbit ring
+  const nodeR = 6        // dot radius
+  const labelR = 228     // radius where labels sit
+
+  // Build the circular path string for the animated dot
+  const circlePathD = `M ${cx} ${cy - ringR} A ${ringR} ${ringR} 0 1 1 ${cx - 0.001} ${cy - ringR}`
+
   return (
-    <div className="mt-16 flex flex-col md:flex-row items-start gap-8 md:gap-0">
-      {STEPS.map((step, i) => (
-        <Fragment key={step.index}>
+    <div>
+      {/* Section heading */}
+      <div className="mb-16">
+        <h3
+          className="font-display mb-3"
+          style={{
+            fontSize: 'clamp(1.75rem, 3.5vw, 3rem)',
+            lineHeight: '1.05',
+            letterSpacing: '-0.03em',
+          }}
+        >
+          From growth to regeneration
+        </h3>
+        <p className="font-sans" style={{ fontSize: '0.9375rem', opacity: 0.42, lineHeight: 1.6 }}>
+          A material system designed as a continuous biological loop.
+        </p>
+      </div>
 
-          {/* ── Step node ──────────────────────────────────────────────────── */}
-          <div className="flex md:flex-col items-center gap-5 md:gap-0 md:text-center w-full md:w-auto flex-shrink-0">
-            {/* Icon circle */}
-            <div className="relative flex-shrink-0 flex items-center justify-center"
-              style={{ width: '52px', height: '52px' }}>
+      {/* Circular diagram */}
+      <div className="flex flex-col lg:flex-row gap-16 lg:gap-20 items-start">
 
-              {/* Pulse rings (active step only) */}
-              {step.active && (
-                <>
-                  <div className="absolute inset-0 rounded-full process-pulse"
-                    style={{ border: '1px solid currentColor' }} />
-                  <div className="absolute inset-0 rounded-full process-pulse process-pulse--delay"
-                    style={{ border: '1px solid currentColor' }} />
-                </>
-              )}
+        {/* SVG ring */}
+        <div className="flex-shrink-0 w-full lg:w-auto" style={{ maxWidth: 600 }}>
+          <svg
+            viewBox="0 0 600 600"
+            width="100%"
+            style={{ overflow: 'visible' }}
+            aria-label="NUMU circular material process"
+          >
+            {/* ── Outer orbit ring ── */}
+            <circle
+              cx={cx} cy={cy} r={ringR}
+              fill="none"
+              stroke="rgba(244,239,232,0.08)"
+              strokeWidth="1"
+            />
 
-              <div style={{
-                width: '52px', height: '52px', borderRadius: '50%',
-                border: '1px solid rgba(128,128,128,0.22)',
-                backgroundColor: step.active ? 'rgba(128,128,128,0.07)' : 'transparent',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                position: 'relative', zIndex: 1,
-              }}>
-                <step.Icon />
-              </div>
-            </div>
+            {/* ── Inner decorative ring ── */}
+            <circle
+              cx={cx} cy={cy} r={ringR * 0.52}
+              fill="none"
+              stroke="rgba(244,239,232,0.04)"
+              strokeWidth="1"
+            />
 
-            {/* Label group */}
-            <div className="md:mt-5">
-              <p className="font-sans text-label uppercase tracking-[0.2em] mb-1.5"
-                style={{ opacity: 0.28 }}>
+            {/* ── Connector spokes (faint radial lines) ── */}
+            {STEPS.map(step => {
+              const outer = polar(cx, cy, ringR - nodeR - 1, step.angle)
+              const inner = polar(cx, cy, ringR * 0.52 + 2, step.angle)
+              return (
+                <line
+                  key={step.index}
+                  x1={inner.x} y1={inner.y}
+                  x2={outer.x} y2={outer.y}
+                  stroke="rgba(244,239,232,0.06)"
+                  strokeWidth="1"
+                />
+              )
+            })}
+
+            {/* ── Return arrow arc from step 07 back to step 01 ── */}
+            {(() => {
+              const from = polar(cx, cy, ringR, 222)
+              const to   = polar(cx, cy, ringR, 270) // top = -90 = 270
+              // small arc from 222→270 (short arc, sweep=1)
+              return (
+                <path
+                  d={`M ${from.x} ${from.y} A ${ringR} ${ringR} 0 0 1 ${to.x} ${to.y}`}
+                  fill="none"
+                  stroke="rgba(178,155,127,0.22)"
+                  strokeWidth="1"
+                  strokeDasharray="3 5"
+                />
+              )
+            })()}
+
+            {/* ── Animated travelling dot ── */}
+            <path
+              id="orbitPath"
+              d={circlePathD}
+              fill="none"
+              stroke="none"
+            />
+            <circle r="3" fill="rgba(178,155,127,0.7)">
+              <animateMotion
+                dur="18s"
+                repeatCount="indefinite"
+                rotate="none"
+              >
+                <mpath href="#orbitPath" />
+              </animateMotion>
+            </circle>
+
+            {/* ── Soft glow following the dot ── */}
+            <circle r="10" fill="none">
+              <animateMotion
+                dur="18s"
+                repeatCount="indefinite"
+                rotate="none"
+              >
+                <mpath href="#orbitPath" />
+              </animateMotion>
+              <animate
+                attributeName="opacity"
+                values="0.15;0.35;0.15"
+                dur="3s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="r"
+                values="8;14;8"
+                dur="3s"
+                repeatCount="indefinite"
+              />
+            </circle>
+
+            {/* ── Step nodes ── */}
+            {STEPS.map((step, i) => {
+              const pos = polar(cx, cy, ringR, step.angle)
+              const isLast = i === STEPS.length - 1
+              return (
+                <g key={step.index}>
+                  {/* Outer ring on node */}
+                  <circle
+                    cx={pos.x} cy={pos.y} r={nodeR + 5}
+                    fill="none"
+                    stroke={isLast ? 'rgba(178,155,127,0.18)' : 'rgba(244,239,232,0.06)'}
+                    strokeWidth="1"
+                  />
+                  {/* Node dot */}
+                  <circle
+                    cx={pos.x} cy={pos.y} r={nodeR}
+                    fill={i === 0 ? 'rgba(178,155,127,0.9)' : 'rgba(244,239,232,0.18)'}
+                    stroke={i === 0 ? 'rgba(178,155,127,0.5)' : 'rgba(244,239,232,0.12)'}
+                    strokeWidth="1"
+                  />
+                  {/* Step index */}
+                  <text
+                    x={pos.x} y={pos.y - nodeR - 10}
+                    textAnchor="middle"
+                    fill="rgba(244,239,232,0.22)"
+                    style={{ fontFamily: 'var(--font-sans, Inter, sans-serif)', fontSize: '8px', letterSpacing: '0.15em' }}
+                  >
+                    {step.index}
+                  </text>
+                </g>
+              )
+            })}
+
+            {/* ── Centre label ── */}
+            <text
+              x={cx} y={cy - 10}
+              textAnchor="middle"
+              fill="rgba(244,239,232,0.18)"
+              style={{ fontFamily: 'var(--font-display, Playfair Display, serif)', fontSize: '13px', letterSpacing: '0.06em' }}
+            >
+              NUMU
+            </text>
+            <text
+              x={cx} y={cy + 10}
+              textAnchor="middle"
+              fill="rgba(244,239,232,0.10)"
+              style={{ fontFamily: 'var(--font-sans, Inter, sans-serif)', fontSize: '9px', letterSpacing: '0.18em' }}
+            >
+              MATERIAL LOOP
+            </text>
+          </svg>
+        </div>
+
+        {/* ── Step list ── */}
+        <div className="flex-1 flex flex-col gap-0">
+          {STEPS.map((step, i) => (
+            <div
+              key={step.index}
+              className="flex gap-5 items-start py-5"
+              style={{
+                borderTop: '1px solid rgba(128,128,128,0.1)',
+                opacity: i === 0 ? 1 : i < 4 ? 0.7 : 0.45,
+              }}
+            >
+              {/* Index */}
+              <span
+                className="font-sans flex-shrink-0"
+                style={{ fontSize: '9px', letterSpacing: '0.2em', opacity: 0.28, paddingTop: '3px', minWidth: '28px' }}
+              >
                 {step.index}
-              </p>
-              <p className="font-display text-base md:text-lg leading-tight"
-                style={{ opacity: step.active ? 1 : 0.6 }}>
-                {step.label}
-              </p>
+              </span>
+
+              {/* Node indicator */}
+              <div className="flex-shrink-0" style={{ paddingTop: '7px' }}>
+                <div style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: i === 0 ? 'rgba(178,155,127,0.9)' : 'rgba(244,239,232,0.2)',
+                }} />
+              </div>
+
+              {/* Text */}
+              <div>
+                <p
+                  className="font-display"
+                  style={{ fontSize: '1rem', letterSpacing: '-0.01em', lineHeight: 1.3, marginBottom: '3px' }}
+                >
+                  {step.title}
+                </p>
+                <p
+                  className="font-sans"
+                  style={{ fontSize: '12px', opacity: 0.4, lineHeight: 1.6 }}
+                >
+                  {step.sub}
+                </p>
+              </div>
+
+              {/* Return arrow on last step */}
+              {i === STEPS.length - 1 && (
+                <div className="ml-auto flex-shrink-0 self-center" style={{ opacity: 0.3 }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 2 C10 2 3 2 3 10 C3 16 8 18 10 18" stroke="rgba(178,155,127,1)" strokeWidth="1" strokeLinecap="round" />
+                    <polyline points="7,15 10,18 13,15" stroke="rgba(178,155,127,1)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              )}
             </div>
+          ))}
+          {/* Close-the-loop note */}
+          <div
+            className="py-5"
+            style={{ borderTop: '1px solid rgba(128,128,128,0.1)' }}
+          >
+            <p className="font-sans" style={{ fontSize: '11px', opacity: 0.22, letterSpacing: '0.12em' }}>
+              ↑ NUTRIENTS RETURN TO AGRICULTURAL LAND — LOOP CLOSES
+            </p>
           </div>
+        </div>
 
-          {/* ── Connector (desktop only) ───────────────────────────────────── */}
-          {i < STEPS.length - 1 && <Connector />}
-
-        </Fragment>
-      ))}
+      </div>
     </div>
   )
 }

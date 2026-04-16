@@ -548,7 +548,6 @@ function VisitorSections({ v }: { v: VisitorContent }) {
       {/* 05 — Process */}
       <S id="process">
         <Label text={v.process.label} />
-        <H2 text={v.process.heading} />
         <ProcessDiagram />
       </S>
 
