@@ -1072,19 +1072,32 @@ export default function PageClient({
           <ModelViewer />
         </div>
         <div className="relative px-6 md:px-12 pt-32 pb-24 w-full max-w-[1440px] mx-auto" style={{ zIndex: 2 }}>
-          {/* Name + Arabic meaning */}
-          <div className="mb-7">
-            <p className="font-sans" style={{ fontSize: '0.6875rem', opacity: 0.32, letterSpacing: '0.18em' }}>
-              NUMU &nbsp;—&nbsp; <span lang="ar">نُمُوّ</span> &nbsp;—&nbsp; Growth
-            </p>
-            <p className="font-sans mt-2 max-w-xs" style={{ fontSize: '0.6875rem', opacity: 0.2, lineHeight: 1.65, letterSpacing: '0.04em' }}>
-              Derived from Arabic, evoking growth, emergence, and transformation — the foundation of our material system.
+          {/* NUMU + Arabic name — primary identity header */}
+          <div className="mb-10">
+            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 mb-5">
+              <span
+                className="font-display block"
+                style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em' }}
+              >
+                NUMU
+              </span>
+              <span
+                lang="ar"
+                className="font-display block"
+                style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', opacity: 0.55, direction: 'rtl' }}
+              >
+                نُمُوّ
+              </span>
+            </div>
+            <p className="font-sans max-w-md" style={{ fontSize: 'clamp(0.875rem, 1.1vw, 1rem)', opacity: 0.48, lineHeight: 1.72 }}>
+              Derived from Arabic — evoking growth, emergence, and natural transformation.
+              The same forces that shape our material system: grown, not manufactured.
             </p>
           </div>
 
           <p
             className="font-sans uppercase tracking-[0.18em] mb-5"
-            style={{ opacity: 0.52, fontSize: 'clamp(0.75rem, 1.2vw, 0.9375rem)' }}
+            style={{ opacity: 0.38, fontSize: '0.6875rem' }}
           >
             {content.hero.sublabel}
           </p>
@@ -1092,18 +1105,12 @@ export default function PageClient({
             <h1
               key={i}
               className="font-display block"
-              style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)' }}
+              style={{ fontSize: 'clamp(1.25rem, 2.8vw, 2.5rem)', lineHeight: '1.15', letterSpacing: '-0.025em', opacity: 0.65 }}
             >
               {line}
             </h1>
           ))}
-          <p
-            className="font-sans mt-6 mb-0 max-w-sm"
-            style={{ fontSize: 'clamp(0.875rem, 1.2vw, 1rem)', opacity: 0.48, lineHeight: 1.7 }}
-          >
-            A material platform grown from biology, designed for architecture and construction.
-          </p>
-          <div className="mt-12 pt-8" style={{ borderTop: borderMid }}>
+          <div className="mt-10 pt-8" style={{ borderTop: borderMid }}>
             <p
               className="font-sans text-label uppercase tracking-[0.14em] mb-8"
               style={{ opacity: 0.38 }}
