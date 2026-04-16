@@ -291,7 +291,7 @@ function VisitorSections({ v }: { v: VisitorContent }) {
         </p>
 
         {/* Four application cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px" style={{ border: borderMid }}>
           {[
             {
               title: 'Acoustic',
@@ -334,9 +334,9 @@ function VisitorSections({ v }: { v: VisitorContent }) {
               placeholder: true,
             },
           ].map(card => (
-            <div key={card.title} style={{ border: borderMid }}>
+            <div key={card.title} style={{ backgroundColor: '#1a1714' }}>
               {/* Square image */}
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
+              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1', borderBottom: borderMid }}>
                 {card.placeholder ? (
                   /* Boards: placeholder — material texture treatment */
                   <div className="absolute inset-0 flex items-end p-5" style={{ backgroundColor: 'rgba(128,128,128,0.04)' }}>
@@ -548,6 +548,7 @@ function VisitorSections({ v }: { v: VisitorContent }) {
       {/* 05 — Process */}
       <S id="process">
         <Label text={v.process.label} />
+        <H2 text={v.process.heading} />
         <ProcessDiagram />
       </S>
 
