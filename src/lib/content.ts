@@ -164,7 +164,7 @@ export function loadInvestorContent(): InvestorContent {
       label: '08 — Next Step',
       heading: 'Request the full investor deck.',
       body: 'Raising $600K to build the first certified bio-material manufacturing system in the GCC.',
-      href: 'mailto:invest@numu.ae',
+      href: 'mailto:Andy@numu.bio',
     },
   }
 }
