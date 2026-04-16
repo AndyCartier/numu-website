@@ -282,16 +282,16 @@ function VisitorSections({ v }: { v: VisitorContent }) {
         </div>
       </S>
 
-      {/* 03 — Platform overview: three applications as a system */}
+      {/* 03 — Platform overview: four applications as a system */}
       <S id="applications">
         <Label text="The Platform" />
         <H2 text="One material platform, many applications." />
         <p className="font-sans leading-[1.75] mb-14 max-w-2xl" style={{ fontSize: '1rem', opacity: 0.58 }}>
-          NUMU begins with acoustic panels as the first commercial application, while thermal systems and protective packaging extend the platform into broader construction and industrial use.
+          NUMU begins with acoustic panels as the first commercial application. Thermal systems, protective packaging, and pressed boards extend the platform into broader construction and industrial use.
         </p>
 
-        {/* Three application cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Four application cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px" style={{ border: borderMid }}>
           {[
             {
               title: 'Acoustic',
@@ -301,6 +301,7 @@ function VisitorSections({ v }: { v: VisitorContent }) {
               image: '/images/materials/acoustic render 05.png',
               imageAlt: 'NUMU acoustic panels — installation view',
               rotate: false,
+              placeholder: false,
             },
             {
               title: 'Thermal',
@@ -310,6 +311,7 @@ function VisitorSections({ v }: { v: VisitorContent }) {
               image: '/images/applications/thermal_panel_wall.png',
               imageAlt: 'NUMU thermal panel — wall system',
               rotate: false,
+              placeholder: false,
             },
             {
               title: 'Packaging',
@@ -319,20 +321,42 @@ function VisitorSections({ v }: { v: VisitorContent }) {
               image: '/images/applications/packaging_protective.png',
               imageAlt: 'NUMU protective packaging',
               rotate: true,
+              placeholder: false,
+            },
+            {
+              title: 'Boards',
+              status: 'In development',
+              active: false,
+              desc: 'Pressed bio-based boards for temporary architecture, event structures, and interior surfaces. A short-term extension of the platform, enabling larger-format applications from the same material logic.',
+              image: '',
+              imageAlt: '',
+              rotate: false,
+              placeholder: true,
             },
           ].map(card => (
-            <div key={card.title} style={{ border: borderMid }}>
+            <div key={card.title} style={{ backgroundColor: '#1a1714' }}>
               {/* Square image */}
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
-                {card.rotate ? (
-                  /* Packaging: inner wrapper rotated so the fill image content rotates correctly */
+              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1', borderBottom: borderMid }}>
+                {card.placeholder ? (
+                  /* Boards: placeholder — material texture treatment */
+                  <div className="absolute inset-0 flex items-end p-5" style={{ backgroundColor: 'rgba(128,128,128,0.04)' }}>
+                    <div style={{ width: '100%' }}>
+                      {/* Grain texture via repeating lines */}
+                      <div className="w-full mb-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px', opacity: 0.08 }}>
+                        {Array.from({ length: 24 }).map((_, i) => (
+                          <div key={i} style={{ height: '2px', backgroundColor: '#f4efe8' }} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : card.rotate ? (
                   <div style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)' }}>
                     <Image
                       src={card.image}
                       alt={card.imageAlt}
                       fill
                       className="object-cover object-center"
-                      sizes="(max-width: 768px) 100vw, 33vw"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     />
                   </div>
                 ) : (
@@ -341,7 +365,7 @@ function VisitorSections({ v }: { v: VisitorContent }) {
                     alt={card.imageAlt}
                     fill
                     className="object-cover object-center"
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   />
                 )}
                 {/* Status badge */}
