@@ -1067,70 +1067,91 @@ export default function PageClient({
       </nav>
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex items-end" style={{ overflow: 'hidden' }}>
-        <div className="absolute inset-0" style={{ zIndex: 0 }}>
-          <ModelViewer />
+      <section className="flex flex-col" style={{ minHeight: '100svh', overflow: 'hidden' }}>
+
+        {/* ── Top: NUMU etymology — solid bg, no panel ── */}
+        <div
+          className="flex flex-col items-center justify-center text-center px-6 pt-28 pb-16"
+          style={{ backgroundColor: theme.bg }}
+        >
+          {/* NUMU + Arabic — large, paired */}
+          <div className="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-1 mb-6">
+            <span
+              className="font-display"
+              style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em' }}
+            >
+              NUMU
+            </span>
+            <span
+              lang="ar"
+              className="font-display"
+              style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', opacity: 0.5, fontFeatureSettings: '"kern" 1' }}
+            >
+              نُمُوّ
+            </span>
+          </div>
+          {/* Explanation */}
+          <p
+            className="font-sans max-w-sm"
+            style={{ fontSize: 'clamp(0.875rem, 1.1vw, 0.9375rem)', opacity: 0.45, lineHeight: 1.75 }}
+          >
+            Derived from Arabic — evoking growth, emergence, and natural transformation.
+            The same forces that shape our material: grown, not manufactured.
+          </p>
         </div>
-        <div className="relative px-6 md:px-12 pt-32 pb-24 w-full max-w-[1440px] mx-auto" style={{ zIndex: 2 }}>
-          {/* NUMU + Arabic name — primary identity header */}
-          <div className="mb-10">
-            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 mb-5">
-              <span
-                className="font-display block"
-                style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em' }}
-              >
-                NUMU
-              </span>
-              <span
-                lang="ar"
-                className="font-display block"
-                style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', opacity: 0.55, direction: 'rtl' }}
-              >
-                نُمُوّ
-              </span>
+
+        {/* ── Bottom: headline + rotating panel centered behind ── */}
+        <div
+          className="relative flex-1 flex flex-col items-center justify-end px-6 pb-20"
+          style={{ minHeight: '55vh' }}
+        >
+          {/* Panel — centered, fills this half */}
+          <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 0 }}>
+            <div style={{ width: '100%', height: '100%' }}>
+              <ModelViewer />
             </div>
-            <p className="font-sans max-w-md" style={{ fontSize: 'clamp(0.875rem, 1.1vw, 1rem)', opacity: 0.48, lineHeight: 1.72 }}>
-              Derived from Arabic — evoking growth, emergence, and natural transformation.
-              The same forces that shape our material system: grown, not manufactured.
-            </p>
           </div>
 
-          <p
-            className="font-sans uppercase tracking-[0.18em] mb-5"
-            style={{ opacity: 0.38, fontSize: '0.6875rem' }}
-          >
-            {content.hero.sublabel}
-          </p>
-          {content.hero.lines.map((line, i) => (
-            <h1
-              key={i}
-              className="font-display block"
-              style={{ fontSize: 'clamp(1.25rem, 2.8vw, 2.5rem)', lineHeight: '1.15', letterSpacing: '-0.025em', opacity: 0.65 }}
-            >
-              {line}
-            </h1>
-          ))}
-          <div className="mt-10 pt-8" style={{ borderTop: borderMid }}>
+          {/* Title + CTA — centered over panel */}
+          <div className="relative w-full max-w-[1440px] mx-auto text-center" style={{ zIndex: 2 }}>
             <p
-              className="font-sans text-label uppercase tracking-[0.14em] mb-8"
-              style={{ opacity: 0.38 }}
+              className="font-sans uppercase tracking-[0.18em] mb-5"
+              style={{ opacity: 0.38, fontSize: '0.6875rem' }}
             >
-              {content.hero.meta}
+              {content.hero.sublabel}
             </p>
-            <a
-              href={content.hero.cta.href}
-              className="font-sans text-label uppercase tracking-[0.14em] px-6 py-3.5 border inline-block"
-              style={{
-                borderColor: 'rgba(128,128,128,0.4)',
-                transition: 'border-color 0.2s, opacity 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = isInvestor ? 'rgba(245,241,232,0.7)' : 'rgba(26,23,20,0.6)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(128,128,128,0.4)' }}
-            >
-              {content.hero.cta.label} ↓
-            </a>
+            {content.hero.lines.map((line, i) => (
+              <h1
+                key={i}
+                className="font-display block"
+                style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)' }}
+              >
+                {line}
+              </h1>
+            ))}
+            <div className="mt-10 pt-8 flex flex-col items-center" style={{ borderTop: borderMid }}>
+              <p
+                className="font-sans text-label uppercase tracking-[0.14em] mb-8"
+                style={{ opacity: 0.38 }}
+              >
+                {content.hero.meta}
+              </p>
+              <a
+                href={content.hero.cta.href}
+                className="font-sans text-label uppercase tracking-[0.14em] px-6 py-3.5 border inline-block"
+                style={{
+                  borderColor: 'rgba(128,128,128,0.4)',
+                  transition: 'border-color 0.2s, opacity 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = isInvestor ? 'rgba(245,241,232,0.7)' : 'rgba(26,23,20,0.6)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(128,128,128,0.4)' }}
+              >
+                {content.hero.cta.label} ↓
+              </a>
+            </div>
           </div>
         </div>
+
       </section>
 
       {/* ── Sections ───────────────────────────────────────────────────────── */}
