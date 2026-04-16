@@ -88,14 +88,14 @@ export function ProcessDiagram() {
       </div>
 
       {/* Circular diagram */}
-      <div className="flex flex-col lg:flex-row gap-16 lg:gap-20 items-start">
+      <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
 
         {/* SVG ring */}
-        <div className="flex-shrink-0 w-full lg:w-auto" style={{ maxWidth: 600 }}>
+        <div className="flex-shrink-0 w-full lg:w-auto" style={{ maxWidth: 420 }}>
           <svg
             viewBox="0 0 600 600"
             width="100%"
-            style={{ overflow: 'visible' }}
+            style={{ overflow: 'hidden', display: 'block' }}
             aria-label="NUMU circular material process"
           >
             {/* ── Outer orbit ring ── */}

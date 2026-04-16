@@ -291,7 +291,7 @@ function VisitorSections({ v }: { v: VisitorContent }) {
         </p>
 
         {/* Four application cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px" style={{ border: borderMid }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             {
               title: 'Acoustic',
@@ -334,9 +334,9 @@ function VisitorSections({ v }: { v: VisitorContent }) {
               placeholder: true,
             },
           ].map(card => (
-            <div key={card.title} style={{ backgroundColor: '#1a1714' }}>
+            <div key={card.title} style={{ border: borderMid }}>
               {/* Square image */}
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1', borderBottom: borderMid }}>
+              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
                 {card.placeholder ? (
                   /* Boards: placeholder — material texture treatment */
                   <div className="absolute inset-0 flex items-end p-5" style={{ backgroundColor: 'rgba(128,128,128,0.04)' }}>
