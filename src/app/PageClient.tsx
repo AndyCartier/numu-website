@@ -1066,92 +1066,82 @@ export default function PageClient({
         </div>
       </nav>
 
-      {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="flex flex-col" style={{ minHeight: '100svh', overflow: 'hidden' }}>
-
-        {/* ── Top: NUMU etymology — solid bg, no panel ── */}
-        <div
-          className="flex flex-col items-center justify-center text-center px-6 pt-28 pb-16"
-          style={{ backgroundColor: theme.bg }}
+      {/* ── Hero: identity screen — 100vh, no panel ──────────────────────── */}
+      <section
+        className="flex flex-col items-center justify-center text-center px-6"
+        style={{ height: '100vh', minHeight: '600px' }}
+      >
+        {/* NUMU — dominant */}
+        <h1
+          className="font-display"
+          style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em' }}
         >
-          {/* NUMU + Arabic — large, paired */}
-          <div className="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-1 mb-6">
-            <span
-              className="font-display"
-              style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em' }}
-            >
-              NUMU
-            </span>
-            <span
-              lang="ar"
-              className="font-display"
-              style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', opacity: 0.5, fontFeatureSettings: '"kern" 1' }}
-            >
-              نُمُوّ
-            </span>
-          </div>
-          {/* Explanation */}
+          NUMU
+        </h1>
+
+        {/* Arabic — secondary, breathing room above */}
+        <p
+          lang="ar"
+          className="font-display mt-4"
+          style={{ fontSize: 'clamp(1.5rem, 4vw, 3.5rem)', lineHeight: 1.1, opacity: 0.38, letterSpacing: '0.02em' }}
+        >
+          نُمُوّ
+        </p>
+
+        {/* Single sentence — subtle, generous space above */}
+        <p
+          className="font-sans mt-8"
+          style={{ fontSize: 'clamp(0.8125rem, 1vw, 0.9375rem)', opacity: 0.4, letterSpacing: '0.06em', lineHeight: 1.7 }}
+        >
+          Grown, not manufactured.
+        </p>
+      </section>
+
+      {/* ── Platform intro: headline + rotating panel ────────────────────── */}
+      <section
+        className="relative flex flex-col items-center justify-end px-6 pb-20 text-center"
+        style={{ height: '100vh', minHeight: '600px', borderTop: borderMid, overflow: 'hidden' }}
+      >
+        {/* Panel — fills section as background */}
+        <div className="absolute inset-0" style={{ zIndex: 0 }}>
+          <ModelViewer />
+        </div>
+
+        {/* Headline + CTA — anchored to bottom, over panel */}
+        <div className="relative w-full max-w-[1440px] mx-auto" style={{ zIndex: 2 }}>
           <p
-            className="font-sans max-w-sm"
-            style={{ fontSize: 'clamp(0.875rem, 1.1vw, 0.9375rem)', opacity: 0.45, lineHeight: 1.75 }}
+            className="font-sans uppercase tracking-[0.18em] mb-6"
+            style={{ opacity: 0.38, fontSize: '0.6875rem' }}
           >
-            Derived from Arabic — evoking growth, emergence, and natural transformation.
-            The same forces that shape our material: grown, not manufactured.
+            {content.hero.sublabel}
           </p>
-        </div>
-
-        {/* ── Bottom: headline + rotating panel centered behind ── */}
-        <div
-          className="relative flex-1 flex flex-col items-center justify-end px-6 pb-20"
-          style={{ minHeight: '55vh' }}
-        >
-          {/* Panel — centered, fills this half */}
-          <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 0 }}>
-            <div style={{ width: '100%', height: '100%' }}>
-              <ModelViewer />
-            </div>
-          </div>
-
-          {/* Title + CTA — centered over panel */}
-          <div className="relative w-full max-w-[1440px] mx-auto text-center" style={{ zIndex: 2 }}>
-            <p
-              className="font-sans uppercase tracking-[0.18em] mb-5"
-              style={{ opacity: 0.38, fontSize: '0.6875rem' }}
+          {content.hero.lines.map((line, i) => (
+            <h2
+              key={i}
+              className="font-display block"
+              style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)' }}
             >
-              {content.hero.sublabel}
+              {line}
+            </h2>
+          ))}
+          <div className="mt-10 pt-8 flex flex-col items-center" style={{ borderTop: borderMid }}>
+            <p
+              className="font-sans text-label uppercase tracking-[0.14em] mb-8"
+              style={{ opacity: 0.38 }}
+            >
+              {content.hero.meta}
             </p>
-            {content.hero.lines.map((line, i) => (
-              <h1
-                key={i}
-                className="font-display block"
-                style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)' }}
-              >
-                {line}
-              </h1>
-            ))}
-            <div className="mt-10 pt-8 flex flex-col items-center" style={{ borderTop: borderMid }}>
-              <p
-                className="font-sans text-label uppercase tracking-[0.14em] mb-8"
-                style={{ opacity: 0.38 }}
-              >
-                {content.hero.meta}
-              </p>
-              <a
-                href={content.hero.cta.href}
-                className="font-sans text-label uppercase tracking-[0.14em] px-6 py-3.5 border inline-block"
-                style={{
-                  borderColor: 'rgba(128,128,128,0.4)',
-                  transition: 'border-color 0.2s, opacity 0.2s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = isInvestor ? 'rgba(245,241,232,0.7)' : 'rgba(26,23,20,0.6)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(128,128,128,0.4)' }}
-              >
-                {content.hero.cta.label} ↓
-              </a>
-            </div>
+            <a
+              href={content.hero.cta.href}
+              className="font-sans text-label uppercase tracking-[0.14em] px-6 py-3.5 border inline-block"
+              style={{ borderColor: 'rgba(128,128,128,0.4)', transition: 'border-color 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = isInvestor ? 'rgba(245,241,232,0.7)' : 'rgba(26,23,20,0.6)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(128,128,128,0.4)' }}
+            >
+              {content.hero.cta.label} ↓
+            </a>
           </div>
         </div>
-
       </section>
 
       {/* ── Sections ───────────────────────────────────────────────────────── */}
