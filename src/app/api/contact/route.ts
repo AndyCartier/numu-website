@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   try {
     await resend.emails.send({
       from:    'NUMU <noreply@numu.bio>',
-      to:      'andy@numu.bio',
+      to:      'Andy@numu.bio',
       replyTo: email,
       subject: 'New deck request — NUMU',
       text: `Deck request from: ${email}\n\nReply directly to this email to send the deck.`,
