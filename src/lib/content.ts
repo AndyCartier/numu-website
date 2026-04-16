@@ -86,7 +86,7 @@ export function loadVisitorContent(): VisitorContent {
       label: '07 — Contact',
       heading: 'Specify NUMU.',
       ctas: [
-        { label: 'Specify NUMU for your next project', href: 'mailto:hello@numu.ae' },
+        { label: 'Specify NUMU for your next project', href: 'mailto:Andy@numu.bio' },
         { label: 'Explore the material system',        href: '#material' },
       ],
     },
