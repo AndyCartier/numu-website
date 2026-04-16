@@ -33,7 +33,7 @@ const borderSoft = '1px solid rgba(128,128,128,0.09)'
 
 function Label({ text }: { text: string }) {
   return (
-    <p className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.52, letterSpacing: '0.18em' }}>
+    <p className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.65, letterSpacing: '0.18em' }}>
       {text}
     </p>
   )
@@ -201,10 +201,13 @@ function VisitorSections({ v }: { v: VisitorContent }) {
           <div className="relative overflow-hidden">
             <video src="/videos/your-video.mp4" autoPlay muted loop playsInline className="w-full block" suppressHydrationWarning />
             <div
-              className="absolute bottom-0 left-0 right-0 z-10 flex items-end px-8 pb-8"
-              style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)', paddingTop: '80px' }}
+              className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-start px-8 pb-8"
+              style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)', paddingTop: '100px' }}
             >
-              <p className="font-display text-white" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}>Material in motion</p>
+              <p className="font-display text-white mb-2" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}>Material in motion</p>
+              <p className="font-sans text-white" style={{ fontSize: '0.8125rem', opacity: 0.6, lineHeight: 1.6, maxWidth: '340px' }}>
+                A material grown over time — not manufactured. From agricultural fibres to structural form, the process unfolds through controlled biological growth over 5–7 days.
+              </p>
             </div>
           </div>
         </div>
@@ -232,6 +235,9 @@ function VisitorSections({ v }: { v: VisitorContent }) {
               </p>
               <p className="font-sans leading-[1.75]" style={{ fontSize: '0.9375rem', opacity: 0.45 }}>
                 Because performance is engineered into the growth process itself, properties can be tuned per application — from dense acoustic cores to open-celled thermal matrices.
+              </p>
+              <p className="font-sans leading-[1.75] mt-5" style={{ fontSize: '0.875rem', opacity: 0.28, letterSpacing: '0.04em' }}>
+                One material system — multiple applications.
               </p>
             </div>
 
@@ -286,8 +292,11 @@ function VisitorSections({ v }: { v: VisitorContent }) {
       <S id="applications">
         <Label text="The Platform" />
         <H2 text="One material platform, many applications." />
-        <p className="font-sans leading-[1.75] mb-14 max-w-2xl" style={{ fontSize: '1rem', opacity: 0.58 }}>
-          NUMU begins with acoustic panels as the first commercial application. Thermal systems, protective packaging, and pressed boards extend the platform into broader construction and industrial use.
+        <p className="font-sans leading-[1.75] mb-3 max-w-2xl" style={{ fontSize: '1rem', opacity: 0.58 }}>
+          Starting with acoustic panels as the first market-ready product, the platform expands into broader construction and industrial applications — each one grown from the same material logic.
+        </p>
+        <p className="font-sans leading-[1.75] mb-14 max-w-2xl" style={{ fontSize: '0.9375rem', opacity: 0.38 }}>
+          Thermal systems, protective packaging, and pressed boards follow the same process: agricultural inputs, biological growth, and a material formed without synthetic additives.
         </p>
 
         {/* Four application cards */}
@@ -408,7 +417,7 @@ function VisitorSections({ v }: { v: VisitorContent }) {
               FOLD is NUMU&apos;s first product — a modular acoustic panel system grown from bio-based material and designed for interior architecture. It translates the material platform into a real, specification-ready object: tactile, scalable, and visually distinctive.
             </p>
             <p className="font-sans leading-[1.75]" style={{ fontSize: '0.9375rem', opacity: 0.44 }}>
-              Fold takes its name from the forces that shape it — the movement of fabric, the softness of drapery, and the way wind carves folds into sand and dunes. The result is a modular acoustic surface that feels both natural and architectural.
+              Fold takes its name from the forces that shape it — the movement of fabric, the softness of drapery, the way wind carves form into sand and dunes. Each panel surface carries that memory: a topography grown into material rather than cut from it. The result is a modular acoustic surface that feels both natural and architectural — at home in the spaces it softens.
             </p>
           </div>
         </div>
