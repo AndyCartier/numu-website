@@ -183,7 +183,7 @@ function VisitorSections({ v }: { v: VisitorContent }) {
       {/* 01 — Platform statement */}
       <S id="statement">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-14 lg:gap-20 items-start">
-          <div className="lg:pt-2 lg:sticky lg:top-32">
+          <div className="lg:pt-2">
             <Label text={v.statement.label} />
             <h2
               className="font-display mb-8"
@@ -444,21 +444,20 @@ function VisitorSections({ v }: { v: VisitorContent }) {
           />
         </div>
 
-        {/* C. Architectural context + video — bottom-aligned, shared height */}
+        {/* C. Architectural context + video — responsive grid, aspect-ratio driven */}
         <div
-          className="grid"
-          style={{ gridTemplateColumns: '1fr 1.25fr', gap: '8px', height: 'clamp(220px, 34vw, 520px)' }}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-2"
         >
-          <div className="relative overflow-hidden h-full">
+          <div className="relative overflow-hidden w-full" style={{ aspectRatio: '4/3' }}>
             <Image
               src="/images/products/fold_context_scale.png"
               alt="FOLD — architectural scale"
               fill
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 55vw"
+              sizes="(max-width: 640px) 100vw, 55vw"
             />
           </div>
-          <div className="relative overflow-hidden h-full">
+          <div className="relative overflow-hidden w-full" style={{ aspectRatio: '4/3' }}>
             <video
               src="/videos/numu_story.mp4"
               autoPlay muted loop playsInline
