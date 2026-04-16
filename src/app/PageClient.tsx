@@ -683,7 +683,7 @@ function InvestorCTA({ iv }: { iv: InvestorContent }) {
             Request received. We&apos;ll be in touch shortly.
           </p>
           <p className="font-sans text-xs mt-3" style={{ opacity: 0.3 }}>
-            Sent to nd@numu.bio
+            Sent to andy@numu.bio
           </p>
         </div>
       ) : (
@@ -722,7 +722,7 @@ function InvestorCTA({ iv }: { iv: InvestorContent }) {
       {state === 'error' && (
         <p className="font-sans text-xs mt-3" style={{ opacity: 0.45 }}>
           Something went wrong — email us directly at{' '}
-          <a href="mailto:nd@numu.bio" style={{ textDecoration: 'underline' }}>nd@numu.bio</a>
+          <a href="mailto:andy@numu.bio" style={{ textDecoration: 'underline' }}>andy@numu.bio</a>
         </p>
       )}
 
