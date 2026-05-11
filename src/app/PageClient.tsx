@@ -2010,6 +2010,34 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             </p>
           </div>
         </div>
+
+        {/* Selected Recognition */}
+        <div className="mt-16" style={{ borderTop: INV_BORDER, paddingTop: 40 }}>
+          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.35 }}>Selected Recognition</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0" style={{ borderTop: INV_BORDER_SUBTLE }}>
+            {[
+              { year: '2024', text: 'Chapter author — Designing with Mycelium, Routledge (global reference volume for bio-based material design)' },
+              { year: '2022–23', text: '2 process-level patents filed — Belgium (mycelium composite formation and no-mold growth technique)' },
+              { year: '2025', text: 'KAVE acoustic installation — live deployment, Dubai (first mycelium acoustic installation in the GCC)' },
+              { year: '2022', text: 'Beyond Chrysant installation — Netherlands (multi-panel grown acoustic system, public documentation)' },
+              { year: 'Ongoing', text: 'Academic partnerships — De Montfort University, American University of Sharjah, Heriot-Watt Dubai, DIDI' },
+              { year: 'Ongoing', text: '7+ years applied industrialization — mycelium composites, EU and GCC production environments' },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -8 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '0px' }}
+                transition={{ duration: 0.4, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
+                className="flex items-baseline gap-6 py-4 px-0"
+                style={{ borderBottom: INV_BORDER_SUBTLE }}
+              >
+                <span className="font-sans flex-shrink-0 w-16 text-right" style={{ fontSize: '0.6875rem', opacity: 0.32, letterSpacing: '0.06em' }}>{item.year}</span>
+                <p className="font-sans leading-[1.65]" style={{ fontSize: '0.875rem', opacity: 0.62 }}>{item.text}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </ISection>
 
       {/* 10 Roadmap */}
