@@ -305,16 +305,18 @@ function ProductionFeature() {
 // ─── Process & Test Carousel ─────────────────────────────────────────────────
 
 const CAROUSEL_ITEMS = [
-  { src: '/images/textures/texture_closeup_01.jpg', alt: 'Material surface — texture study', aspect: '1/1', label: 'Surface texture' },
-  { src: '/images/products/biofoam_detail.png', alt: 'Biofoam block — material study', aspect: '4/3', label: 'Biofoam material' },
-  { src: '/images/founder/founder_in_action.png', alt: 'Production lab — process documentation', aspect: '3/4', label: 'Lab process' },
-  { src: '/images/textures/texture_closeup_02.jpg', alt: 'Material surface — detail', aspect: '1/1', label: 'Surface detail' },
-  { src: '/images/products/fold_solo_panel.png', alt: 'FOLD panel — product study', aspect: '3/4', label: 'FOLD panel' },
-  { src: '/images/hero/mycofoam_block_01.png', alt: 'Mycofoam composite block', aspect: '4/3', label: 'Composite form' },
-  { src: '/images/applications/event_board.png', alt: 'Pressed composite board — test batch', aspect: '16/9', label: 'Pressed board' },
-  { src: '/images/materials/acoustic_render_05.png', alt: 'Acoustic tile — geometry study', aspect: '1/1', label: 'Acoustic tile' },
-  { src: '/images/products/fold_context_scale.png', alt: 'FOLD installation — scale context', aspect: '4/3', label: 'Scale context' },
+  { src: '/images/textures/texture_closeup_01.jpg', alt: 'Material surface — texture study', label: 'Surface texture' },
+  { src: '/images/products/biofoam_detail.png', alt: 'Biofoam block — material study', label: 'Biofoam material' },
+  { src: '/images/founder/founder_in_action.png', alt: 'Production lab — process documentation', label: 'Lab process' },
+  { src: '/images/textures/texture_closeup_02.jpg', alt: 'Material surface — detail', label: 'Surface detail' },
+  { src: '/images/products/fold_solo_panel.png', alt: 'FOLD panel — product study', label: 'FOLD panel' },
+  { src: '/images/hero/mycofoam_block_01.png', alt: 'Mycofoam composite block', label: 'Composite form' },
+  { src: '/images/applications/event_board.png', alt: 'Pressed composite board — test batch', label: 'Pressed board' },
+  { src: '/images/materials/acoustic_render_05.png', alt: 'Acoustic tile — geometry study', label: 'Acoustic tile' },
+  { src: '/images/products/fold_context_scale.png', alt: 'FOLD installation — scale context', label: 'Scale context' },
 ]
+const CAROUSEL_W = 400
+const CAROUSEL_H = 300
 
 function ProcessCarousel() {
   return (
@@ -340,44 +342,40 @@ function ProcessCarousel() {
         }}
         className="md:px-12 carousel-scroll"
       >
-        {CAROUSEL_ITEMS.map((item, i) => {
-          const heights: Record<string, number> = { '1/1': 280, '4/3': 280, '3/4': 360, '16/9': 210 }
-          const widths: Record<string, number> = { '1/1': 280, '4/3': 374, '3/4': 270, '16/9': 374 }
-          return (
+        {CAROUSEL_ITEMS.map((item, i) => (
+          <div
+            key={i}
+            style={{
+              flexShrink: 0,
+              scrollSnapAlign: 'start',
+              width: CAROUSEL_W,
+              height: CAROUSEL_H,
+              position: 'relative',
+              overflow: 'hidden',
+              border: BORDER,
+            }}
+          >
+            <Image
+              src={item.src}
+              alt={item.alt}
+              fill
+              className="object-cover object-center"
+              sizes="400px"
+            />
             <div
-              key={i}
               style={{
-                flexShrink: 0,
-                scrollSnapAlign: 'start',
-                width: widths[item.aspect] || 280,
-                height: heights[item.aspect] || 280,
-                position: 'relative',
-                overflow: 'hidden',
-                border: BORDER,
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '10px 12px',
+                background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)',
               }}
             >
-              <Image
-                src={item.src}
-                alt={item.alt}
-                fill
-                className="object-cover object-center"
-                sizes="300px"
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  padding: '10px 12px',
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)',
-                }}
-              >
-                <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: 8, opacity: 0.55, color: '#f5f1e8' }}>{item.label}</p>
-              </div>
+              <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: 8, opacity: 0.55, color: '#f5f1e8' }}>{item.label}</p>
             </div>
-          )
-        })}
+          </div>
+        ))}
         {/* Placeholder slots for new content */}
         {[
           { label: 'Growth cycle — time-lapse', brief: 'Growth chamber time-lapse documentation. Mycelium colonization from inoculation to full substrate coverage over 5 days.' },
@@ -389,12 +387,12 @@ function ProcessCarousel() {
             style={{
               flexShrink: 0,
               scrollSnapAlign: 'start',
-              width: 280,
-              height: 280,
+              width: CAROUSEL_W,
+              height: CAROUSEL_H,
               position: 'relative',
             }}
           >
-            <ImagePlaceholder aspect="1:1" brief={ph.brief} label={ph.label} />
+            <ImagePlaceholder aspect="4:3" brief={ph.brief} label={ph.label} />
           </div>
         ))}
       </div>
