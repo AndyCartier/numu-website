@@ -1147,11 +1147,19 @@ function TeamMemberCard({ member, i, large }: { member: InvestorContent['team'][
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '0px' })
 
+  const photoMap: Record<string, string> = {
+    founder: '/images/founder/Portrait.PNG',
+    benjamin: '/images/founder/benjamin.png',
+    othman: '/images/founder/othman.png',
+    matthew: '/images/founder/matthew.png',
+  }
+  const photoSrc = photoMap[member.imageKey]
+
   const PhotoSlot = () => (
     <div className="relative mb-8 overflow-hidden" style={{ aspectRatio: large ? '3/2' : '1/1', backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)' }}>
-      {member.imageKey === 'founder' ? (
+      {photoSrc ? (
         <Image
-          src="/images/founder/Portrait.PNG"
+          src={photoSrc}
           alt={member.name}
           fill
           className="object-cover object-top"
