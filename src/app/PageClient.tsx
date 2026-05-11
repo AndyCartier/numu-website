@@ -1963,6 +1963,32 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             </div>
           ))}
         </div>
+
+        {/* Press */}
+        <div className="mt-16" style={{ borderTop: INV_BORDER, paddingTop: 40 }}>
+          <p className="font-sans uppercase tracking-[0.2em] mb-8" style={{ fontSize: '0.6875rem', opacity: 0.35 }}>Press</p>
+          <div className="flex flex-col gap-0" style={{ borderTop: INV_BORDER_SUBTLE }}>
+            {[
+              { pub: 'Placeholder Publication', title: 'Article title about KAVE installation or NUMU — link to be provided', href: '#' },
+              { pub: 'Placeholder Publication', title: 'Second press mention — link to be provided', href: '#' },
+            ].map((item, i) => (
+              <a
+                key={i}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-baseline gap-6 py-4 group"
+                style={{ borderBottom: INV_BORDER_SUBTLE, textDecoration: 'none' }}
+              >
+                <span className="font-sans flex-shrink-0 w-40" style={{ fontSize: '0.6875rem', opacity: 0.38, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{item.pub}</span>
+                <span className="font-sans leading-[1.6] flex-1" style={{ fontSize: '0.875rem', opacity: 0.62, transition: 'opacity 0.15s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0.62' }}
+                >{item.title} ↗</span>
+              </a>
+            ))}
+          </div>
+        </div>
       </ISection>
 
       {/* 09 Founder Credibility */}
