@@ -710,6 +710,18 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
               <div className="text-center">
                 <p className="font-display text-sm md:text-base" style={{ letterSpacing: '-0.01em', opacity: isLast ? 1 : 0.75, color: isLast ? ACCENT : undefined }}>{yr.label}</p>
                 <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.35 }}>{yr.year}</p>
+                {yr.year === 'Y3' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '0px' }}
+                    transition={{ duration: 0.4, delay: 1.0 }}
+                    className="mt-3 inline-block px-2 py-1"
+                    style={{ border: `1px solid ${ACCENT}55`, backgroundColor: `${ACCENT}12` }}
+                  >
+                    <p className="font-sans uppercase tracking-[0.1em]" style={{ fontSize: 7, color: ACCENT, whiteSpace: 'nowrap' }}>Series A · ~$3M</p>
+                  </motion.div>
+                )}
               </div>
             </div>
           )
