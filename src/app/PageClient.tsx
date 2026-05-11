@@ -2198,8 +2198,18 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
             justifyContent: 'center',
           }}
         >
-          <div style={{ width: '130vmin', height: '130vmin', maxWidth: 1200, maxHeight: 1200 }}>
-            <PanelViewer isInvestor={isInvestor} />
+          <div style={{ width: '130vmin', height: '130vmin', maxWidth: 1200, maxHeight: 1200, position: 'relative' }}>
+            {/* Dark radial backdrop — makes normalmap shadows visible on light background */}
+            {!isInvestor && (
+              <div style={{
+                position: 'absolute', inset: 0, zIndex: 0, borderRadius: '50%',
+                background: 'radial-gradient(ellipse 80% 75% at 50% 50%, rgba(18,12,8,0.42) 0%, transparent 68%)',
+                pointerEvents: 'none',
+              }} />
+            )}
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}>
+              <PanelViewer isInvestor={isInvestor} />
+            </div>
           </div>
         </div>
         <div className="relative w-full max-w-[1440px] mx-auto" style={{ zIndex: 2 }}>

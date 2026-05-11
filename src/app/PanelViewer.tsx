@@ -87,28 +87,28 @@ export default function PanelViewer({ isInvestor = false }: { isInvestor?: boole
         gl={{ alpha: true, antialias: true }}
         style={{ background: 'transparent', width: '100%', height: '100%' }}
       >
-        {/* Generous ambient — diffuse organic base, no glossy shadows */}
-        <ambientLight intensity={isInvestor ? 0.55 : 0.65} />
+        {/* Ambient — kept low so directional lights create visible shadow/depth */}
+        <ambientLight intensity={0.45} />
 
-        {/* Raking key light — angle reveals normal-map depth without specular */}
+        {/* Raking key light — strong angle reveals normal-map depth */}
         <directionalLight
           position={[-4, 3, 2]}
-          intensity={isInvestor ? 1.4 : 1.7}
-          color={isInvestor ? '#f0e8d8' : '#fff8f0'}
+          intensity={isInvestor ? 1.4 : 2.2}
+          color={isInvestor ? '#f0e8d8' : '#e8dfd4'}
         />
 
         {/* Soft cross light — broadens diffuse, kills harsh shadow boundary */}
         <directionalLight
           position={[4, 1, 1]}
-          intensity={isInvestor ? 0.6 : 0.75}
-          color={isInvestor ? '#ddd5c8' : '#ede8de'}
+          intensity={isInvestor ? 0.6 : 0.9}
+          color={isInvestor ? '#ddd5c8' : '#d4cfc8'}
         />
 
-        {/* Gentle bounce fill — keeps underside readable */}
+        {/* Bounce fill — keeps underside readable */}
         <directionalLight
           position={[0, -3, 2]}
           intensity={isInvestor ? 0.3 : 0.35}
-          color={isInvestor ? '#c8c0b4' : '#d8d0c4'}
+          color={isInvestor ? '#c8c0b4' : '#c0b8b0'}
         />
 
         <Suspense fallback={null}>
