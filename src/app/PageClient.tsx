@@ -242,7 +242,7 @@ function ILabel({ text }: { text: string }) {
 
 function IHeading({ text }: { text: string }) {
   return (
-    <h2 className="font-display text-headline mb-10 max-w-3xl" style={{ textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
+    <h2 className="font-display mb-10 max-w-3xl" style={{ fontSize: 'clamp(2.25rem, 4.5vw, 3.75rem)', lineHeight: 1.08, letterSpacing: '-0.03em', fontWeight: 700, textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
       {text}
     </h2>
   )
@@ -250,7 +250,7 @@ function IHeading({ text }: { text: string }) {
 
 function IBody({ text }: { text: string }) {
   return (
-    <p className="font-sans text-base md:text-[1.0625rem] leading-[1.75] mb-10 max-w-2xl" style={{ opacity: 0.55 }}>
+    <p className="font-sans text-base md:text-[1.0625rem] leading-[1.75] mb-10 max-w-2xl" style={{ opacity: 0.68 }}>
       {text}
     </p>
   )
@@ -620,7 +620,7 @@ function RevenueEngines({ data }: { data: InvestorContent['revenue_engines'] }) 
                 {engine.status === 'active' ? 'Active' : engine.status === 'next' ? 'Phase 2' : 'Phase 3'}
               </span>
             </div>
-            <p className="font-display text-2xl mb-3" style={{ letterSpacing: '-0.02em' }}>{engine.name}</p>
+            <p className="font-display text-2xl md:text-3xl mb-3" style={{ letterSpacing: '-0.02em', fontWeight: 700 }}>{engine.name}</p>
             <p className="font-sans text-base leading-[1.75] mb-8" style={{ opacity: 0.5 }}>{engine.desc}</p>
             <div className="grid grid-cols-3 gap-4 pt-6" style={{ borderTop: INV_BORDER_SUBTLE }}>
               <div>
@@ -1035,7 +1035,7 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
             style={{ backgroundColor: '#0e0e0e' }}
           >
             <p className="font-sans text-label uppercase tracking-[0.16em] mb-2" style={{ opacity: 0.35, color: i === 0 ? ACCENT : undefined }}>{phase.year}</p>
-            <p className="font-display text-2xl md:text-3xl mb-8" style={{ letterSpacing: '-0.025em', opacity: i === 0 ? 1 : 0.45 }}>{phase.label}</p>
+            <p className="font-display text-2xl md:text-3xl mb-8" style={{ letterSpacing: '-0.025em', fontWeight: 700, opacity: i === 0 ? 1 : 0.65 }}>{phase.label}</p>
             <div>
               {phase.items.map((item, j) => (
                 <motion.div
@@ -1168,9 +1168,9 @@ function TeamMemberCard({ member, i, large }: { member: InvestorContent['team'][
       style={{ backgroundColor: '#0e0e0e' }}
     >
       <PhotoSlot />
-      <p className="font-display mb-1" style={{ fontSize: large ? 'clamp(1.25rem, 2vw, 1.75rem)' : '1.125rem' }}>{member.name}</p>
-      <p className="font-sans text-label uppercase tracking-[0.14em] mb-5" style={{ opacity: 0.32 }}>{member.role}</p>
-      <p className="font-sans leading-[1.75]" style={{ fontSize: large ? '0.9375rem' : '0.8125rem', opacity: 0.45 }}>{member.bio}</p>
+      <p className="font-display mb-1" style={{ fontSize: large ? 'clamp(1.5rem, 2.5vw, 2rem)' : '1.25rem', fontWeight: 700 }}>{member.name}</p>
+      <p className="font-sans text-label uppercase tracking-[0.14em] mb-5" style={{ opacity: 0.42 }}>{member.role}</p>
+      <p className="font-sans leading-[1.75]" style={{ fontSize: large ? '0.9375rem' : '0.875rem', opacity: 0.58 }}>{member.bio}</p>
     </motion.div>
   )
 }
