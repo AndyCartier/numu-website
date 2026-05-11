@@ -1972,28 +1972,41 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
           ))}
         </div>
 
-        {/* Press */}
+        {/* Featured In */}
         <div className="mt-16" style={{ borderTop: INV_BORDER, paddingTop: 40 }}>
-          <p className="font-sans uppercase tracking-[0.2em] mb-8" style={{ fontSize: '0.6875rem', opacity: 0.35 }}>Press</p>
-          <div className="flex flex-col gap-0" style={{ borderTop: INV_BORDER_SUBTLE }}>
+          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.35 }}>Featured In</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
             {[
-              { pub: 'Placeholder Publication', title: 'Article title about KAVE installation or NUMU — link to be provided', href: '#' },
-              { pub: 'Placeholder Publication', title: 'Second press mention — link to be provided', href: '#' },
+              { pub: 'Wallpaper*', headline: 'Postcard from Dubai Design Week 2024: the highlights', url: 'https://www.wallpaper.com/design-interiors/design-events/dubai-design-week-highlights', date: 'Nov 2024' },
+              { pub: 'The National', headline: 'How coral stones, reefs and mycelium inspired the winning Abwab projects', url: 'https://www.thenationalnews.com/arts-culture/art-design/2024/10/03/abwab-dubai-design-week-coral-stones-reefs-mycelium/', date: 'Oct 2024' },
+              { pub: 'STIRworld', headline: 'A decade on, Dubai Design Week is still growing alongside the MENA culture scene', url: 'https://www.stirworld.com/inspire-visits-a-decade-on-dubai-design-week-is-still-growing-alongside-the-mena-culture-scene', date: 'Nov 2024' },
+              { pub: 'Design Anthology', headline: 'Dubai Design Week Celebrates its Tenth Edition', url: 'https://design-anthology.com/story/dubai-design-week-2024', date: 'Jul 2025' },
             ].map((item, i) => (
-              <a
+              <motion.a
                 key={i}
-                href={item.href}
+                href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-baseline gap-6 py-4 group"
-                style={{ borderBottom: INV_BORDER_SUBTLE, textDecoration: 'none' }}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '0px' }}
+                transition={{ duration: 0.4, delay: i * 0.08, ease: [0.25, 0, 0.2, 1] }}
+                className="flex flex-col gap-3 p-6"
+                style={{
+                  backgroundColor: '#0e0e0e',
+                  textDecoration: 'none',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(245,241,232,0.04)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#0e0e0e' }}
               >
-                <span className="font-sans flex-shrink-0 w-40" style={{ fontSize: '0.6875rem', opacity: 0.38, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{item.pub}</span>
-                <span className="font-sans leading-[1.6] flex-1" style={{ fontSize: '0.875rem', opacity: 0.62, transition: 'opacity 0.15s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0.62' }}
-                >{item.title} ↗</span>
-              </a>
+                <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.625rem', opacity: 0.45, letterSpacing: '0.16em' }}>{item.pub}</p>
+                <p className="font-sans leading-[1.55] flex-1" style={{ fontSize: '0.8125rem', opacity: 0.72 }}>{item.headline}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="font-sans" style={{ fontSize: '0.625rem', opacity: 0.28, letterSpacing: '0.08em' }}>{item.date}</p>
+                  <span style={{ fontSize: '0.625rem', opacity: 0.28 }}>↗</span>
+                </div>
+              </motion.a>
             ))}
           </div>
         </div>
