@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef } from 'react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
-const CX  = 430
-const CY  = 340
-const RR  = 172
-const NR  = 26    // base node radius
-const LR  = 266   // label radius
-const ISZ = 22    // icon viewport size
+const CX  = 500
+const CY  = 400
+const RR  = 220
+const NR  = 30    // base node radius
+const LR  = 330   // label radius
+const ISZ = 26    // icon viewport size
 
-const ORBIT_PERIOD = 22000   // ms — slower revolution
+const ORBIT_PERIOD = 18000   // ms — smooth, not too slow
 const ACT_RANGE    = 28      // degrees either side of step angle to trigger highlight
 
 // ─── Steps ───────────────────────────────────────────────────────────────────
@@ -169,8 +169,8 @@ const TA = (d: number): 'start' | 'middle' | 'end' => {
   return nx > CX + 20 ? 'start' : nx < CX - 20 ? 'end' : 'middle'
 }
 
-const ARC_S = XY(RR, -68)
-const ARC_E = XY(RR, -53)
+const ARC_S = XY(RR, -70)
+const ARC_E = XY(RR, -52)
 
 export default function ProcessDiagram() {
   const [activeStep, setActiveStep] = useState(-1)
@@ -188,11 +188,11 @@ export default function ProcessDiagram() {
       const angleDeg = frac * 360 - 90
       const angleRad = DEG(angleDeg)
 
-      // Direct DOM: move dot along orbit circle
+      // GPU-accelerated: CSS transform instead of SVG attribute
       if (dotRef.current) {
         const tx = RR * Math.cos(angleRad)
-        const ty = RR * (1 + Math.sin(angleRad))   // relative to initial pos (CX, CY-RR)
-        dotRef.current.setAttribute('transform', `translate(${tx.toFixed(2)}, ${ty.toFixed(2)})`)
+        const ty = RR * (1 + Math.sin(angleRad))
+        dotRef.current.style.transform = `translate(${tx.toFixed(3)}px, ${ty.toFixed(3)}px)`
       }
 
       // Determine active step (max 6 React state updates per orbit — cheap)
@@ -217,9 +217,9 @@ export default function ProcessDiagram() {
   }, [])
 
   return (
-    <div className="w-full max-w-[940px] mx-auto select-none">
+    <div className="w-full select-none">
       <svg
-        viewBox="0 0 860 690"
+        viewBox="0 0 1000 810"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: '100%', height: 'auto', display: 'block' }}
@@ -391,8 +391,8 @@ export default function ProcessDiagram() {
         <text x={CX} y={CY - 12} textAnchor="middle" fontFamily="'Playfair Display', Georgia, serif" fontSize={24} fontWeight={700} fill="#1a1714" fillOpacity={0.07} letterSpacing={4}>NUMU</text>
         <text x={CX} y={CY + 11} textAnchor="middle" fontFamily="'Inter', sans-serif" fontSize={9} fill="#1a1714" fillOpacity={0.2} letterSpacing={3}>MATERIAL CYCLE</text>
 
-        {/* Orbiting dot — moved via direct DOM ref */}
-        <g ref={dotRef}>
+        {/* Orbiting dot — GPU-composited via CSS transform */}
+        <g ref={dotRef} style={{ willChange: 'transform' }}>
           <circle cx={CX} cy={CY - RR} r={4.5} fill="#1a1714" fillOpacity={0.6} />
           <circle cx={CX} cy={CY - RR} r={8} fill="#1a1714" fillOpacity={0.06} />
         </g>

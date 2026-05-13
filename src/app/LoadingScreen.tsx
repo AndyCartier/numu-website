@@ -18,52 +18,69 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
     canvas.height = H
     const ctx = canvas.getContext('2d')!
 
-    // Offscreen canvas — text mask
-    const maskCanvas = document.createElement('canvas')
-    maskCanvas.width = W
-    maskCanvas.height = H
-    const mctx = maskCanvas.getContext('2d')!
-
-    const fontSize = Math.min(W * 0.26, 240)
-
-    function renderMask() {
-      mctx.clearRect(0, 0, W, H)
-      mctx.fillStyle = '#1a1714'
-      mctx.font = `700 ${fontSize}px 'Playfair Display', Georgia, serif`
-      mctx.textAlign = 'center'
-      mctx.textBaseline = 'middle'
-      mctx.fillText('NUMU', W / 2, H / 2)
-    }
+    const FILL_DUR = 1600
+    const HOLD_DUR = 200
+    const TOTAL = FILL_DUR + HOLD_DUR
 
     let raf = 0
 
-    document.fonts.ready.then(() => {
-      renderMask()
+    const img = new window.Image()
+    img.src = '/branding/logo-black-numu.png'
 
-      // Find exact pixel bounds of rendered text
-      const maskData = mctx.getImageData(0, 0, W, H)
+    img.onload = () => {
+      // Scale logo to ~42vw, max 320px
+      const maxW = Math.min(W * 0.42, 320)
+      const scale = maxW / img.width
+      const dw = img.width * scale
+      const dh = img.height * scale
+      const dx = W / 2 - dw / 2
+      const dy = H / 2 - dh / 2
+
+      // Build mask canvas from dark pixels of the logo
+      const maskCanvas = document.createElement('canvas')
+      maskCanvas.width = W
+      maskCanvas.height = H
+      const mctx = maskCanvas.getContext('2d')!
+
+      const tempC = document.createElement('canvas')
+      tempC.width = W
+      tempC.height = H
+      const tctx = tempC.getContext('2d')!
+      tctx.drawImage(img, dx, dy, dw, dh)
+
+      const raw = tctx.getImageData(0, 0, W, H)
+      const mask = mctx.createImageData(W, H)
+
+      // Convert dark logo pixels → opaque charcoal mask; light → transparent
+      for (let i = 0; i < raw.data.length; i += 4) {
+        const brightness = (raw.data[i] + raw.data[i + 1] + raw.data[i + 2]) / 3
+        if (brightness < 100) {
+          mask.data[i]     = 26
+          mask.data[i + 1] = 23
+          mask.data[i + 2] = 20
+          mask.data[i + 3] = Math.min(255, Math.round((100 - brightness) * 2.8))
+        }
+      }
+      mctx.putImageData(mask, 0, 0)
+
+      // Pixel bounds of logo shape
       let textTop = H, textBottom = 0
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
-          if (maskData.data[(y * W + x) * 4 + 3] > 25) {
-            if (y < textTop) textTop = y
+          if (mask.data[(y * W + x) * 4 + 3] > 25) {
+            if (y < textTop)    textTop    = y
             if (y > textBottom) textBottom = y
           }
         }
       }
 
-      // Offscreen canvas for liquid fill — same size as mask
       const fillCanvas = document.createElement('canvas')
       fillCanvas.width = W
       fillCanvas.height = H
       const fctx = fillCanvas.getContext('2d')!
 
-      const FILL_DUR = 2200   // ms for liquid to rise 0→100%
-      const HOLD_DUR = 400    // ms to hold fully filled
-      const TOTAL = FILL_DUR + HOLD_DUR
-
       const textHeight = textBottom - textTop
-      const waveAmplitude = fontSize * 0.018  // subtle meniscus
+      const waveAmplitude = dw * 0.012
 
       let startTs = 0
 
@@ -71,25 +88,20 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
         if (!startTs) startTs = ts
         const e = Math.min(ts - startTs, TOTAL)
 
-        // Ease: cubic bezier approximation — slow start, steady rise
         const raw = Math.min(e / FILL_DUR, 1)
         const ease = raw < 0.5
           ? 4 * raw * raw * raw
           : 1 - Math.pow(-2 * raw + 2, 3) / 2
 
         ctx.clearRect(0, 0, W, H)
-
-        // Build fill canvas: solid fill clipped to current liquid level
         fctx.clearRect(0, 0, W, H)
 
-        // Draw the full text solid
+        // Draw logo mask (full logo shape)
         fctx.drawImage(maskCanvas, 0, 0)
 
-        // Clip away everything above the liquid level using destination-out
-        // Liquid surface Y: starts at textBottom, rises to textTop
+        // Clip away everything above the rising liquid level
         const liquidY = textBottom - ease * textHeight
 
-        // Sine wave meniscus along the liquid surface
         fctx.globalCompositeOperation = 'destination-out'
         fctx.beginPath()
         fctx.moveTo(0, 0)
@@ -98,12 +110,10 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
         const wavePoints = 80
         for (let i = 0; i <= wavePoints; i++) {
           const wx = (i / wavePoints) * W
-          // Meniscus: sine wave + slight center dip (surface tension effect)
           const phase = (wx / W) * Math.PI * 3 + ts * 0.003
           const centerDip = Math.sin((wx / W) * Math.PI) * waveAmplitude * 0.6
           const wy = liquidY - waveAmplitude * Math.sin(phase) - centerDip
-          if (i === 0) fctx.lineTo(wx, wy)
-          else fctx.lineTo(wx, wy)
+          fctx.lineTo(wx, wy)
         }
 
         fctx.lineTo(W, 0)
@@ -111,7 +121,6 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
         fctx.fill()
         fctx.globalCompositeOperation = 'source-over'
 
-        // Draw the clipped fill result onto main canvas
         ctx.drawImage(fillCanvas, 0, 0)
 
         if (e < TOTAL) {
@@ -121,12 +130,12 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
           setTimeout(() => {
             setGone(true)
             onComplete()
-          }, 900)
+          }, 750)
         }
       }
 
       raf = requestAnimationFrame(render)
-    })
+    }
 
     return () => { if (raf) cancelAnimationFrame(raf) }
   }, [onComplete])
@@ -142,7 +151,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
         y: typeof window !== 'undefined' ? -window.innerHeight * 0.455 : 0,
         opacity: 0,
       } : {}}
-      transition={{ duration: 0.85, ease: [0.76, 0, 0.24, 1] }}
+      transition={{ duration: 0.65, ease: [0.76, 0, 0.24, 1] }}
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
         backgroundColor: '#f5f1e8',

@@ -60,6 +60,8 @@ export type CompetitorRow = {
   bio: boolean
   local: boolean
   certified: boolean
+  feedstock: boolean
+  design: boolean
   numu: boolean
 }
 
@@ -120,7 +122,7 @@ export function loadVisitorContent(): VisitorContent {
     hero: {
       lines: ["The Middle East's first", 'bio-engineered', 'material platform.'],
       sublabel: 'UAE — Bio-composites platform',
-      meta: 'Est. 2024 — Dubai, UAE',
+      meta: 'Est. 2025 — Dubai, UAE',
       cta: { label: 'Explore the material system', href: '#statement' },
     },
     statement: {
@@ -247,10 +249,10 @@ export function loadInvestorContent(): InvestorContent {
       label: 'Competitive Position',
       heading: 'No direct comparable exists in the GCC.',
       players: [
-        { name: 'Synthetic Imports', origin: 'Imported', price: 'AED 400–600', bio: false, local: false, certified: true, numu: false },
-        { name: 'Desertboard', origin: 'UAE', price: '~AED 1,100', bio: false, local: true, certified: false, numu: false },
-        { name: 'Ecovative (US)', origin: 'Imported', price: 'AED 2,000+', bio: true, local: false, certified: true, numu: false },
-        { name: 'NUMU', origin: 'UAE', price: 'AED 1,000–1,800', bio: true, local: true, certified: false, numu: true },
+        { name: 'Synthetic Imports', origin: 'Imported', price: 'AED 400–600', bio: false, local: false, certified: true, feedstock: false, design: false, numu: false },
+        { name: 'Desertboard', origin: 'UAE', price: '~AED 1,100', bio: false, local: true, certified: false, feedstock: false, design: false, numu: false },
+        { name: 'Ecovative (US)', origin: 'Imported', price: 'AED 2,000+', bio: true, local: false, certified: true, feedstock: false, design: true, numu: false },
+        { name: 'NUMU', origin: 'UAE', price: 'AED 1,000–1,800', bio: true, local: true, certified: false, feedstock: true, design: true, numu: true },
       ],
     },
     traction: {
@@ -360,7 +362,7 @@ export function loadInvestorContent(): InvestorContent {
     cta: {
       label: '14 — Next Step',
       heading: 'Request the full investor deck.',
-      body: 'Raising AED 2.2M ($600K) to build the first certified bio-material manufacturing system in the GCC.',
+      body: 'Raising AED 2.2M to build the first certified bio-material manufacturing system in the GCC.',
       href: 'mailto:Andy@numu.bio',
     },
   }

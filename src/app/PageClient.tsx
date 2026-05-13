@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { motion, AnimatePresence, useInView, useMotionValue, useTransform, animate } from 'framer-motion'
 import type { VisitorContent, InvestorContent } from '@/lib/content'
 
-const PanelViewer = dynamic(() => import('./PanelViewer'), { ssr: false })
 const LoadingScreen = dynamic(() => import('./LoadingScreen'), { ssr: false })
 import ProcessDiagram from '@/components/ProcessDiagram'
 
@@ -188,6 +187,285 @@ function HoverVideo({ src, className, style }: { src: string; className?: string
   )
 }
 
+// ─── Spore Field — visitor hero: organic growing hyphae + spore flutter ────────
+
+function SporeField() {
+  const ref = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = ref.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth
+      canvas.height = canvas.offsetHeight
+    }
+    resize()
+
+    // Each root grows from a seed point, branches off children, then fades
+    type Segment = { x: number; y: number }
+    type Root = {
+      segs: Segment[]
+      angle: number
+      speed: number
+      wobble: number
+      width: number
+      alpha: number
+      targetAlpha: number
+      growing: boolean
+      maxSegs: number
+      branchAt: number   // segment index to spawn a child branch
+      branched: boolean
+      phase: number
+    }
+
+    const roots: Root[] = []
+
+    const makeRoot = (x?: number, y?: number, angle?: number, width?: number): Root => {
+      const W = canvas.width, H = canvas.height
+      const sx = x ?? Math.random() * W
+      const sy = y ?? H * 0.5 + (Math.random() - 0.5) * H * 0.7
+      const a = angle ?? Math.random() * Math.PI * 2
+      const w = width ?? 0.6 + Math.random() * 1.4
+      return {
+        segs: [{ x: sx, y: sy }],
+        angle: a,
+        speed: 1.4 + Math.random() * 2.2,
+        wobble: (Math.random() - 0.5) * 0.09,
+        width: w,
+        alpha: 0,
+        targetAlpha: 0.22 + Math.random() * 0.38,
+        growing: true,
+        maxSegs: 40 + Math.floor(Math.random() * 50),
+        branchAt: 15 + Math.floor(Math.random() * 20),
+        branched: false,
+        phase: Math.random() * Math.PI * 2,
+      }
+    }
+
+    const MAX_SEGS = 55
+    const hyphae: Root[] = Array.from({ length: 38 }, makeRoot)
+
+    type Spore = { x: number; y: number; vx: number; vy: number; r: number; alpha: number; targetAlpha: number; phase: number; freq: number }
+    const makeSpore = (): Spore => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.14,
+      vy: -0.04 - Math.random() * 0.1,
+      r: Math.random() * 1.4 + 0.35,
+      alpha: Math.random() * 0.08,
+      targetAlpha: 0.06 + Math.random() * 0.14,
+      phase: Math.random() * Math.PI * 2,
+      freq: 0.003 + Math.random() * 0.007,
+    })
+    const spores: Spore[] = Array.from({ length: 28 }, makeSpore)
+
+    let tick = 0
+    let raf: number
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      tick++
+
+      for (const h of hyphae) {
+        h.alpha += (h.targetAlpha - h.alpha) * 0.014
+
+        if (h.growing) {
+          if (h.segs.length < MAX_SEGS) {
+            h.angle += h.wobble + (Math.random() - 0.5) * 0.032
+            const last = h.segs[h.segs.length - 1]
+            h.segs.push({ x: last.x + Math.cos(h.angle) * h.speed, y: last.y + Math.sin(h.angle) * h.speed })
+            // Branch from current tip (crash-safe)
+            if (!h.branched && h.segs.length >= h.branchAt && h.width > 0.5) {
+              h.branched = true
+              const tip = h.segs[h.segs.length - 1]
+              if (tip) {
+                const child = makeRoot(tip.x, tip.y, h.angle + (Math.random() > 0.5 ? 1 : -1) * (0.4 + Math.random() * 0.5), h.width * 0.55)
+                child.targetAlpha = h.targetAlpha * 0.75
+                hyphae.push(child)
+                if (hyphae.length > 55) hyphae.splice(0, 1)
+              }
+            }
+          } else {
+            h.growing = false
+            h.targetAlpha = 0
+          }
+        }
+
+        if (!h.growing && h.alpha < 0.003) {
+          Object.assign(h, makeRoot())
+          continue
+        }
+
+        if (h.segs.length < 2) continue
+
+        const flutter = h.growing ? 0 : 0.55
+        ctx.save()
+        ctx.globalAlpha = h.alpha
+        ctx.strokeStyle = 'rgba(26,23,20,1)'
+        ctx.lineWidth = h.width
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        ctx.beginPath()
+        ctx.moveTo(h.segs[0].x, h.segs[0].y)
+        for (let i = 1; i < h.segs.length; i++) {
+          const p = i / h.segs.length
+          const s = h.segs[i]
+          ctx.lineTo(
+            s.x + Math.sin(tick * 0.016 + h.phase + i * 0.13) * flutter * p,
+            s.y + Math.cos(tick * 0.012 + h.phase + i * 0.09) * flutter * 0.45 * p,
+          )
+        }
+        ctx.stroke()
+        ctx.restore()
+      }
+
+      for (const s of spores) {
+        s.alpha += (s.targetAlpha - s.alpha) * 0.009
+        if (Math.abs(s.alpha - s.targetAlpha) < 0.004) s.targetAlpha = Math.random() * 0.14 + 0.03
+        s.x += s.vx + Math.sin(tick * s.freq + s.phase) * 0.14
+        s.y += s.vy
+        if (s.y < -12) { s.y = canvas.height + 6; s.x = Math.random() * canvas.width }
+        if (s.x < -12) s.x = canvas.width + 8
+        if (s.x > canvas.width + 12) s.x = -8
+        ctx.save()
+        ctx.globalAlpha = s.alpha
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(26,23,20,1)'
+        ctx.fill()
+        ctx.restore()
+      }
+
+      raf = requestAnimationFrame(draw)
+    }
+
+    draw()
+    const ro = new ResizeObserver(resize)
+    ro.observe(canvas)
+    return () => { cancelAnimationFrame(raf); ro.disconnect() }
+  }, [])
+
+  return (
+    <canvas
+      ref={ref}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
+    />
+  )
+}
+
+// ─── Hyphae Field — investor hero: organic growth lines expanding from center ──
+
+function HyphaeField() {
+  const ref = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = ref.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth
+      canvas.height = canvas.offsetHeight
+    }
+    resize()
+
+    const MAX_SEGS = 85
+
+    type Hypha = {
+      pts: [number, number][]
+      angle: number
+      alpha: number
+      targetAlpha: number
+      width: number
+      speed: number
+      growing: boolean
+      wobble: number
+    }
+
+    const make = (): Hypha => {
+      const cw = canvas.width
+      const ch = canvas.height
+      const spread = Math.min(cw, ch) * 0.26
+      const ox = cw * 0.5 + (Math.random() - 0.5) * spread
+      const oy = ch * 0.46 + (Math.random() - 0.5) * spread * 0.7
+      return {
+        pts: [[ox, oy]],
+        angle: Math.random() * Math.PI * 2,
+        alpha: 0,
+        targetAlpha: 0.04 + Math.random() * 0.09,
+        width: 0.3 + Math.random() * 0.65,
+        speed: 1.1 + Math.random() * 1.3,
+        growing: true,
+        wobble: (Math.random() - 0.5) * 0.055,
+      }
+    }
+
+    const N = 50
+    const hyphae: Hypha[] = Array.from({ length: N }, make)
+    let raf: number
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      for (const h of hyphae) {
+        h.alpha += (h.targetAlpha - h.alpha) * 0.016
+
+        if (h.growing) {
+          if (h.pts.length < MAX_SEGS) {
+            h.angle += h.wobble + (Math.random() - 0.5) * 0.028
+            const [lx, ly] = h.pts[h.pts.length - 1]
+            h.pts.push([lx + Math.cos(h.angle) * h.speed, ly + Math.sin(h.angle) * h.speed])
+          } else {
+            h.growing = false
+            h.targetAlpha = 0
+          }
+        }
+
+        if (!h.growing && h.alpha < 0.003) {
+          Object.assign(h, make())
+          continue
+        }
+
+        if (h.pts.length < 2) continue
+
+        ctx.save()
+        ctx.globalAlpha = h.alpha
+        ctx.beginPath()
+        ctx.moveTo(h.pts[0][0], h.pts[0][1])
+        for (let i = 1; i < h.pts.length; i++) {
+          ctx.lineTo(h.pts[i][0], h.pts[i][1])
+        }
+        ctx.strokeStyle = 'rgba(178,155,127,1)'
+        ctx.lineWidth = h.width
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        ctx.stroke()
+        ctx.restore()
+      }
+
+      raf = requestAnimationFrame(draw)
+    }
+
+    draw()
+
+    const ro = new ResizeObserver(resize)
+    ro.observe(canvas)
+
+    return () => { cancelAnimationFrame(raf); ro.disconnect() }
+  }, [])
+
+  return (
+    <canvas
+      ref={ref}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
+    />
+  )
+}
+
 // ─── Visitor shared components ────────────────────────────────────────────────
 
 function VSection({ id, children }: { id: string; children: React.ReactNode }) {
@@ -270,31 +548,20 @@ function ProductionFeature() {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-[1.75fr_1fr] gap-3">
-          {/* Main feature image */}
           <div className="relative overflow-hidden" style={{ aspectRatio: '16/9' }}>
-            <Image
-              src="/images/founder/founder_in_action.png"
-              alt="NUMU production lab — Dubai"
-              fill
-              className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 65vw"
-            />
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px', background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)' }}>
-              <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 9, opacity: 0.6, color: '#f5f1e8' }}>Production lab — Dubai, 2025</p>
-            </div>
+            <Image src="/images/founder/founder_in_action.png" alt="NUMU production lab — Dubai 2025" fill unoptimized className="object-cover object-center" sizes="(max-width: 768px) 100vw, 65vw" />
           </div>
-          {/* Right column placeholders */}
-          <div className="flex flex-col gap-3">
-            <ImagePlaceholder
-              aspect="4:3"
-              brief="Lab documentation — growth chamber, substrate preparation, and panel finishing in the Dubai production lab. Photography Q2 2026."
-              label="Lab documentation — coming"
-            />
-            <ImagePlaceholder
-              aspect="4:3"
-              brief="KAVE installation — Dubai 2025. FOLD acoustic panel system installed in situ. Full photography session scheduled."
-              label="KAVE install — photography pending"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              '/images/projects/Screenshot%202026-05-13%20at%2014.30.07.png',
+              '/images/projects/Screenshot%202026-05-13%20at%2014.30.58.png',
+              '/images/projects/Screenshot%202026-05-13%20at%2014.31.48.png',
+              '/images/projects/Screenshot%202026-05-13%20at%2014.32.42.png',
+            ].map((src, i) => (
+              <div key={i} className="relative overflow-hidden" style={{ aspectRatio: '1/1' }}>
+                <Image src={src} alt={`Production lab detail ${i + 1}`} fill unoptimized className="object-cover object-center" sizes="20vw" />
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -312,20 +579,60 @@ const CAROUSEL_ITEMS = [
   { src: '/images/products/fold_solo_panel.png', alt: 'FOLD panel — product study', label: 'FOLD panel' },
   { src: '/images/hero/mycofoam_block_01.png', alt: 'Mycofoam composite block', label: 'Composite form' },
   { src: '/images/applications/event_board.png', alt: 'Pressed composite board — test batch', label: 'Pressed board' },
-  { src: '/images/materials/acoustic_render_05.png', alt: 'Acoustic tile — geometry study', label: 'Acoustic tile' },
+  { src: '/images/projects/Mymo01.png', alt: 'Mymo — material experiment', label: 'Mymo' },
   { src: '/images/products/fold_context_scale.png', alt: 'FOLD installation — scale context', label: 'Scale context' },
+  { src: '/images/projects/Insulation.jpeg', alt: 'Mycelium insulation — material research', label: 'Insulation' },
+  { src: '/images/projects/Kinoko.jpeg', alt: 'Kinoko project — grown form', label: 'Kinoko' },
+  { src: '/images/projects/Kinoko02.jpeg', alt: 'Kinoko project — detail', label: 'Kinoko detail' },
+  { src: '/images/projects/Lamp01.jpeg', alt: 'Mycelium lamp — applied research', label: 'Lamp 01' },
+  { src: '/images/projects/Lamp02.jpeg', alt: 'Mycelium lamp — form study', label: 'Lamp 02' },
+  { src: '/images/projects/Pressed_samples.jpeg', alt: 'Pressed samples — batch testing', label: 'Pressed samples' },
+  { src: '/images/projects/Reroot_panels.jpeg', alt: 'Reroot panels — acoustic surface', label: 'Reroot panels' },
+  { src: '/images/projects/Spora_panels.PNG', alt: 'Spora panels — grown acoustic', label: 'Spora panels' },
+  { src: '/images/projects/pressed_booth.PNG', alt: 'Pressed booth — applied installation', label: 'Pressed booth' },
 ]
 const CAROUSEL_W = 400
 const CAROUSEL_H = 300
 
 function ProcessCarousel() {
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
+
+  useEffect(() => {
+    if (!lightbox) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightbox(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lightbox])
+
   return (
     <section className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9000,
+            backgroundColor: 'rgba(10,8,6,0.92)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'zoom-out',
+          }}
+        >
+          <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={lightbox.src} alt={lightbox.alt} style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', display: 'block' }} />
+            <button
+              onClick={() => setLightbox(null)}
+              style={{ position: 'absolute', top: -36, right: 0, background: 'none', border: 'none', color: '#f5f1e8', opacity: 0.6, fontSize: 22, cursor: 'pointer', fontFamily: 'sans-serif' }}
+            >✕</button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-[1440px] mx-auto mb-8">
         <p className="font-sans text-label uppercase tracking-[0.18em] mb-2" style={{ opacity: 0.35 }}>
-          Process & material studies
+          Material Experiments &amp; Applied Research
         </p>
-        <p className="font-sans text-xs" style={{ opacity: 0.28 }}>← scroll →</p>
+        <p className="font-sans text-xs" style={{ opacity: 0.28 }}>← scroll · click to enlarge →</p>
       </div>
       <div
         style={{
@@ -345,6 +652,7 @@ function ProcessCarousel() {
         {CAROUSEL_ITEMS.map((item, i) => (
           <div
             key={i}
+            onClick={() => setLightbox({ src: item.src, alt: item.alt })}
             style={{
               flexShrink: 0,
               scrollSnapAlign: 'start',
@@ -353,6 +661,7 @@ function ProcessCarousel() {
               position: 'relative',
               overflow: 'hidden',
               border: BORDER,
+              cursor: 'zoom-in',
             }}
           >
             <Image
@@ -376,25 +685,120 @@ function ProcessCarousel() {
             </div>
           </div>
         ))}
-        {/* Placeholder slots for new content */}
-        {[
-          { label: 'Growth cycle — time-lapse', brief: 'Growth chamber time-lapse documentation. Mycelium colonization from inoculation to full substrate coverage over 5 days.' },
-          { label: 'Substrate testing — batch 04', brief: 'Substrate composition tests — palm fibre ratios and moisture content variations affecting final density and acoustic performance.' },
-          { label: 'Panel installation — close', brief: 'Panel installation close-up documentation — adhesive fixing, grout line, and surface consistency across a multi-panel wall installation.' },
-        ].map((ph, i) => (
-          <div
-            key={`ph-${i}`}
-            style={{
-              flexShrink: 0,
-              scrollSnapAlign: 'start',
-              width: CAROUSEL_W,
-              height: CAROUSEL_H,
-              position: 'relative',
-            }}
-          >
-            <ImagePlaceholder aspect="4:3" brief={ph.brief} label={ph.label} />
+      </div>
+    </section>
+  )
+}
+
+// ─── KAVE countdown + feature section ────────────────────────────────────────
+// Target: July 1, 2026 — approximately 1.5 months from launch (May 2026)
+
+const KAVE_TARGET_DATE = new Date('2026-07-01T00:00:00')
+
+function KaveCountdown() {
+  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+
+  useEffect(() => {
+    const tick = () => {
+      const diff = Math.max(0, KAVE_TARGET_DATE.getTime() - Date.now())
+      setTime({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      })
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div className="flex items-center gap-8 mt-8">
+      {([
+        { value: time.days, unit: 'Days' },
+        { value: time.hours, unit: 'Hours' },
+        { value: time.minutes, unit: 'Min' },
+        { value: time.seconds, unit: 'Sec' },
+      ] as { value: number; unit: string }[]).map(({ value, unit }, i) => (
+        <div key={unit} className="flex items-start gap-8">
+          <div className="text-center">
+            <p className="font-display" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', letterSpacing: '-0.045em', lineHeight: 1, color: '#f5f1e8', opacity: 0.9 }}>
+              {String(value).padStart(2, '0')}
+            </p>
+            <p className="font-sans uppercase tracking-[0.2em] mt-1" style={{ fontSize: '0.5625rem', opacity: 0.38, color: '#f5f1e8' }}>
+              {unit}
+            </p>
           </div>
+          {i < 3 && <p className="font-display" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 1, color: '#f5f1e8', opacity: 0.3, marginTop: 0 }}>:</p>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const BEYOND_SLIDES = [
+  '/images/projects/Beyond01.png',
+  '/images/projects/Beyond02.png',
+  '/images/projects/Mymo01.png',
+]
+
+function BeyondSlideshow() {
+  const [slide, setSlide] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setSlide(s => (s + 1) % BEYOND_SLIDES.length), 3500)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <div className="relative w-full overflow-hidden mb-3" style={{ aspectRatio: '16/9' }}>
+      {BEYOND_SLIDES.map((src, i) => (
+        <div key={src} style={{ position: 'absolute', inset: 0, backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: i === slide ? 1 : 0, transition: 'opacity 1s ease-in-out' }} />
+      ))}
+      <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 5, zIndex: 2 }}>
+        {BEYOND_SLIDES.map((_, i) => (
+          <div key={i} onClick={() => setSlide(i)} style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#f5f1e8', opacity: i === slide ? 0.9 : 0.3, cursor: 'pointer', transition: 'opacity 0.3s' }} />
         ))}
+      </div>
+    </div>
+  )
+}
+
+function KaveSection() {
+  return (
+    <section
+      className="relative overflow-hidden"
+      style={{ height: '85vh', minHeight: 560, borderTop: BORDER }}
+    >
+      <div
+        style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/images/projects/acoustic%20render%2007.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          filter: 'blur(2px)',
+          transform: 'scale(1.05)',
+          opacity: 0.85,
+        }}
+      />
+      <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(10,8,6,0.42)' }} />
+
+      {/* Content */}
+      <div
+        className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
+        style={{ zIndex: 2 }}
+      >
+        <p className="font-sans uppercase tracking-[0.24em] mb-6" style={{ fontSize: '0.5rem', opacity: 0.42, color: '#f5f1e8' }}>
+          Installation — Dubai, UAE · 2026 Q2
+        </p>
+        <h2 className="font-display" style={{ fontSize: 'clamp(4rem, 12vw, 9rem)', lineHeight: 0.9, letterSpacing: '-0.045em', color: '#f5f1e8', opacity: 0.95 }}>
+          KAVE
+        </h2>
+        <div className="mt-5 flex items-center gap-3">
+          <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#f5f1e8', opacity: 0.55, animation: 'process-pulse 2s ease-out infinite' }} />
+          <p className="font-sans uppercase tracking-[0.22em]" style={{ fontSize: '0.6875rem', opacity: 0.55, color: '#f5f1e8' }}>
+            Currently being built
+          </p>
+        </div>
+        <KaveCountdown />
       </div>
     </section>
   )
@@ -476,7 +880,7 @@ function ThreeForces({ forces }: { forces: InvestorContent['forces'] }) {
             style={{ backgroundColor: '#0e0e0e', position: 'relative', overflow: 'hidden' }}
           >
             {/* Large background number */}
-            <div style={{ position: 'absolute', top: -8, right: 16, fontFamily: "'Playfair Display', Georgia, serif", fontSize: '7rem', lineHeight: 1, color: 'rgba(245,241,232,1)', opacity: 0.04, fontWeight: 700, letterSpacing: '-0.04em', userSelect: 'none', pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', top: -8, right: 16, fontFamily: "'Playfair Display', Georgia, serif", fontSize: '7rem', lineHeight: 1, color: 'rgba(245,241,232,1)', opacity: 0.08, fontWeight: 700, letterSpacing: '-0.04em', userSelect: 'none', pointerEvents: 'none' }}>
               {String(i + 1).padStart(2, '0')}
             </div>
             <div className="mb-8 flex items-center gap-3">
@@ -500,10 +904,10 @@ function InvestorMetricsStrip() {
   const inView = useInView(ref, { once: true, margin: '0px' })
 
   const metrics = [
-    { value: 600, prefix: '$', suffix: 'K', unit: 'SAFE RAISE', decimals: 0 },
+    { value: 2.2, prefix: 'AED ', suffix: 'M', unit: 'CURRENT RAISE', decimals: 1 },
     { value: 18, prefix: '', suffix: ' mo', unit: 'RUNWAY', decimals: 0 },
     { value: 65, prefix: '', suffix: '%', unit: 'GROSS MARGIN', decimals: 0 },
-    { value: 2.2, prefix: 'AED ', suffix: 'M', unit: 'TOTAL RAISE', decimals: 1 },
+    { value: 11, prefix: 'AED ', suffix: 'M', unit: 'SERIES A TARGET', decimals: 0 },
   ]
 
   return (
@@ -537,10 +941,51 @@ function InvestorMetricsStrip() {
 // ─── Investor platform expansion ──────────────────────────────────────────────
 
 const PLATFORM_TIERS = [
-  { index: '01', name: 'Acoustic + Pressed Boards', note: '2026 — Active', width: '32%', status: 'active' },
-  { index: '02', name: 'Certified Specification Channel', note: '2027 — Next', width: '55%', status: 'next' },
-  { index: '03', name: 'Packaging + Thermal', note: '2028 — Future', width: '75%', status: 'future' },
-  { index: '04', name: 'Licensing + Regional Expansion', note: '2028+ — Long-term', width: '100%', status: 'future' },
+  {
+    index: '01', name: 'Acoustic + Pressed Boards', note: '2026 — Active', width: '32%', status: 'active',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+        <rect x="2" y="4" width="16" height="12" rx="1.5" />
+        <path d="M6 9.5 Q8 7 10 9.5 Q12 12 14 9.5" />
+      </svg>
+    ),
+  },
+  {
+    index: '02', name: 'Certified Specification Channel', note: '2027 — Next', width: '55%', status: 'next',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+        <circle cx="10" cy="10" r="7.5" />
+        <polyline points="6.5,10 9,12.5 13.5,7" />
+      </svg>
+    ),
+  },
+  {
+    index: '03', name: 'Packaging + Thermal', note: '2028 — Future', width: '75%', status: 'future',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+        <path d="M3 7L10 3.5L17 7V13L10 16.5L3 13V7Z" />
+        <line x1="10" y1="3.5" x2="10" y2="10" />
+        <line x1="3" y1="7" x2="10" y2="10" />
+        <line x1="17" y1="7" x2="10" y2="10" />
+      </svg>
+    ),
+  },
+  {
+    index: '04', name: 'Licensing + Regional Expansion', note: '2028+ — Long-term', width: '100%', status: 'future',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" width={16} height={16}>
+        <circle cx="10" cy="10" r="2.5" />
+        <circle cx="4" cy="4.5" r="1.5" />
+        <circle cx="16" cy="4.5" r="1.5" />
+        <circle cx="4" cy="15.5" r="1.5" />
+        <circle cx="16" cy="15.5" r="1.5" />
+        <line x1="7.8" y1="8.2" x2="5.2" y2="6" />
+        <line x1="12.2" y1="8.2" x2="14.8" y2="6" />
+        <line x1="7.8" y1="11.8" x2="5.2" y2="14" />
+        <line x1="12.2" y1="11.8" x2="14.8" y2="14" />
+      </svg>
+    ),
+  },
 ]
 
 function PlatformExpansion() {
@@ -550,30 +995,46 @@ function PlatformExpansion() {
   return (
     <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
       <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.35 }}>
-        Platform expansion — from entry point to system
+        Platform expansion — 2026 to long-term
       </p>
       <div>
-        {[...PLATFORM_TIERS].reverse().map((tier, i) => {
+        {PLATFORM_TIERS.map((tier, i) => {
           const isActive = tier.status === 'active'
-          const barColor = isActive ? ACCENT : tier.status === 'next' ? 'rgba(245,241,232,0.45)' : 'rgba(245,241,232,0.18)'
+          const isNext = tier.status === 'next'
+          const barColor = isActive ? ACCENT : isNext ? 'rgba(245,241,232,0.42)' : 'rgba(245,241,232,0.16)'
+          const nameOpacity = isActive ? 1 : isNext ? 0.65 : 0.42
           return (
-            <div key={tier.index} className="flex items-center gap-6 py-5" style={{ borderBottom: i < PLATFORM_TIERS.length - 1 ? INV_BORDER_SUBTLE : 'none' }}>
-              <span className="font-sans text-label uppercase tracking-[0.18em] flex-shrink-0 w-8" style={{ opacity: isActive ? 0.8 : 0.28, color: isActive ? ACCENT : undefined }}>{tier.index}</span>
-              <div className="flex-1">
-                <motion.div
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  viewport={{ once: true, margin: '0px' }}
-                  transition={{ duration: 0.8, delay: i * 0.12, ease: [0.25, 0, 0.2, 1] }}
-                  style={{ width: tier.width, height: isActive ? 3 : 2, backgroundColor: barColor, marginBottom: 10, transformOrigin: 'left', boxShadow: isActive ? `0 0 8px ${ACCENT}66` : 'none' }}
-                />
-                <div className="flex items-baseline gap-4">
-                  <p className="font-display text-lg md:text-xl" style={{ opacity: isActive ? 1 : 0.55, color: isActive ? undefined : undefined }}>{tier.name}</p>
-                  <span className="font-sans text-label uppercase tracking-[0.14em]" style={{ opacity: isActive ? 0.6 : 0.28, color: isActive ? ACCENT : undefined }}>{tier.note}</span>
+            <motion.div
+              key={tier.index}
+              initial={{ opacity: 0, x: -16 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 0, 0.2, 1] }}
+              className="flex items-center gap-6 py-6"
+              style={{ borderBottom: i < PLATFORM_TIERS.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
+            >
+              {/* Index + icon */}
+              <div className="flex-shrink-0 flex flex-col items-center gap-1.5" style={{ width: 40 }}>
+                <span className="font-sans text-label uppercase tracking-[0.18em]" style={{ opacity: isActive ? 0.9 : 0.25, color: isActive ? ACCENT : undefined, fontSize: '0.5625rem' }}>{tier.index}</span>
+                <div style={{ opacity: isActive ? 0.9 : isNext ? 0.45 : 0.22, color: isActive ? ACCENT : 'rgba(245,241,232,1)' }}>
+                  {tier.icon}
                 </div>
               </div>
+              {/* Bar + label */}
+              <div className="flex-1 min-w-0">
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  animate={inView ? { scaleX: 1 } : {}}
+                  transition={{ duration: 0.85, delay: i * 0.12 + 0.1, ease: [0.25, 0, 0.2, 1] }}
+                  style={{ width: tier.width, height: isActive ? 3 : 1.5, backgroundColor: barColor, marginBottom: 12, transformOrigin: 'left', boxShadow: isActive ? `0 0 10px ${ACCENT}55` : 'none' }}
+                />
+                <div className="flex flex-wrap items-baseline gap-3">
+                  <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.375rem)', letterSpacing: '-0.02em', opacity: nameOpacity, color: isActive ? undefined : undefined }}>{tier.name}</p>
+                  <span className="font-sans text-label uppercase tracking-[0.14em]" style={{ opacity: isActive ? 0.65 : isNext ? 0.35 : 0.22, color: isActive ? ACCENT : undefined }}>{tier.note}</span>
+                </div>
+              </div>
+              {/* Active pulse dot */}
               {isActive && <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: ACCENT, flexShrink: 0, boxShadow: `0 0 8px ${ACCENT}88` }} />}
-            </div>
+            </motion.div>
           )
         })}
       </div>
@@ -710,16 +1171,30 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
               <div className="text-center">
                 <p className="font-display text-sm md:text-base" style={{ letterSpacing: '-0.01em', opacity: isLast ? 1 : 0.75, color: isLast ? ACCENT : undefined }}>{yr.label}</p>
                 <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.35 }}>{yr.year}</p>
-                {yr.year === 'Y3' && (
+                {yr.year === 'Y1' && (
                   <motion.div
-                    initial={{ opacity: 0, y: 4 }}
+                    initial={{ opacity: 0, y: 6 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '0px' }}
-                    transition={{ duration: 0.4, delay: 1.0 }}
-                    className="mt-3 inline-block px-2 py-1"
-                    style={{ border: `1px solid ${ACCENT}55`, backgroundColor: `${ACCENT}12` }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                    className="mt-4 inline-block px-3 py-2.5"
+                    style={{ border: '1.5px solid rgba(245,241,232,0.28)', backgroundColor: 'rgba(245,241,232,0.05)', minWidth: 96 }}
                   >
-                    <p className="font-sans uppercase tracking-[0.1em]" style={{ fontSize: 7, color: ACCENT, whiteSpace: 'nowrap' }}>Series A · ~$3M</p>
+                    <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: 'rgba(245,241,232,0.6)', whiteSpace: 'nowrap' }}>Current Raise</p>
+                    <p className="font-display" style={{ fontSize: 15, color: 'rgba(245,241,232,0.82)', letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 3 }}>AED 2.2M</p>
+                  </motion.div>
+                )}
+                {yr.year === 'Y3' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '0px' }}
+                    transition={{ duration: 0.5, delay: 1.0 }}
+                    className="mt-4 inline-block px-3 py-2.5"
+                    style={{ border: `1.5px solid ${ACCENT}88`, backgroundColor: `${ACCENT}18`, minWidth: 96 }}
+                  >
+                    <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: ACCENT, opacity: 0.72, whiteSpace: 'nowrap' }}>Series A</p>
+                    <p className="font-display" style={{ fontSize: 17, color: ACCENT, letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 3 }}>AED 11M</p>
                   </motion.div>
                 )}
               </div>
@@ -750,16 +1225,23 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '0px' })
 
-  const Check = ({ val, highlight }: { val: boolean; highlight?: boolean }) => (
-    <span style={{ opacity: val ? (highlight ? 1 : 0.8) : 0.2 }}>
-      {val
-        ? <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polyline points="2,8 6,12 14,4" /></svg>
-        : <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1="4" y1="4" x2="12" y2="12" /><line x1="12" y1="4" x2="4" y2="12" /></svg>
-      }
-    </span>
+  const CheckIcon = ({ val, highlight }: { val: boolean; highlight?: boolean }) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: 36 }}>
+      {val ? (
+        <svg viewBox="0 0 16 16" fill="none" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={15} height={15}
+          stroke={highlight ? ACCENT : 'rgba(245,241,232,0.75)'}>
+          <polyline points="2,8 6,12 14,4" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 16 16" fill="none" strokeWidth={1.8} strokeLinecap="round" width={13} height={13}
+          stroke="rgba(245,241,232,0.22)">
+          <line x1="4" y1="4" x2="12" y2="12" /><line x1="12" y1="4" x2="4" y2="12" />
+        </svg>
+      )}
+    </div>
   )
 
-  const cols = ['Bio-based', 'GCC Local', 'Certified', 'Price / m²']
+  const COL_W = 80
 
   return (
     <div ref={ref} className="mt-20" style={{ borderTop: INV_BORDER }}>
@@ -770,13 +1252,21 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
         {data.heading}
       </h3>
       <div className="overflow-x-auto">
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 620 }}>
+          <colgroup>
+            <col style={{ width: 'auto' }} />
+            {(['Bio-based', 'GCC Local', 'Certified', 'UAE Feedstock', 'Design-Led'] as const).map(c => (
+              <col key={c} style={{ width: COL_W }} />
+            ))}
+            <col style={{ width: 110 }} />
+          </colgroup>
           <thead>
             <tr style={{ borderBottom: INV_BORDER }}>
-              <th className="font-sans text-label uppercase tracking-[0.14em] text-left py-4 pr-6" style={{ opacity: 0.35 }}>Player</th>
-              {cols.map(col => (
-                <th key={col} className="font-sans text-label uppercase tracking-[0.12em] text-center py-4 px-4" style={{ opacity: 0.35 }}>{col}</th>
+              <th className="font-sans text-label uppercase tracking-[0.14em] text-left py-4 pr-6 pl-2" style={{ opacity: 0.35, fontSize: '0.5625rem' }}>Player</th>
+              {['Bio-based', 'GCC Local', 'Certified', 'UAE Feedstock', 'Design-Led'].map(col => (
+                <th key={col} className="font-sans text-label uppercase tracking-[0.1em] text-center py-4" style={{ opacity: 0.35, fontSize: '0.5625rem' }}>{col}</th>
               ))}
+              <th className="font-sans text-label uppercase tracking-[0.1em] text-center py-4 pr-2" style={{ opacity: 0.35, fontSize: '0.5625rem' }}>Price / m²</th>
             </tr>
           </thead>
           <tbody>
@@ -785,28 +1275,32 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
                 key={player.name}
                 initial={{ opacity: 0, x: -10 }}
                 animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.4, delay: i * 0.08, ease: [0.25, 0, 0.2, 1] }}
+                transition={{ duration: 0.4, delay: i * 0.09, ease: [0.25, 0, 0.2, 1] }}
                 style={{
                   borderBottom: i < data.players.length - 1 ? INV_BORDER_SUBTLE : 'none',
-                  backgroundColor: player.numu ? `${ACCENT}12` : 'transparent',
+                  backgroundColor: player.numu ? `${ACCENT}10` : 'transparent',
                   boxShadow: player.numu ? `inset 3px 0 0 ${ACCENT}` : 'none',
                 }}
               >
-                <td className="py-5 pr-6 pl-4">
+                <td className="py-4 pr-4 pl-4">
                   <div className="flex items-center gap-3">
                     {player.numu && (
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: ACCENT, flexShrink: 0, boxShadow: `0 0 8px ${ACCENT}88` }} />
+                      <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: ACCENT, flexShrink: 0, boxShadow: `0 0 7px ${ACCENT}88` }} />
                     )}
                     <div>
-                      <p className="font-display text-base md:text-lg" style={{ opacity: player.numu ? 1 : 0.55, color: player.numu ? ACCENT : undefined }}>{player.name}</p>
-                      <p className="font-sans text-label" style={{ opacity: 0.3 }}>{player.origin}</p>
+                      <p className="font-display" style={{ fontSize: '1rem', opacity: player.numu ? 1 : 0.6, color: player.numu ? ACCENT : undefined }}>{player.name}</p>
+                      <p className="font-sans" style={{ fontSize: '0.6875rem', opacity: 0.28, marginTop: 1 }}>{player.origin}</p>
                     </div>
                   </div>
                 </td>
-                <td className="text-center px-4"><Check val={player.bio} highlight={player.numu} /></td>
-                <td className="text-center px-4"><Check val={player.local} highlight={player.numu} /></td>
-                <td className="text-center px-4"><Check val={player.certified} highlight={player.numu} /></td>
-                <td className="text-center px-4 font-sans text-sm" style={{ opacity: player.numu ? 1 : 0.45, color: player.numu ? ACCENT : undefined }}>{player.price}</td>
+                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.bio} highlight={player.numu} /></td>
+                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.local} highlight={player.numu} /></td>
+                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.certified} highlight={player.numu} /></td>
+                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.feedstock} highlight={player.numu} /></td>
+                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.design} highlight={player.numu} /></td>
+                <td style={{ textAlign: 'center', verticalAlign: 'middle', paddingRight: 8 }}>
+                  <p className="font-sans text-sm" style={{ opacity: player.numu ? 1 : 0.45, color: player.numu ? ACCENT : undefined }}>{player.price}</p>
+                </td>
               </motion.tr>
             ))}
           </tbody>
@@ -823,34 +1317,42 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
 
 const MARKET_TAM_DATA = [
   {
-    phase: '01', label: 'UAE Acoustic', period: '2026 — Entry',
+    phase: '01', label: 'UAE Acoustic', period: '2026 — Beachhead',
     tam: 'AED 200–300M', sam: 'AED 60M', som: 'AED 15M',
-    tamR: 44, samR: 28, somR: 15, active: true,
+    tamR: 60, samR: 38, somR: 21, active: true,
   },
   {
     phase: '02', label: 'GCC Acoustic Spec', period: '2027 — Certification',
     tam: 'AED 1.5B', sam: 'AED 350M', som: 'AED 50M',
-    tamR: 60, samR: 37, somR: 18, active: false,
+    tamR: 78, samR: 48, somR: 25, active: false,
   },
   {
     phase: '03', label: 'GCC Multi-material', period: '2028 — Platform',
     tam: 'AED 6B+', sam: 'AED 1.2B', som: 'AED 150M',
-    tamR: 76, samR: 47, somR: 22, active: false,
+    tamR: 97, samR: 59, somR: 29, active: false,
   },
   {
-    phase: '04', label: 'Regional Licensing', period: '2029+ — Scale',
+    phase: '04', label: 'Regional Licensing', period: '2029+ — Full Scale',
     tam: 'AED 20B+', sam: 'AED 4B', som: 'AED 400M',
-    tamR: 92, samR: 57, somR: 28, active: false,
+    tamR: 120, samR: 74, somR: 37, active: false,
   },
+]
+
+// Grey-to-gold gradient: phase 01 = muted grey, phase 04 = warm ACCENT gold
+const PHASE_COLORS = [
+  { tamStroke: 'rgba(245,241,232,0.22)', samStroke: 'rgba(245,241,232,0.34)', somStroke: 'rgba(245,241,232,0.46)', somFill: 'rgba(245,241,232,0.06)', tamFill: 'rgba(245,241,232,0.02)', text: 'rgba(245,241,232,0.42)' },
+  { tamStroke: 'rgba(215,200,174,0.40)', samStroke: 'rgba(215,200,174,0.55)', somStroke: 'rgba(215,200,174,0.68)', somFill: 'rgba(215,200,174,0.09)', tamFill: 'rgba(215,200,174,0.03)', text: 'rgba(215,200,174,0.60)' },
+  { tamStroke: 'rgba(192,168,134,0.62)', samStroke: 'rgba(192,168,134,0.78)', somStroke: 'rgba(192,168,134,0.90)', somFill: 'rgba(192,168,134,0.12)', tamFill: 'rgba(192,168,134,0.05)', text: 'rgba(192,168,134,0.80)' },
+  { tamStroke: ACCENT, samStroke: ACCENT, somStroke: ACCENT, somFill: `${ACCENT}30`, tamFill: `${ACCENT}0e`, text: ACCENT },
 ]
 
 function MarketTAMDiagram() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '0px' })
-  const SVG_W = 760
-  const SVG_H = 300
-  const CY = 130
-  const centers = [95, 282, 469, 660]
+  const SVG_W = 900
+  const SVG_H = 380
+  const CY = 162
+  const centers = [108, 310, 530, 762]
 
   return (
     <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
@@ -858,18 +1360,20 @@ function MarketTAMDiagram() {
         Market phases — addressable opportunity expands as platform activates
       </p>
       <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
-        <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: '100%', maxWidth: SVG_W, display: 'block', minWidth: 360, margin: '0 auto' }}>
+        <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: '100%', maxWidth: SVG_W, display: 'block', minWidth: 420, margin: '0 auto' }}>
           {MARKET_TAM_DATA.map((p, i) => {
             const cx = centers[i]
+            const isLast = i === MARKET_TAM_DATA.length - 1
             const tamCirc = 2 * Math.PI * p.tamR
             const samCirc = 2 * Math.PI * p.samR
             const somCirc = 2 * Math.PI * p.somR
+            const col = PHASE_COLORS[i]
             return (
               <g key={p.phase}>
                 {/* TAM — outer fill */}
                 <motion.circle
                   cx={cx} cy={CY} r={p.tamR}
-                  fill={p.active ? `${ACCENT}0e` : 'rgba(245,241,232,0.03)'}
+                  fill={col.tamFill}
                   initial={{ opacity: 0 }}
                   animate={inView ? { opacity: 1 } : {}}
                   transition={{ duration: 0.6, delay: i * 0.18 + 0.1 }}
@@ -878,8 +1382,8 @@ function MarketTAMDiagram() {
                 <motion.circle
                   cx={cx} cy={CY} r={p.tamR}
                   fill="none"
-                  stroke={p.active ? ACCENT : 'rgba(245,241,232,0.2)'}
-                  strokeWidth={p.active ? 1.2 : 0.75}
+                  stroke={col.tamStroke}
+                  strokeWidth={isLast ? 1.4 : 0.8}
                   strokeDasharray={tamCirc}
                   initial={{ strokeDashoffset: tamCirc }}
                   animate={inView ? { strokeDashoffset: 0 } : {}}
@@ -890,8 +1394,8 @@ function MarketTAMDiagram() {
                 <motion.circle
                   cx={cx} cy={CY} r={p.samR}
                   fill="none"
-                  stroke={p.active ? ACCENT : 'rgba(245,241,232,0.32)'}
-                  strokeWidth={p.active ? 1.5 : 0.9}
+                  stroke={col.samStroke}
+                  strokeWidth={isLast ? 1.6 : 1.0}
                   strokeDasharray={samCirc}
                   initial={{ strokeDashoffset: samCirc }}
                   animate={inView ? { strokeDashoffset: 0 } : {}}
@@ -901,23 +1405,38 @@ function MarketTAMDiagram() {
                 {/* SOM — inner fill + stroke */}
                 <motion.circle
                   cx={cx} cy={CY} r={p.somR}
-                  fill={p.active ? `${ACCENT}28` : 'rgba(245,241,232,0.07)'}
-                  stroke={p.active ? ACCENT : 'rgba(245,241,232,0.45)'}
-                  strokeWidth={p.active ? 1.8 : 1.1}
+                  fill={col.somFill}
+                  stroke={col.somStroke}
+                  strokeWidth={isLast ? 2 : 1.2}
                   strokeDasharray={somCirc}
                   initial={{ strokeDashoffset: somCirc }}
                   animate={inView ? { strokeDashoffset: 0 } : {}}
                   transition={{ duration: 0.65, delay: i * 0.18 + 0.55, ease: [0.25, 0, 0.2, 1] }}
                   transform={`rotate(-90 ${cx} ${CY})`}
                 />
+                {/* Beachhead / end-market badges */}
+                {(p.active || isLast) && (
+                  <motion.text
+                    x={cx} y={CY - p.tamR - 20}
+                    textAnchor="middle"
+                    fontFamily="'Inter', sans-serif"
+                    fontSize={7}
+                    fill={ACCENT}
+                    letterSpacing={1.4}
+                    initial={{ opacity: 0 }}
+                    animate={inView ? { opacity: 1 } : {}}
+                    transition={{ duration: 0.4, delay: i * 0.18 + 0.65 }}
+                  >
+                    {p.active ? '← START HERE' : 'FULL SCALE →'}
+                  </motion.text>
+                )}
                 {/* Phase number */}
                 <motion.text
-                  x={cx} y={CY - p.tamR - 12}
+                  x={cx} y={CY - p.tamR - 8}
                   textAnchor="middle"
                   fontFamily="'Inter', sans-serif"
                   fontSize={7.5}
-                  fill={p.active ? ACCENT : 'rgba(245,241,232,1)'}
-                  fillOpacity={p.active ? 1 : 0.28}
+                  fill={col.text}
                   letterSpacing={1.8}
                   initial={{ opacity: 0 }}
                   animate={inView ? { opacity: 1 } : {}}
@@ -930,8 +1449,8 @@ function MarketTAMDiagram() {
                   x={cx} y={CY + p.tamR + 20}
                   textAnchor="middle"
                   fontFamily="'Playfair Display', Georgia, serif"
-                  fontSize={p.active ? 11 : 9.5}
-                  fill={p.active ? ACCENT : 'rgba(245,241,232,0.5)'}
+                  fontSize={isLast ? 11.5 : i === 0 ? 10 : 9.5}
+                  fill={col.text}
                   initial={{ opacity: 0 }}
                   animate={inView ? { opacity: 1 } : {}}
                   transition={{ duration: 0.4, delay: i * 0.18 + 0.8 }}
@@ -944,8 +1463,7 @@ function MarketTAMDiagram() {
                   textAnchor="middle"
                   fontFamily="'Inter', sans-serif"
                   fontSize={7}
-                  fill="rgba(245,241,232,1)"
-                  fillOpacity={p.active ? 0.45 : 0.2}
+                  fill={col.text}
                   letterSpacing={1.2}
                   initial={{ opacity: 0 }}
                   animate={inView ? { opacity: 1 } : {}}
@@ -973,25 +1491,28 @@ function MarketTAMDiagram() {
       </div>
       {/* Phase detail rows */}
       <div className="mt-12">
-        {MARKET_TAM_DATA.map((p, i) => (
-          <motion.div
-            key={p.phase}
-            className="flex items-start gap-6 py-5"
-            initial={{ opacity: 0, x: 16 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.5, delay: i * 0.12 + 0.6, ease: [0.25, 0, 0.2, 1] }}
-            style={{ borderBottom: i < MARKET_TAM_DATA.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
-          >
-            <p className="font-sans text-label uppercase tracking-[0.14em] flex-shrink-0 w-8" style={{ opacity: 0.3, color: p.active ? ACCENT : undefined }}>{p.phase}</p>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-1">
-                <p className="font-display" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.75rem)', letterSpacing: '-0.025em', lineHeight: 1, color: p.active ? ACCENT : undefined, opacity: p.active ? 1 : 0.55 }}>{p.tam}</p>
-                <p className="font-sans text-label uppercase tracking-[0.12em]" style={{ opacity: 0.3, color: p.active ? ACCENT : undefined }}>{p.period}</p>
+        {MARKET_TAM_DATA.map((p, i) => {
+          const rowCol = PHASE_COLORS[i]
+          return (
+            <motion.div
+              key={p.phase}
+              className="flex items-start gap-6 py-5"
+              initial={{ opacity: 0, x: 16 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.5, delay: i * 0.12 + 0.6, ease: [0.25, 0, 0.2, 1] }}
+              style={{ borderBottom: i < MARKET_TAM_DATA.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
+            >
+              <p className="font-sans text-label uppercase tracking-[0.14em] flex-shrink-0 w-8" style={{ color: rowCol.text }}>{p.phase}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-1">
+                  <p className="font-display" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.75rem)', letterSpacing: '-0.025em', lineHeight: 1, color: rowCol.text }}>{p.tam}</p>
+                  <p className="font-sans text-label uppercase tracking-[0.12em]" style={{ color: rowCol.text, opacity: 0.65 }}>{p.period}</p>
+                </div>
+                <p className="font-sans text-sm" style={{ opacity: 0.38 }}>{p.label}</p>
               </div>
-              <p className="font-sans text-sm" style={{ opacity: 0.38 }}>{p.label}</p>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          )
+        })}
       </div>
     </div>
   )
@@ -1084,30 +1605,77 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
 function BusinessModelStreams() {
   return (
     <div className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <div className="grid grid-cols-1 md:grid-cols-2 mt-10" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.12)' }}>
+      {/* Branching paths diagram */}
+      <div className="mt-10 mb-10 flex justify-center">
+        <svg viewBox="0 0 560 100" style={{ width: '100%', maxWidth: 560, display: 'block' }}>
+          {/* Platform source node */}
+          <motion.rect x={218} y={8} width={124} height={32} rx={2}
+            fill={`${ACCENT}14`} stroke={ACCENT} strokeWidth={1.2}
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+            viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
+          />
+          <text x={280} y={29} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={8} fill={ACCENT} fillOpacity={0.85} letterSpacing={1.2}>MYCELIUM PLATFORM</text>
+
+          {/* Fork lines */}
+          <motion.line x1={280} y1={40} x2={280} y2={58}
+            stroke={ACCENT} strokeWidth={1.2}
+            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.3 }}
+          />
+          <motion.line x1={100} y1={58} x2={460} y2={58}
+            stroke="rgba(245,241,232,0.2)" strokeWidth={0.8}
+            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }}
+          />
+          <motion.line x1={100} y1={58} x2={100} y2={72}
+            stroke={ACCENT} strokeWidth={1.2}
+            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.55 }}
+          />
+          <motion.line x1={460} y1={58} x2={460} y2={72}
+            stroke="rgba(245,241,232,0.3)" strokeWidth={0.85}
+            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.6 }}
+          />
+
+          {/* Stream 01 */}
+          <motion.rect x={18} y={72} width={164} height={20} rx={1.5}
+            fill={`${ACCENT}12`} stroke={ACCENT} strokeWidth={1.0}
+            initial={{ opacity: 0, y: 4 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.7 }}
+          />
+          <text x={100} y={86} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={7.5} fill={ACCENT} fillOpacity={0.8} letterSpacing={0.8}>DESIGN PRODUCTS — HIGH MARGIN</text>
+
+          {/* Stream 02 */}
+          <motion.rect x={378} y={72} width={164} height={20} rx={1.5}
+            fill="rgba(245,241,232,0.04)" stroke="rgba(245,241,232,0.28)" strokeWidth={0.9}
+            initial={{ opacity: 0, y: 4 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.75 }}
+          />
+          <text x={460} y={86} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={7.5} fill="rgba(245,241,232,0.55)" letterSpacing={0.8}>MATERIAL LICENSING — SCALABLE</text>
+        </svg>
+      </div>
+
+      {/* Stream cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.12)' }}>
         {[
-          { stream: 'Stream 01', title: 'Design Products', desc: 'Grown acoustic panels and pressed composite boards sold direct to interior designers, architects, and events clients. Two production routes, one material system. High margin. Immediate market. Brand-establishing.', bullets: ['Direct sale', 'High margin', 'Near-term revenue'] },
-          { stream: 'Stream 02', title: 'Material Licensing', desc: 'Licensing the material platform to regional manufacturers. Scalable without proportional capex. Compounds proprietary IP.', bullets: ['Platform fee', 'Scalable', 'Long-term compounding'] },
+          { stream: 'Stream 01', title: 'Design Products', desc: 'Grown acoustic panels and pressed composite boards sold direct to interior designers, architects, and events clients. Two production routes, one material system. High margin. Immediate market. Brand-establishing.', bullets: ['Direct sale', 'High margin', 'Near-term revenue'], accent: true },
+          { stream: 'Stream 02', title: 'Material Licensing', desc: 'Licensing the material platform to regional manufacturers. Scalable without proportional capex. Compounds proprietary IP.', bullets: ['Platform fee', 'Scalable', 'Long-term compounding'], accent: false },
         ].map(s => (
           <div key={s.stream} className="p-10 md:p-14" style={{ backgroundColor: '#0e0e0e' }}>
-            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.35 }}>{s.stream}</p>
-            <p className="font-display text-2xl md:text-3xl mb-6">{s.title}</p>
+            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.35, color: s.accent ? ACCENT : undefined }}>{s.stream}</p>
+            <p className="font-display text-2xl md:text-3xl mb-6" style={{ color: s.accent ? undefined : undefined, opacity: s.accent ? 1 : 0.75 }}>{s.title}</p>
             <p className="font-sans text-base leading-[1.75] mb-10" style={{ opacity: 0.55 }}>{s.desc}</p>
             <div style={{ borderTop: INV_BORDER_SUBTLE, paddingTop: 24 }}>
               {s.bullets.map(b => (
                 <div key={b} className="flex items-center gap-3 mb-3">
-                  <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: 'rgba(245,241,232,1)', opacity: 0.4 }} />
+                  <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: s.accent ? ACCENT : 'rgba(245,241,232,1)', opacity: s.accent ? 0.8 : 0.35 }} />
                   <p className="font-sans text-sm" style={{ opacity: 0.5 }}>{b}</p>
                 </div>
               ))}
             </div>
           </div>
         ))}
-      </div>
-      <div className="mt-8 flex items-center gap-4" style={{ opacity: 0.3 }}>
-        <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(245,241,232,1)' }} />
-        <p className="font-sans text-label uppercase tracking-[0.16em] flex-shrink-0">Products establish brand → licensing scales margin</p>
-        <div style={{ flex: 1, height: 1, backgroundColor: 'rgba(245,241,232,1)' }} />
       </div>
     </div>
   )
@@ -1196,24 +1764,11 @@ function TeamMemberCard({ member, i, large }: { member: InvestorContent['team'][
 }
 
 function TeamGrid({ members }: { members: InvestorContent['team']['members'] }) {
-  const founder = members.find(m => m.imageKey === 'founder')!
-  const cofounders = members.filter(m => m.imageKey === 'benjamin' || m.imageKey === 'othman')
-  const cgo = members.find(m => m.imageKey === 'matthew')!
-
   return (
-    <div className="mt-16" style={{ borderTop: INV_BORDER }}>
-      {/* Row 1 — Founder (larger, full-width card) */}
-      <div className="grid grid-cols-1" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)', marginBottom: 1 }}>
-        <TeamMemberCard member={founder} i={0} large />
-      </div>
-      {/* Row 2 — Cofounders */}
-      <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)', marginBottom: 1 }}>
-        {cofounders.map((m, i) => <TeamMemberCard key={m.name} member={m} i={i + 1} />)}
-      </div>
-      {/* Row 3 — CGO */}
-      <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)' }}>
-        <TeamMemberCard member={cgo} i={3} />
-      </div>
+    <div className="mt-16 grid grid-cols-2 md:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)', borderTop: INV_BORDER }}>
+      {members.map((m, i) => (
+        <TeamMemberCard key={m.name} member={m} i={i} />
+      ))}
     </div>
   )
 }
@@ -1234,50 +1789,115 @@ function FounderEcosystem() {
 }
 
 // ─── Lab video (hover-to-play desktop, tap-to-play mobile) ───────────────────
+const MAX_VIDEO_TIME = 90  // seconds — trim point
 
 function LabVideo() {
   const ref = useRef<HTMLVideoElement>(null)
   const [playing, setPlaying] = useState(false)
+  const [ready, setReady] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [hovering, setHovering] = useState(false)
 
   const play = () => { ref.current?.play(); setPlaying(true) }
   const pause = () => { ref.current?.pause(); setPlaying(false) }
+  const toggle = (e: React.MouseEvent) => { e.stopPropagation(); playing ? pause() : play() }
+
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    const onTime = () => {
+      if (v.currentTime >= MAX_VIDEO_TIME) { v.currentTime = 0; v.play() }
+      setProgress(Math.min(v.currentTime / MAX_VIDEO_TIME, 1))
+    }
+    v.addEventListener('timeupdate', onTime)
+    return () => v.removeEventListener('timeupdate', onTime)
+  }, [ready])
+
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    ref.current.currentTime = p * MAX_VIDEO_TIME
+    setProgress(p)
+  }
 
   return (
     <div
       className="relative w-full overflow-hidden"
-      style={{ aspectRatio: '16/9', cursor: playing ? 'default' : 'pointer', backgroundColor: 'rgba(128,128,128,0.05)' }}
-      onMouseEnter={play}
-      onMouseLeave={pause}
-      onClick={() => playing ? pause() : play()}
+      style={{ aspectRatio: '16/9', backgroundColor: 'rgba(128,128,128,0.05)' }}
+      onMouseEnter={() => { setHovering(true); ready && play() }}
+      onMouseLeave={() => { setHovering(false); ready && pause() }}
     >
       <video
         ref={ref}
-        src="/videos/numu_timelapse.mp4"
-        poster="/images/products/biofoam_detail.png"
+        src="/videos/numu_story_enhanced.mp4"
         muted
         loop
         playsInline
+        onLoadedData={() => setReady(true)}
+        onEnded={() => { if (ref.current) { ref.current.currentTime = 0; ref.current.play() } }}
         className="w-full h-full object-cover block"
+        style={{ display: ready ? 'block' : 'none' }}
         suppressHydrationWarning
       />
-      {/* Play overlay — hidden when playing */}
-      <div
-        style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
-          opacity: playing ? 0 : 1, transition: 'opacity 0.3s',
-          pointerEvents: 'none',
-        }}
-      >
-        <div style={{ width: 56, height: 56, borderRadius: '50%', border: '1px solid rgba(26,23,20,0.35)', backgroundColor: 'rgba(255,252,245,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="14" height="16" viewBox="0 0 14 16" fill="none" style={{ marginLeft: 3 }}>
-            <path d="M1 1L13 8L1 15Z" fill="rgba(26,23,20,0.8)" />
+
+      {/* Placeholder */}
+      {!ready && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3" style={{ border: '1px solid rgba(128,128,128,0.1)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" width={28} height={28} style={{ opacity: 0.18 }}>
+            <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
+          <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.5625rem', opacity: 0.28 }}>Production lab — process documentation</p>
         </div>
-        <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.5625rem', opacity: 0.45 }}>
-          Hover to play · ~2 min
-        </p>
-      </div>
+      )}
+
+      {/* Play hint — only when ready and not yet played */}
+      {ready && !playing && !hovering && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.5rem', opacity: 0.38 }}>Hover to play</p>
+        </div>
+      )}
+
+      {/* Minimal hover controls — time bar + pause */}
+      {ready && (
+        <div
+          style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            padding: '14px 16px 12px',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.52) 0%, transparent 100%)',
+            opacity: hovering ? 1 : 0,
+            transition: 'opacity 0.25s ease',
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}
+        >
+          {/* Pause / play icon */}
+          <button onClick={toggle} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+            {playing ? (
+              <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+                <rect x="0" y="0" width="3.5" height="12" rx="1" fill="rgba(245,241,232,0.85)" />
+                <rect x="6.5" y="0" width="3.5" height="12" rx="1" fill="rgba(245,241,232,0.85)" />
+              </svg>
+            ) : (
+              <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+                <path d="M0 0L10 6L0 12Z" fill="rgba(245,241,232,0.85)" />
+              </svg>
+            )}
+          </button>
+          {/* Scrubber bar */}
+          <div
+            onClick={seek}
+            style={{ flex: 1, height: 2, backgroundColor: 'rgba(245,241,232,0.2)', borderRadius: 1, cursor: 'pointer', position: 'relative' }}
+          >
+            <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${progress * 100}%`, backgroundColor: 'rgba(245,241,232,0.85)', borderRadius: 1, transition: 'width 0.25s linear' }} />
+            {/* Playhead dot */}
+            <div style={{ position: 'absolute', top: '50%', left: `${progress * 100}%`, transform: 'translate(-50%,-50%)', width: 7, height: 7, borderRadius: '50%', backgroundColor: 'rgba(245,241,232,0.95)' }} />
+          </div>
+          {/* Time remaining */}
+          <p className="font-sans" style={{ fontSize: '0.5rem', opacity: 0.5, color: '#f5f1e8', flexShrink: 0, letterSpacing: '0.08em' }}>
+            {Math.floor((1 - progress) * MAX_VIDEO_TIME)}s
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -1291,7 +1911,7 @@ function ExploreCTA() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!email) return
-    window.location.href = `mailto:andy@numu.bio?subject=Sample Request&body=From: ${encodeURIComponent(email)}%0A%0AI would like to request samples of NUMU Biofoam.`
+    window.location.href = `mailto:andy@numu.bio?subject=Sample Request&body=From: ${encodeURIComponent(email)}%0A%0AI would like to request samples of NUMU PALMYCO™.`
     setSent(true)
   }
 
@@ -1299,7 +1919,7 @@ function ExploreCTA() {
     <VSection id="specify">
       <VLabel text="Specify NUMU" />
       <h2 className="font-display mb-8" style={{ fontSize: 'clamp(2rem, 4vw, 5rem)', lineHeight: '0.96', letterSpacing: '-0.04em' }}>
-        Bring Biofoam into your project.
+        Bring PALMYCO™ into your project.
       </h2>
       <p className="font-sans leading-[1.75] max-w-xl mb-14" style={{ fontSize: '1rem', opacity: 0.55 }}>
         Samples, specification sheets, and project conversations for architects, interior designers, and fit-out teams. Based in Dubai. Delivering regionally.
@@ -1382,10 +2002,10 @@ function VisitorView({ v }: { v: VisitorContent }) {
               {v.statement.heading}
             </h2>
             <p className="font-sans leading-[1.75] mb-5 max-w-md" style={{ fontSize: '1rem', opacity: 0.65 }}>
-              NUMU operates a bio-composites platform built for the GCC. A single material system, Biofoam, is tuned across density, porosity, and form to serve multiple construction applications from shared production infrastructure.
+              NUMU operates a bio-composites platform built for the GCC. Our flagship material, <strong>PALMYCO™</strong>, is a grown mycelium foam — a proprietary bio-composite cultivated inside molds from regional agricultural fibers, producing lightweight panels with distinctive three-dimensional texture.
             </p>
-            <p className="font-sans leading-[1.75] max-w-md" style={{ fontSize: '0.9375rem', opacity: 0.5 }}>
-              The platform runs two processes. Grown Biofoam is cultivated inside proprietary molds over a controlled growth cycle, producing panels with distinctive texture and three-dimensional form. Pressed Biofoam is formed from spent mushroom substrate, heat-pressed into flat boards in short cycles. Same material logic, two production routes, four revenue lines.
+            <p className="font-sans leading-[1.75] max-w-md" style={{ fontSize: '0.9375rem', opacity: 0.62 }}>
+              Alongside PALMYCO™, NUMU leverages spent mushroom substrate — a regional waste stream — to produce heat-pressed composite boards. Two distinct material outputs, shared production infrastructure, four revenue lines. Circular by design.
             </p>
           </div>
           <div className="relative overflow-hidden">
@@ -1407,13 +2027,13 @@ function VisitorView({ v }: { v: VisitorContent }) {
             <div>
               <VLabel text={v.material.label} />
               <h2 className="font-display mb-8" style={{ fontSize: 'clamp(2rem, 3.5vw, 3.5rem)', lineHeight: '1.08', letterSpacing: '-0.03em', textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
-                Biofoam — grown, not manufactured.
+                PALMYCO™ — grown, not manufactured.
               </h2>
               <p className="font-sans leading-[1.75] mb-5" style={{ fontSize: '1rem', opacity: 0.65 }}>
-                Biofoam is NUMU&apos;s core material system. Mycelium acts as a natural binding network around regional agricultural residues, producing a lightweight composite that is rigid, breathable, sound-absorbent, and home-compostable at end of life. No binders. No petroleum. No synthetic residue.
+                PALMYCO™ is NUMU&apos;s proprietary grown mycelium foam — a bio-composite cultivated from regional agricultural fibers bound by a living mycelium network. Rigid, breathable, sound-absorbent, and home-compostable. No binders. No petroleum. No synthetic residue. Trademarked material, grown in Dubai.
               </p>
               <p className="font-sans leading-[1.75]" style={{ fontSize: '0.9375rem', opacity: 0.5 }}>
-                Properties are engineered into the growth process itself. The same material can be tuned for dense acoustic cores, open-celled thermal matrices, or structural pressed board — one material system, multiple applications.
+                PALMYCO™ properties are tuned through the growth cycle itself. Alongside it, NUMU presses composite boards from spent mushroom substrate — a separate material, a separate waste stream, a separate product line. The platform compounds both.
               </p>
             </div>
             <div className="mt-auto pt-12" style={{ borderTop: '1px solid rgba(128,128,128,0.1)', marginTop: 'auto' }}>
@@ -1421,18 +2041,21 @@ function VisitorView({ v }: { v: VisitorContent }) {
                 Substrate inputs — regional agricultural residues
               </p>
               <div className="grid grid-cols-2 gap-4 mb-12">
-                {[
-                  { src: '/images/materials/palm_leaf_substrate.png', alt: 'Palm leaf agricultural substrate from UAE date palm pruning waste', label: 'Palm leaf fibre', desc: 'UAE date palm pruning waste, the region\'s largest agricultural residue stream.' },
-                  { src: '/images/materials/plant_fiber_substrate.png', alt: 'Plant fibre blend — mixed agricultural by-products', label: 'Plant fibre blend', desc: 'Mixed agricultural by-products sourced regionally.' },
-                ].map(img => (
-                  <div key={img.label}>
-                    <div className="relative w-full mb-3" style={{ aspectRatio: '3/2' }}>
-                      <Image src={img.src} alt={img.alt} fill unoptimized className="object-contain object-center" sizes="(max-width: 1024px) 50vw, 25vw" />
-                    </div>
-                    <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.04em' }}>{img.label}</p>
-                    <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.32 }}>{img.desc}</p>
+                {/* Palm leaf — existing image */}
+                <div>
+                  <div className="relative w-full mb-3" style={{ aspectRatio: '1/1' }}>
+                    <Image src="/images/materials/palm_leaf_substrate.png" alt="Palm leaf agricultural substrate from UAE date palm pruning waste" fill unoptimized className="object-contain object-center" sizes="(max-width: 1024px) 50vw, 25vw" />
                   </div>
-                ))}
+                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.04em' }}>Palm leaf fibre</p>
+                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.32 }}>UAE date palm pruning waste, the region&apos;s largest agricultural residue stream.</p>
+                </div>
+                <div>
+                  <div className="relative w-full mb-3" style={{ aspectRatio: '1/1' }}>
+                    <Image src="/images/materials/hemp_shivs.jpg" alt="Plant fibre blend — mixed agricultural by-products sourced regionally" fill unoptimized className="object-cover object-center" sizes="(max-width: 1024px) 50vw, 25vw" style={{ mixBlendMode: 'multiply' }} />
+                  </div>
+                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.04em' }}>Plant fibre blend</p>
+                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.32 }}>Mixed agricultural by-products sourced regionally.</p>
+                </div>
               </div>
               <div className="flex items-start gap-3 p-4" style={{ border: '1px solid rgba(128,128,128,0.1)', backgroundColor: 'rgba(128,128,128,0.03)' }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'rgba(26,23,20,0.4)', flexShrink: 0, marginTop: 5 }} />
@@ -1448,28 +2071,35 @@ function VisitorView({ v }: { v: VisitorContent }) {
                 Production routes
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-5" style={{ border: '1px solid rgba(128,128,128,0.14)' }}>
-                  <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.45 }}>Grown</p>
-                  <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
-                    Mycelium cultivated inside proprietary molds over a controlled growth cycle, then heat-stabilized into a finished form. Produces distinctive surface texture and complex three-dimensional form factors.
-                  </p>
-                  <p className="font-sans" style={{ fontSize: 10, opacity: 0.35, letterSpacing: '0.04em' }}>Used in: Acoustic panels, architectural surface.</p>
-                </div>
-                <div className="p-5" style={{ border: '1px solid rgba(128,128,128,0.14)' }}>
-                  <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.45 }}>Pressed</p>
-                  <div className="relative w-full mb-4 overflow-hidden" style={{ aspectRatio: '16/9' }}>
-                    <Image src="/images/applications/event_board.png" alt="NUMU pressed mycelium board — heat-pressed composite from spent mushroom substrate" fill className="object-cover object-center" sizes="(max-width: 1024px) 100vw, 25vw" />
+                <div style={{ border: '1px solid rgba(128,128,128,0.14)' }}>
+                  <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
+                    <Image src="/images/products/Chair.jpeg" alt="Grown mycelium chair — NUMU material formed into product application" fill unoptimized className="object-contain object-center" sizes="(max-width: 640px) 100vw, 50vw" style={{ mixBlendMode: 'multiply' }} />
                   </div>
-                  <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
-                    Spent mycelium biomass shredded and heat-pressed directly into flat board formats. Minutes of press time rather than weeks of cultivation.
-                  </p>
-                  <p className="font-sans" style={{ fontSize: 10, opacity: 0.35, letterSpacing: '0.04em' }}>Used in: Event structures, temporary architecture, pressed board applications.</p>
+                  <div className="p-5">
+                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.45 }}>Grown</p>
+                    <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
+                      Mycelium cultivated inside proprietary molds over a controlled growth cycle, then heat-stabilized into a finished form. Produces distinctive surface texture and complex three-dimensional form factors.
+                    </p>
+                    <p className="font-sans" style={{ fontSize: 10, opacity: 0.35, letterSpacing: '0.04em' }}>Used in: Acoustic panels, architectural surface.</p>
+                  </div>
+                </div>
+                <div style={{ border: '1px solid rgba(128,128,128,0.14)' }}>
+                  <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
+                    <Image src="/images/products/pressed_detail.png" alt="Pressed mycelium board close-up — surface texture and cross-section detail" fill unoptimized className="object-cover object-center" sizes="(max-width: 640px) 100vw, 50vw" />
+                  </div>
+                  <div className="p-5">
+                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.45 }}>Pressed</p>
+                    <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
+                      Spent mycelium biomass shredded and heat-pressed directly into flat board formats. Minutes of press time rather than weeks of cultivation.
+                    </p>
+                    <p className="font-sans" style={{ fontSize: 10, opacity: 0.35, letterSpacing: '0.04em' }}>Used in: Event structures, temporary architecture, pressed board applications.</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           <div className="relative overflow-hidden aspect-[3/4] lg:aspect-auto">
-            <Image src="/images/products/biofoam_detail.png" alt="NUMU biofoam — material study" fill className="object-cover object-center" sizes="(max-width: 1024px) 100vw, 50vw" />
+            <Image src="/images/products/biofoam_detail.png" alt="NUMU PALMYCO™ — material study" fill className="object-cover object-center" sizes="(max-width: 1024px) 100vw, 50vw" />
           </div>
         </div>
       </VSection>
@@ -1482,7 +2112,7 @@ function VisitorView({ v }: { v: VisitorContent }) {
           Acoustic panels are the entry product. The platform expands across four revenue lines, each running on the same material system and the same production infrastructure.
         </p>
         <p className="font-sans leading-[1.75] mb-14 max-w-2xl" style={{ fontSize: '0.9375rem', opacity: 0.38 }}>
-          Grown Biofoam enters the market through decorative acoustic panels, scales through certified architectural specification, and extends into thermal wall assemblies. Pressed Biofoam serves events, brand activations, and non-structural interior applications, with scalable throughput on a separate production line. Packaging and regional licensing open in phase two.
+          Grown PALMYCO™ enters the market through decorative acoustic panels, scales through certified architectural specification, and extends into thermal wall assemblies. Pressed PALMYCO™ serves events, brand activations, and non-structural interior applications, with scalable throughput on a separate production line. Packaging and regional licensing open in phase two.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {[
@@ -1591,14 +2221,15 @@ function VisitorView({ v }: { v: VisitorContent }) {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
             {[
-              { field: 'Panel dimensions', value: '400mm × 400mm × 25mm (standard)' },
+              { field: 'Panel dimensions', value: '400 mm × 400 mm × 60 mm' },
               { field: 'Weight', value: 'Approx. 1.8–2.2 kg/m²' },
-              { field: 'Acoustic performance', value: 'NRC rating — in certification' },
-              { field: 'Fire performance', value: 'ASTM E84 Class A target — in certification' },
+              { field: 'Acoustic performance', value: 'NRC ~0.7 target — certification pending' },
+              { field: 'Fire performance', value: 'ASTM E84 Class B — target (certification pending)' },
               { field: 'Installation', value: 'Concealed adhesive mount or mechanical fixing' },
-              { field: 'Finish', value: 'Natural Biofoam surface, raw or sealed' },
+              { field: 'Finish', value: 'Natural PALMYCO™ surface, raw or sealed' },
               { field: 'Lead time', value: '6–8 weeks from order' },
               { field: 'Origin', value: 'Manufactured in Dubai, UAE' },
+              { field: 'End of life', value: '100% bio-based, biodegradable under natural composting conditions' },
             ].map(spec => (
               <div key={spec.field} className="px-6 py-7" style={{ backgroundColor: 'rgba(26,23,20,0.03)' }}>
                 <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.5625rem', opacity: 0.35 }}>{spec.field}</p>
@@ -1639,39 +2270,86 @@ function VisitorView({ v }: { v: VisitorContent }) {
       <section id="packaging" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
           <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.5 }}>Applications — Packaging</p>
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-12 lg:gap-20 items-start">
-            <div className="lg:pt-4">
+
+          {/* Main layout: text (wider) left, image right */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-12 lg:gap-20 items-start mb-16">
+            <div>
               <p className="font-display mb-6" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.75rem)', lineHeight: '1.1', letterSpacing: '-0.025em', opacity: 0.8 }}>
                 Molded protection, grown not manufactured.
               </p>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.48 }}>
-                NUMU materials can be shaped into protective packaging forms, offering a compostable alternative to petroleum-based foams.
+              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
+                NUMU materials can be shaped into protective packaging forms — a compostable alternative to petroleum-based foams. Each piece is grown into shape from agricultural waste, maintaining shock absorption while remaining fully biodegradable at end of life.
               </p>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.48 }}>
-                Each piece is grown into shape, reducing waste while maintaining shock absorption and structural integrity.
+              <p className="font-sans leading-[1.75] mb-10" style={{ fontSize: '0.9375rem', opacity: 0.45 }}>
+                Working with mycelium means manufacturing with a living material system. Each object is grown from natural fibers, shaped through biological growth, and stabilized into a functional product. Sustainability is not added afterward — it is built into the material process itself.
               </p>
-              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.28 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mb-1" style={{ fontSize: 10, opacity: 0.32 }}>
                 Scalable application — logistics and product protection
               </p>
-              <p className="font-sans uppercase tracking-[0.16em] mt-3" style={{ fontSize: 10, opacity: 0.22 }}>
-                European pathway — partnership under Biomyc LOI
+              <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: 10, opacity: 0.22 }}>
+                European pathway — Biomyc partnership, LOI signed
               </p>
             </div>
-            <div className="w-full overflow-hidden" style={{ position: 'relative', aspectRatio: '3/4' }}>
-              <Image src="/images/applications/packaging_protective.png" alt="NUMU protective packaging — molded form" fill className="object-cover object-center" sizes="(max-width: 1024px) 100vw, 50vw" />
+            <div className="w-full overflow-hidden" style={{ position: 'relative', aspectRatio: '1/1' }}>
+              <Image src="/images/applications/packaging01.png" alt="NUMU mycelium packaging — protective molded form grown from agricultural waste" fill unoptimized className="object-cover object-center" sizes="(max-width: 768px) 100vw, 50vw" />
+            </div>
+          </div>
+
+          {/* Material comparison: Styrofoam vs Mycelium */}
+          <div>
+            <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ fontSize: '0.5625rem', opacity: 0.32 }}>Material comparison</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
+              {[
+                {
+                  name: 'Styrofoam — EPS',
+                  items: [
+                    'Fossil-based petroleum derivative',
+                    'Persistent pollutant — 500+ year lifespan',
+                    'Extremely difficult to recycle',
+                    'Non-biodegradable in natural conditions',
+                    'High embedded carbon',
+                  ],
+                  highlight: false,
+                },
+                {
+                  name: 'Mycelium packaging',
+                  items: [
+                    'Grown from agricultural waste residues',
+                    'Bio-based — no synthetic binders or polymers',
+                    'Equal or superior shock absorption',
+                    'Home-compostable at end of life',
+                    'Carbon-sequestering feedstock',
+                  ],
+                  highlight: true,
+                },
+              ].map((col) => (
+                <div key={col.name} className="px-7 py-8" style={{ backgroundColor: col.highlight ? 'rgba(26,23,20,0.04)' : 'rgba(26,23,20,0.01)' }}>
+                  <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: '0.5625rem', opacity: col.highlight ? 0.65 : 0.28 }}>{col.name}</p>
+                  {col.items.map((item, j) => (
+                    <div key={j} className="flex items-start gap-3 mb-3">
+                      <span style={{ fontSize: 7, opacity: col.highlight ? 0.55 : 0.28, flexShrink: 0, marginTop: 4 }}>
+                        {col.highlight ? '◆' : '○'}
+                      </span>
+                      <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: col.highlight ? 0.68 : 0.42 }}>{item}</p>
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
       {/* 04 Process */}
-      <section id="process" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
-        <div className="max-w-[1440px] mx-auto">
+      <section id="process" style={{ borderTop: BORDER, paddingTop: '5rem', paddingBottom: '4rem' }}>
+        {/* Title — compact, above the diagram */}
+        <div className="px-6 md:px-12 mb-6 max-w-[1440px] mx-auto">
           <VLabel text={v.process.label} />
           <VHeading text={v.process.heading} />
-          <div className="mt-8 max-w-[820px] mx-auto">
-            <ProcessDiagram />
-          </div>
+        </div>
+        {/* Diagram — full bleed, no max-width constraint */}
+        <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+          <ProcessDiagram />
         </div>
       </section>
 
@@ -1688,10 +2366,10 @@ function VisitorView({ v }: { v: VisitorContent }) {
                 The process, documented.
               </h2>
               <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
-                Biofoam is produced in a lab operational in Dubai since 2025. The video shows actual production: substrate preparation, mycelium inoculation, growth cycle, stabilization, and finishing. No renders, no simulations. Real conditions, regional feedstock, repeatable process.
+                PALMYCO™ is produced in our active Dubai production lab. This footage documents the full process cycle — substrate preparation, mycelium inoculation, growth, heat-stabilization, and finishing. Shot prior to the Dubai lab setup. No renders, no simulations. Real production conditions, repeatable process.
               </p>
               <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.28 }}>
-                Duration — approx. 2 min
+                Duration — 1 min 34 sec
               </p>
             </div>
             <div>
@@ -1710,8 +2388,8 @@ function VisitorView({ v }: { v: VisitorContent }) {
       {/* Manifesto */}
       <section id="manifesto" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-16" style={{ fontSize: '0.6875rem', opacity: 0.35 }}>Manifesto</p>
-          <h2 className="font-sans uppercase tracking-[0.14em] mb-14" style={{ fontSize: '0.6875rem', opacity: 0.4 }}>What we believe.</h2>
+          <p className="font-sans uppercase tracking-[0.18em] mb-16" style={{ fontSize: '0.6875rem', opacity: 0.48 }}>Manifesto</p>
+          <h2 className="font-sans uppercase tracking-[0.14em] mb-14" style={{ fontSize: '0.6875rem', opacity: 0.54 }}>What we believe.</h2>
           <div>
             {[
               'Performance before narrative.',
@@ -1745,30 +2423,24 @@ function VisitorView({ v }: { v: VisitorContent }) {
         <VLabel text="Installations" />
         <VHeading text="Two installations. Real conditions." />
         <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
-          {[
-            {
-              project: 'Beyond Chrysant',
-              location: 'Netherlands — 2022',
-              caption: 'Project photography in archive retrieval. Interim render shown.',
-              brief: 'Mycelium acoustic installation — private residential interior, Netherlands 2022. Archive retrieval in progress.',
-            },
-            {
-              project: 'KAVE',
-              location: 'Dubai, UAE — 2025',
-              caption: 'Documentation in progress. Interim render shown.',
-              brief: 'FOLD acoustic panel installation — KAVE, Dubai 2025. Photography session scheduled.',
-            },
-          ].map(inst => (
-            <div key={inst.project}>
-              <div className="mb-3">
-                <ImagePlaceholder aspect="16:9" brief={inst.brief} label={inst.caption} />
-              </div>
-              <VLabel text={inst.location} />
-              <p className="font-display text-xl md:text-2xl mt-1">{inst.project}</p>
-            </div>
-          ))}
+          <div>
+            <BeyondSlideshow />
+            <VLabel text="Netherlands — 2022" />
+            <p className="font-display text-xl md:text-2xl mt-1">Beyond Chrysant</p>
+          </div>
+          {/* KAVE gets its own dedicated section below — see KaveSection */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+            <p className="font-sans leading-[1.75] max-w-sm mb-4" style={{ fontSize: '0.9375rem', opacity: 0.48 }}>
+              A second installation — KAVE, Dubai 2025 — is currently in progress. See below.
+            </p>
+            <VLabel text="Dubai, UAE — 2025" />
+            <p className="font-display text-xl md:text-2xl mt-1">KAVE</p>
+          </div>
         </div>
       </VSection>
+
+      {/* KAVE — dedicated section with countdown */}
+      <KaveSection />
 
       {/* Specify NUMU CTA */}
       <ExploreCTA />
@@ -1815,7 +2487,7 @@ function VisitorView({ v }: { v: VisitorContent }) {
           ))}
         </div>
         <div className="pt-10 flex flex-col sm:flex-row sm:items-center gap-6" style={{ borderTop: BORDER }}>
-          <Image src="/branding/logo-black-numu.png" alt="NUMU" width={120} height={48} className="h-10 w-auto object-contain" style={{ opacity: 0.18 }} />
+          <Image src="/branding/logo-black-numu.png" alt="NUMU" width={120} height={48} className="h-10 w-auto object-contain" style={{ opacity: 0.30 }} />
           <SocialLinks />
         </div>
         <PartnersStrip />
@@ -1841,7 +2513,67 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
       <ISection id="platform">
         <ILabel text={iv.platform.label} />
         <IHeading text={iv.platform.heading} />
-        <IBody text={iv.platform.body} />
+        {/* Strategic thesis: PALMYCO™ platform → multiple applications */}
+        <div className="mt-2 mb-16 grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-8 lg:gap-14 items-center">
+          <div>
+            <p className="font-sans text-base md:text-[1.0625rem] leading-[1.8] mb-10" style={{ opacity: 0.68 }}>
+              {iv.platform.body}
+            </p>
+            <div style={{ border: INV_BORDER, padding: '28px', backgroundColor: `${ACCENT}06` }}>
+              <p className="font-sans uppercase tracking-[0.2em] mb-6" style={{ fontSize: '0.5rem', opacity: 0.38, letterSpacing: '0.22em' }}>Material system → Applications</p>
+              <div>
+                <div className="flex items-center gap-3 pb-4" style={{ borderBottom: INV_BORDER_SUBTLE }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: ACCENT, flexShrink: 0, boxShadow: `0 0 10px ${ACCENT}55` }} />
+                  <p className="font-sans" style={{ fontSize: '0.875rem', opacity: 0.88, letterSpacing: '-0.01em' }}>Grown PALMYCO™ — bio-composite substrate</p>
+                </div>
+                <div className="pt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                  {[
+                    { app: 'Acoustic panels', status: 'Active', active: true },
+                    { app: 'Pressed boards', status: 'Active', active: true },
+                    { app: 'Thermal insulation', status: 'Phase 2', active: false },
+                    { app: 'Regional licensing', status: 'Phase 3', active: false },
+                  ].map(a => (
+                    <div key={a.app} className="flex items-center gap-2.5">
+                      <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: a.active ? ACCENT : 'rgba(245,241,232,0.28)', flexShrink: 0 }} />
+                      <div>
+                        <p className="font-sans" style={{ fontSize: '0.8125rem', opacity: a.active ? 0.82 : 0.44 }}>{a.app}</p>
+                        <p className="font-sans uppercase tracking-[0.1em]" style={{ fontSize: '0.5rem', opacity: 0.3, color: a.active ? ACCENT : undefined }}>{a.status}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: '0px' }}
+            transition={{ duration: 0.8, ease: [0.25, 0, 0.2, 1] }}
+            className="relative overflow-hidden"
+            style={{ aspectRatio: '3/4', maxHeight: 560 }}
+          >
+            <Image
+              src="/images/products/biofoam_detail.png"
+              alt="NUMU PALMYCO™ — material platform"
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 1024px) 100vw, 45vw"
+            />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to bottom, rgba(14,14,14,0.08) 0%, transparent 25%, transparent 52%, rgba(14,14,14,0.92) 100%)',
+            }} />
+            <div style={{ position: 'absolute', bottom: 28, left: 28, right: 28 }}>
+              <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.5rem', opacity: 0.5, color: '#f5f1e8', marginBottom: 8 }}>
+                Grown PALMYCO™ · UAE production · 2025
+              </p>
+              <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.375rem)', lineHeight: 1.25, letterSpacing: '-0.02em', color: '#f5f1e8', opacity: 0.95 }}>
+                One substrate. Multiple product engines.
+              </p>
+            </div>
+          </motion.div>
+        </div>
         <PlatformExpansion />
       </ISection>
 
@@ -1880,17 +2612,107 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             &ldquo;Specialty first. Margin first. Licensing scale later. The exact inverse of every failed player.&rdquo;
           </p>
         </motion.div>
-        <div className="mt-8 max-w-3xl space-y-0">
-          <p className="font-sans text-base md:text-lg leading-[1.85] pb-8" style={{ opacity: 0.65, borderBottom: INV_BORDER_SUBTLE }}>
-            The mycelium materials sector has two patterns. One failed publicly. Bolt Threads, MycoWorks, and other venture-capital-funded biomaterials ventures collapsed after attempting industrial-scale vertical integration against single-product dependency. The other persisted quietly. Ecovative, Mogu, and Grown.bio operate profitably in Europe and the US, scaled deliberately through specialty production, diversified revenue, and licensing rather than owned industrial capex.
-          </p>
-          <p className="font-sans text-base md:text-lg leading-[1.85] py-8" style={{ opacity: 0.65, borderBottom: INV_BORDER_SUBTLE }}>
-            NUMU is <em style={{ fontStyle: 'italic', color: ACCENT }}>structured against the failed pattern</em>, explicitly. Specialty-scale production, not industrial-scale vertical integration. Performance-led pricing, not sustainability premium. Four revenue engines on shared infrastructure, not a single-product bet. Licensing pathway to Year 3+ scale, not proportional capex.
-          </p>
-          <p className="font-sans text-base md:text-lg leading-[1.85] pt-8" style={{ opacity: 0.65 }}>
-            The AED 2.2M raise funds an 18-month path to certified specification revenue and the operational foundation for regional licensing. It does not attempt to build a billion-dollar industrial facility on seed capital. That is the failure mode. NUMU is designed around it.
-          </p>
+
+        {/* Text + platform resilience diagram */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-12 lg:gap-16 items-start">
+          <div className="space-y-0">
+            <p className="font-sans text-base md:text-lg leading-[1.85] pb-8" style={{ opacity: 0.65, borderBottom: INV_BORDER_SUBTLE }}>
+              The mycelium materials sector has two patterns. One failed publicly. Bolt Threads, MycoWorks, and other venture-capital-funded biomaterials ventures collapsed after attempting industrial-scale vertical integration against single-product dependency. The other persisted quietly. Ecovative, Mogu, and Grown.bio operate profitably in Europe and the US, scaled deliberately through specialty production, diversified revenue, and licensing rather than owned industrial capex.
+            </p>
+            <p className="font-sans text-base md:text-lg leading-[1.85] py-8" style={{ opacity: 0.65, borderBottom: INV_BORDER_SUBTLE }}>
+              NUMU is <em style={{ fontStyle: 'italic', color: ACCENT }}>structured against the failed pattern</em>, explicitly. Specialty-scale production, not industrial-scale vertical integration. Performance-led pricing, not sustainability premium. Four revenue engines on shared infrastructure, not a single-product bet. Licensing pathway to Year 3+ scale, not proportional capex.
+            </p>
+            <p className="font-sans text-base md:text-lg leading-[1.85] pt-8" style={{ opacity: 0.65 }}>
+              The AED 2.2M raise funds an 18-month path to certified specification revenue and the operational foundation for regional licensing. It does not attempt to build a billion-dollar industrial facility on seed capital. That is the failure mode. NUMU is designed around it.
+            </p>
+          </div>
+
+          {/* Platform resilience diagram — each branch is an independent growth path */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '0px' }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.25, 0, 0.2, 1] }}
+            className="lg:sticky lg:top-24"
+            style={{ border: INV_BORDER, backgroundColor: 'rgba(245,241,232,0.02)', padding: '32px 28px' }}
+          >
+            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.3, fontSize: '0.5625rem' }}>Platform structure — resilience diagram</p>
+            <svg viewBox="0 0 280 320" style={{ width: '100%', maxWidth: 280, display: 'block', margin: '0 auto' }}>
+              {/* Center node — Mycelium Platform */}
+              <motion.circle cx={140} cy={44} r={28}
+                fill={`${ACCENT}18`} stroke={ACCENT} strokeWidth={1.4}
+                initial={{ scale: 0, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }}
+                viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }}
+              />
+              <text x={140} y={40} textAnchor="middle" fontFamily="'Playfair Display',serif" fontSize={8.5} fill={ACCENT} fillOpacity={0.9} letterSpacing={0.5}>NUMU</text>
+              <text x={140} y={52} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={6.5} fill={ACCENT} fillOpacity={0.55} letterSpacing={1}>PLATFORM</text>
+
+              {/* Branch lines */}
+              {[
+                { cx: 44, label1: 'Acoustics', label2: 'E1 + E3', col: ACCENT, active: true },
+                { cx: 140, label1: 'Packaging', label2: 'E2 + E4', col: 'rgba(245,241,232,0.6)', active: false },
+                { cx: 236, label1: 'Thermal', label2: 'E4 future', col: 'rgba(245,241,232,0.4)', active: false },
+              ].map((branch, bi) => (
+                <g key={bi}>
+                  {/* Vertical stem */}
+                  <motion.line x1={140} y1={72} x2={branch.cx} y2={128}
+                    stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.2)'} strokeWidth={branch.active ? 1.4 : 0.8}
+                    strokeDasharray={branch.active ? 'none' : '3 3'}
+                    initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+                    viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.5 + bi * 0.12 }}
+                  />
+                  {/* Branch node */}
+                  <motion.circle cx={branch.cx} cy={148} r={branch.active ? 22 : 18}
+                    fill={branch.active ? `${ACCENT}15` : 'rgba(245,241,232,0.04)'}
+                    stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.22)'} strokeWidth={branch.active ? 1.4 : 0.85}
+                    initial={{ scale: 0, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }} transition={{ duration: 0.45, delay: 0.7 + bi * 0.12 }}
+                  />
+                  <text x={branch.cx} y={144} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={7} fill={branch.col} letterSpacing={0.5}>{branch.label1}</text>
+                  <text x={branch.cx} y={155} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={5.5} fill={branch.col} fillOpacity={0.55} letterSpacing={0.8}>{branch.label2}</text>
+                  {/* Revenue path indicator */}
+                  <motion.line x1={branch.cx} y1={170} x2={branch.cx} y2={210}
+                    stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.15)'} strokeWidth={branch.active ? 1.2 : 0.7}
+                    initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.9 + bi * 0.12 }}
+                  />
+                  <motion.text x={branch.cx} y={225} textAnchor="middle"
+                    fontFamily="'Inter',sans-serif" fontSize={6} fill={branch.col} fillOpacity={branch.active ? 0.55 : 0.28} letterSpacing={0.6}
+                    initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }} transition={{ duration: 0.4, delay: 1.0 + bi * 0.12 }}
+                  >
+                    Independent revenue
+                  </motion.text>
+                  <motion.text x={branch.cx} y={236} textAnchor="middle"
+                    fontFamily="'Inter',sans-serif" fontSize={6} fill={branch.col} fillOpacity={branch.active ? 0.55 : 0.25} letterSpacing={0.6}
+                    initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }} transition={{ duration: 0.4, delay: 1.05 + bi * 0.12 }}
+                  >
+                    path
+                  </motion.text>
+                </g>
+              ))}
+
+              {/* Fallback note */}
+              <motion.text x={140} y={278} textAnchor="middle"
+                fontFamily="'Inter',sans-serif" fontSize={6.5} fill="rgba(245,241,232,1)" fillOpacity={0.28} letterSpacing={1}
+                initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                viewport={{ once: true }} transition={{ duration: 0.4, delay: 1.3 }}
+              >
+                If one path is delayed, others continue
+              </motion.text>
+              <motion.line x1={40} y1={268} x2={240} y2={268}
+                stroke="rgba(245,241,232,0.1)" strokeWidth={0.7}
+                initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                viewport={{ once: true }} transition={{ duration: 0.4, delay: 1.25 }}
+              />
+            </svg>
+            <p className="font-sans text-label mt-6 text-center" style={{ opacity: 0.22, fontSize: '0.5rem', letterSpacing: '0.06em' }}>
+              Shared production infrastructure — each branch activates independently
+            </p>
+          </motion.div>
         </div>
+
         {/* Failure vs survival comparison */}
         <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.1)' }}>
           {[
@@ -1922,54 +2744,58 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
       <ISection id="traction">
         <ILabel text={iv.traction.label} />
         <IHeading text={iv.traction.heading} />
-        {/* Traction stats */}
-        <div className="grid grid-cols-3 gap-px mt-8 mb-2" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
-          {[
-            { to: 180, prefix: 'AED ', suffix: 'K', label: 'Founder capital deployed' },
-            { to: 2, prefix: '', suffix: '', label: 'Real installations built' },
-            { to: 7, prefix: '', suffix: 'yrs', label: 'Operational experience' },
-          ].map((s, i) => (
-            <div key={s.label} className="px-6 py-6" style={{ backgroundColor: '#0e0e0e' }}>
-              <p className="font-display mb-1" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', letterSpacing: '-0.04em', lineHeight: 1, color: ACCENT }}>
-                <span style={{ fontSize: '0.5em', opacity: 0.7 }}>{s.prefix}</span>
-                <CountUp to={s.to} suffix={s.suffix} duration={1.1 + i * 0.1} />
-              </p>
-              <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.32, fontSize: '0.5625rem' }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-14 pl-5" style={{ borderTop: INV_BORDER, borderLeft: '2px solid rgba(245,241,232,0.18)' }}>
-          {iv.traction.items.map((item, i) => (
-            <div key={item} className="flex items-start gap-5 py-5" style={{ borderBottom: i < iv.traction.items.length - 1 ? INV_BORDER_SUBTLE : 'none', lineHeight: 2 }}>
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} className="flex-shrink-0 mt-2" style={{ opacity: 0.6 }}>
-                <polyline points="2,8 6,12 14,4" />
-              </svg>
-              <p className="font-sans text-base md:text-lg leading-snug" style={{ opacity: 0.78 }}>{item}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
-          {[
-            { project: 'Beyond Chrysant', location: 'Netherlands — 2022', caption: 'Project photography in archive retrieval. Interim render shown.' },
-            { project: 'KAVE', location: 'Dubai, UAE — 2025', caption: 'Documentation in progress. Interim render shown.' },
-          ].map(inst => (
-            <div key={inst.project}>
-              <div className="relative w-full mb-3 overflow-hidden" style={{ aspectRatio: '16/9' }}>
-                <Image
-                  src="/images/products/fold_context_scale.png"
-                  alt={`FOLD — interim render, ${inst.project} installation`}
-                  fill
-                  className="object-cover object-center"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
+        {/* Centered content container — stats + list + photos */}
+        <div style={{ maxWidth: 880, marginLeft: 'auto', marginRight: 'auto' }}>
+          {/* Traction stats */}
+          <div className="grid grid-cols-3 gap-px mt-8 mb-2" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
+            {[
+              { to: 180, prefix: 'AED ', suffix: 'K', label: 'Founder capital deployed' },
+              { to: 2, prefix: '', suffix: '', label: 'Real installations built' },
+              { to: 7, prefix: '', suffix: 'yrs', label: 'Operational experience' },
+            ].map((s, i) => (
+              <div key={s.label} className="px-6 py-6" style={{ backgroundColor: '#0e0e0e' }}>
+                <p className="font-display mb-1" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', letterSpacing: '-0.04em', lineHeight: 1, color: ACCENT }}>
+                  <span style={{ fontSize: '0.5em', opacity: 0.7 }}>{s.prefix}</span>
+                  <CountUp to={s.to} suffix={s.suffix} duration={1.1 + i * 0.1} />
+                </p>
+                <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.32, fontSize: '0.5625rem' }}>{s.label}</p>
               </div>
-              <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: 9, opacity: 0.28 }}>
-                {inst.caption}
-              </p>
-              <ILabel text={inst.location} />
-              <p className="font-display text-lg md:text-xl">{inst.project}</p>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div className="mt-14 pl-5" style={{ borderTop: INV_BORDER, borderLeft: '2px solid rgba(245,241,232,0.18)' }}>
+            {iv.traction.items.map((item, i) => (
+              <div key={item} className="flex items-start gap-5 py-5" style={{ borderBottom: i < iv.traction.items.length - 1 ? INV_BORDER_SUBTLE : 'none', lineHeight: 2 }}>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} className="flex-shrink-0 mt-2" style={{ opacity: 0.6 }}>
+                  <polyline points="2,8 6,12 14,4" />
+                </svg>
+                <p className="font-sans text-base md:text-lg leading-snug" style={{ opacity: 0.78 }}>{item}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
+            {[
+              {
+                project: 'Beyond Chrysant',
+                location: 'Netherlands — 2022',
+                caption: 'Beyond Chrysant — Netherlands, 2022',
+                brief: 'Beyond Chrysant — mycelium acoustic installation, Netherlands 2022.',
+              },
+              {
+                project: 'KAVE',
+                location: 'Dubai, UAE — 2025',
+                caption: 'KAVE — Dubai, UAE 2025',
+                brief: 'KAVE — FOLD acoustic panel installation, Dubai 2025.',
+              },
+            ].map(inst => (
+              <div key={inst.project}>
+                <div className="mb-3">
+                  <ImagePlaceholder aspect="16:9" brief={inst.brief} label={inst.caption} />
+                </div>
+                <ILabel text={inst.location} />
+                <p className="font-display text-lg md:text-xl">{inst.project}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Featured In */}
@@ -2040,20 +2866,26 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             </motion.div>
           ))}
         </div>
-        <div className="mt-14 grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-10 items-start" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
-          <div className="relative overflow-hidden" style={{ aspectRatio: '3/4', backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)' }}>
+        <div className="mt-14 grid grid-cols-1 lg:grid-cols-[1fr_3fr] gap-10 items-start" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
+          <div className="relative overflow-hidden" style={{ aspectRatio: '1/1', backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)', maxWidth: 240 }}>
             <Image
               src="/images/founder/Portrait.PNG"
-              alt="Andy Cartier — NUMU founder, Dubai lab"
+              alt="Andy Cartier — NUMU founder"
               fill
               className="object-cover object-top"
-              sizes="(max-width: 1024px) 100vw, 45vw"
+              sizes="240px"
               style={{ filter: 'grayscale(100%)' }}
             />
           </div>
           <div>
-            <p className="font-sans text-base md:text-lg leading-[1.8]" style={{ opacity: 0.6 }}>
-              Andy Cartier compressed the lab-to-production gap across two continents before founding NUMU. Operational knowledge, not research aspiration. Two built installations, not prototypes. Published technical work in the Routledge reference volume for mycelium-based material design. A no-mold growth technique developed in-house and applied commercially.
+            <p className="font-sans text-base md:text-lg leading-[1.85] mb-6" style={{ opacity: 0.68 }}>
+              Andy dropped out of university to open his own design studio. He built a practice around material experimentation, product development, and applied design — working with manufacturers and clients across Europe and the Middle East. That path led to mycelium, not through academia, but through the practical problem of industrializing a biological process at production scale.
+            </p>
+            <p className="font-sans text-base leading-[1.85] mb-6" style={{ opacity: 0.55 }}>
+              He has set up labs, run growth cycles, failed batches, fixed processes, and shipped real installations — Netherlands 2022, Dubai 2025. He holds process-level patents in Belgium and published in the Routledge reference volume for bio-based material design. He is not a researcher who started a company. He is a builder who learned through real-world evidence what works in production and what does not.
+            </p>
+            <p className="font-sans text-base leading-[1.85]" style={{ opacity: 0.48 }}>
+              Andy also holds co-founder positions in UFO (US, pressed mycelium composites) and Hyphen (US, bio-materials ecosystem) — relationships that extend NUMU&apos;s long-term technology and IP pipeline without diverting operational focus. Approximately 90% of his time is dedicated to NUMU. The point is not the credentials. The point is that he has already paid the tuition, on two continents, in real production conditions. NUMU is built on that foundation.
             </p>
           </div>
         </div>
@@ -2119,7 +2951,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
         <div className="flex flex-wrap gap-6 mt-2 mb-10">
           {[
             { label: 'Instrument', value: 'Post-money SAFE' },
-            { label: 'Amount', value: 'AED 2.2M / USD 600K' },
+            { label: 'Amount', value: 'AED 2.2M' },
             { label: 'Runway', value: '18 months' },
             { label: 'Stage', value: 'Pre-seed / Seed' },
           ].map(t => (
@@ -2206,7 +3038,16 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
   }
 
   return (
-    <div style={{ backgroundColor: theme.bg, color: theme.fg, minHeight: '100vh', transition: 'background-color 0.6s cubic-bezier(0.25,0,0.2,1), color 0.6s cubic-bezier(0.25,0,0.2,1)' }}>
+    <div style={{ backgroundColor: theme.bg, color: theme.fg, minHeight: '100vh', transition: 'background-color 0.6s cubic-bezier(0.25,0,0.2,1), color 0.6s cubic-bezier(0.25,0,0.2,1)', position: 'relative' }}>
+      {/* Subtle grain overlay — adds depth without visual noise */}
+      {!isInvestor && (
+        <div aria-hidden style={{
+          position: 'fixed', inset: 0, zIndex: 9998, pointerEvents: 'none',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+          opacity: 0.022,
+          mixBlendMode: 'multiply',
+        }} />
+      )}
 
       {/* Loading screen */}
       {!loadingDone && <LoadingScreen onComplete={() => setLoadingDone(true)} />}
@@ -2255,54 +3096,104 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
       </nav>
 
       {/* Hero 1 — identity */}
-      <section className="flex flex-col items-center justify-center text-center px-6" style={{ height: '100vh', minHeight: 600 }}>
+      <section className="flex flex-col items-center justify-center text-center px-6" style={{ height: '100vh', minHeight: 600, position: 'relative' }}>
         <h1 className="font-display" style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em' }}>NUMU</h1>
         <p lang="ar" className="font-display mt-4" style={{ fontSize: 'clamp(1.5rem, 4vw, 3.5rem)', lineHeight: 1.1, opacity: 0.38, letterSpacing: '0.02em' }}>نُمُوّ</p>
-        <p className="font-sans mt-5 uppercase tracking-[0.18em]" style={{ fontSize: '0.625rem', opacity: 0.32 }}>
+        <p className="font-sans mt-5 uppercase tracking-[0.18em]" style={{ fontSize: '0.625rem', opacity: 0.46 }}>
           UAE — Bio-composites platform
         </p>
-        <p className="font-sans mt-6" style={{ fontSize: 'clamp(0.8125rem, 1vw, 0.9375rem)', opacity: 0.4, letterSpacing: '0.06em', lineHeight: 1.7 }}>
+        <p className="font-sans mt-6" style={{ fontSize: 'clamp(0.8125rem, 1vw, 0.9375rem)', opacity: 0.60, letterSpacing: '0.06em', lineHeight: 1.7 }}>
           Grown, not manufactured.
         </p>
+        {/* Scroll indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.34 }}
+          transition={{ delay: 1.4, duration: 1.0 }}
+          style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
+        >
+          <p className="font-sans uppercase tracking-[0.2em]" style={{ fontSize: 7 }}>Scroll</p>
+          <motion.div
+            animate={{ y: [0, 4, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.3 }}
+          >
+            <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
+              <path d="M5 0v10M1 7l4 4 4-4" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* Hero 2 — product with 3D panel */}
+      {/* Hero 2 — product visual */}
       <section
         className="relative flex flex-col items-center justify-end px-6 pb-20 text-center"
-        style={{ height: '100vh', minHeight: 600, borderTop: BORDER }}
+        style={{ height: '100vh', minHeight: 600, borderTop: BORDER, overflow: 'hidden' }}
       >
-        {/* 3D rotating panel — centered absolutely */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 0,
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <div style={{ width: '130vmin', height: '130vmin', maxWidth: 1200, maxHeight: 1200, position: 'relative' }}>
-            {/* Dark radial backdrop — makes normalmap shadows visible on light background */}
-            {!isInvestor && (
-              <div style={{
-                position: 'absolute', inset: 0, zIndex: 0, borderRadius: '50%',
-                background: 'radial-gradient(ellipse 80% 75% at 50% 50%, rgba(18,12,8,0.42) 0%, transparent 68%)',
-                pointerEvents: 'none',
-              }} />
-            )}
-            <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}>
-              <PanelViewer isInvestor={isInvestor} />
-            </div>
+        {/* Background — visitor: spore field, investor: 3D rotating panel */}
+        {!isInvestor ? (
+          <>
+            {/* Soft warm center glow — full-bleed, no clip */}
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+              background: 'radial-gradient(ellipse 68% 60% at 50% 44%, rgba(178,155,127,0.13) 0%, transparent 65%)',
+            }} />
+            <SporeField />
+          </>
+        ) : (
+          <>
+            {/* Subtle warm center glow for investor */}
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+              background: 'radial-gradient(ellipse 55% 50% at 50% 44%, rgba(178,155,127,0.07) 0%, transparent 62%)',
+            }} />
+            <HyphaeField />
+          </>
+        )}
+
+        {/* Bottom vignette — softens transition to first content section */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '38%', zIndex: 1, pointerEvents: 'none',
+          background: isInvestor
+            ? 'linear-gradient(to top, rgba(14,14,14,0.65) 0%, transparent 100%)'
+            : 'linear-gradient(to top, rgba(245,241,232,0.88) 0%, transparent 100%)',
+        }} />
+
+        {/* Foam block cutout — FILE: /public/images/hero/biofoam-cutout.jpg
+             Use a PNG or cutout photo of a foam block. mixBlendMode:multiply
+             makes white/light areas transparent on cream background. */}
+        {!isInvestor && (
+          <div style={{
+            position: 'absolute', bottom: '14%', left: '50%',
+            transform: 'translateX(-50%)',
+            width: 'min(48vw, 380px)',
+            zIndex: 1,
+            pointerEvents: 'none',
+            mixBlendMode: 'multiply' as React.CSSProperties['mixBlendMode'],
+            opacity: 0.38,
+          }}>
+            <img
+              src="/images/hero/biofoam-cutout.jpg"
+              alt=""
+              aria-hidden
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+            />
           </div>
-        </div>
-        <div className="relative w-full max-w-[1440px] mx-auto" style={{ zIndex: 2 }}>
+        )}
+
+        <div className="relative w-full max-w-[1440px] mx-auto text-center" style={{ zIndex: 2 }}>
           <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.38, fontSize: '0.6875rem' }}>
             {isInvestor ? investor.hero.sublabel : visitor.hero.sublabel}
           </p>
           {(isInvestor ? investor.hero.lines : visitor.hero.lines).map((line, i) => (
-            <h2 key={i} className="font-display block" style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)' }}>{line}</h2>
+            <h2
+              key={i}
+              className="font-display block text-center"
+              style={{
+                fontSize: isInvestor ? 'clamp(1.875rem, 4.5vw, 3.75rem)' : 'clamp(2.5rem, 6vw, 5.5rem)',
+                lineHeight: 1.1,
+                letterSpacing: '-0.03em',
+              }}
+            >{line}</h2>
           ))}
           <div className="mt-10 pt-8 flex flex-col items-center" style={{ borderTop: BORDER }}>
             <p className="font-sans text-label uppercase tracking-[0.14em] mb-8" style={{ opacity: 0.38 }}>
