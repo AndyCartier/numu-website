@@ -346,7 +346,7 @@ export default function ProcessDiagram() {
                 x={l.x} y={numY}
                 textAnchor={ta}
                 fontFamily="'Inter', 'Helvetica Neue', Arial, sans-serif"
-                fontSize={8.5}
+                fontSize={10}
                 fill="#1a1714"
                 fillOpacity={numO}
                 letterSpacing={1.5}
@@ -360,7 +360,7 @@ export default function ProcessDiagram() {
                 x={l.x} y={mainY}
                 textAnchor={ta}
                 fontFamily="'Inter', 'Helvetica Neue', Arial, sans-serif"
-                fontSize={isActive ? 13 : 11.5}
+                fontSize={isActive ? 15.5 : 13.5}
                 fontWeight={isActive ? 600 : 500}
                 fill="#1a1714"
                 fillOpacity={labelO}
@@ -375,7 +375,7 @@ export default function ProcessDiagram() {
                 x={l.x} y={subY}
                 textAnchor={ta}
                 fontFamily="'Inter', 'Helvetica Neue', Arial, sans-serif"
-                fontSize={9.5}
+                fontSize={11}
                 fill="#1a1714"
                 fillOpacity={subO}
                 letterSpacing={0.2}
@@ -388,8 +388,8 @@ export default function ProcessDiagram() {
         })}
 
         {/* Centre wordmark */}
-        <text x={CX} y={CY - 12} textAnchor="middle" fontFamily="'Playfair Display', Georgia, serif" fontSize={24} fontWeight={700} fill="#1a1714" fillOpacity={0.07} letterSpacing={4}>NUMU</text>
-        <text x={CX} y={CY + 11} textAnchor="middle" fontFamily="'Inter', sans-serif" fontSize={9} fill="#1a1714" fillOpacity={0.2} letterSpacing={3}>MATERIAL CYCLE</text>
+        <text x={CX} y={CY - 12} textAnchor="middle" fontFamily="'Playfair Display', Georgia, serif" fontSize={30} fontWeight={700} fill="#1a1714" fillOpacity={0.09} letterSpacing={5}>NUMU</text>
+        <text x={CX} y={CY + 13} textAnchor="middle" fontFamily="'Inter', sans-serif" fontSize={11} fill="#1a1714" fillOpacity={0.22} letterSpacing={3.5}>MATERIAL CYCLE</text>
 
         {/* Orbiting dot — GPU-composited via CSS transform */}
         <g ref={dotRef} style={{ willChange: 'transform' }}>

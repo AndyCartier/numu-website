@@ -1,5 +1,6 @@
 'use strict';
 
 module.exports = {
-  extends: '@mscdex/eslint-config',
+  root: true,
+  extends: ['next/core-web-vitals'],
 };

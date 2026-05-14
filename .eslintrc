@@ -1,9 +1,6 @@
 {
 	"root": true,
-
-	"extends": "@ljharb",
-
-	"globals": {
-		"DataView": false,
-	},
+	"extends": [
+		"next/core-web-vitals"
+	]
 }

@@ -1,167 +1,225 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 
-export default function LoadingScreen({ onComplete }: { onComplete: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [exiting, setExiting] = useState(false)
-  const [gone, setGone] = useState(false)
+const CRITICAL_ASSETS = [
+  '/branding/logo-black-numu.png',
+  '/branding/logo-numu.png',
+  '/images/hero/mycofoam_block_01.png',
+  '/images/products/biofoam_detail.png',
+]
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const W = window.innerWidth
-    const H = window.innerHeight
-    canvas.width = W
-    canvas.height = H
-    const ctx = canvas.getContext('2d')!
-
-    const FILL_DUR = 1600
-    const HOLD_DUR = 200
-    const TOTAL = FILL_DUR + HOLD_DUR
-
-    let raf = 0
-
+function preloadImage(src: string) {
+  return new Promise<void>((resolve) => {
     const img = new window.Image()
-    img.src = '/branding/logo-black-numu.png'
+    img.onload = () => resolve()
+    img.onerror = () => resolve()
+    img.src = src
+  })
+}
 
-    img.onload = () => {
-      // Scale logo to ~42vw, max 320px
-      const maxW = Math.min(W * 0.42, 320)
-      const scale = maxW / img.width
-      const dw = img.width * scale
-      const dh = img.height * scale
-      const dx = W / 2 - dw / 2
-      const dy = H / 2 - dh / 2
-
-      // Build mask canvas from dark pixels of the logo
-      const maskCanvas = document.createElement('canvas')
-      maskCanvas.width = W
-      maskCanvas.height = H
-      const mctx = maskCanvas.getContext('2d')!
-
-      const tempC = document.createElement('canvas')
-      tempC.width = W
-      tempC.height = H
-      const tctx = tempC.getContext('2d')!
-      tctx.drawImage(img, dx, dy, dw, dh)
-
-      const raw = tctx.getImageData(0, 0, W, H)
-      const mask = mctx.createImageData(W, H)
-
-      // Convert dark logo pixels → opaque charcoal mask; light → transparent
-      for (let i = 0; i < raw.data.length; i += 4) {
-        const brightness = (raw.data[i] + raw.data[i + 1] + raw.data[i + 2]) / 3
-        if (brightness < 100) {
-          mask.data[i]     = 26
-          mask.data[i + 1] = 23
-          mask.data[i + 2] = 20
-          mask.data[i + 3] = Math.min(255, Math.round((100 - brightness) * 2.8))
-        }
-      }
-      mctx.putImageData(mask, 0, 0)
-
-      // Pixel bounds of logo shape
-      let textTop = H, textBottom = 0
-      for (let y = 0; y < H; y++) {
-        for (let x = 0; x < W; x++) {
-          if (mask.data[(y * W + x) * 4 + 3] > 25) {
-            if (y < textTop)    textTop    = y
-            if (y > textBottom) textBottom = y
-          }
-        }
-      }
-
-      const fillCanvas = document.createElement('canvas')
-      fillCanvas.width = W
-      fillCanvas.height = H
-      const fctx = fillCanvas.getContext('2d')!
-
-      const textHeight = textBottom - textTop
-      const waveAmplitude = dw * 0.012
-
-      let startTs = 0
-
-      function render(ts: number) {
-        if (!startTs) startTs = ts
-        const e = Math.min(ts - startTs, TOTAL)
-
-        const raw = Math.min(e / FILL_DUR, 1)
-        const ease = raw < 0.5
-          ? 4 * raw * raw * raw
-          : 1 - Math.pow(-2 * raw + 2, 3) / 2
-
-        ctx.clearRect(0, 0, W, H)
-        fctx.clearRect(0, 0, W, H)
-
-        // Draw logo mask (full logo shape)
-        fctx.drawImage(maskCanvas, 0, 0)
-
-        // Clip away everything above the rising liquid level
-        const liquidY = textBottom - ease * textHeight
-
-        fctx.globalCompositeOperation = 'destination-out'
-        fctx.beginPath()
-        fctx.moveTo(0, 0)
-        fctx.lineTo(0, liquidY)
-
-        const wavePoints = 80
-        for (let i = 0; i <= wavePoints; i++) {
-          const wx = (i / wavePoints) * W
-          const phase = (wx / W) * Math.PI * 3 + ts * 0.003
-          const centerDip = Math.sin((wx / W) * Math.PI) * waveAmplitude * 0.6
-          const wy = liquidY - waveAmplitude * Math.sin(phase) - centerDip
-          fctx.lineTo(wx, wy)
-        }
-
-        fctx.lineTo(W, 0)
-        fctx.closePath()
-        fctx.fill()
-        fctx.globalCompositeOperation = 'source-over'
-
-        ctx.drawImage(fillCanvas, 0, 0)
-
-        if (e < TOTAL) {
-          raf = requestAnimationFrame(render)
-        } else {
-          setExiting(true)
-          setTimeout(() => {
-            setGone(true)
-            onComplete()
-          }, 750)
-        }
-      }
-
-      raf = requestAnimationFrame(render)
+function waitForInitialPaint() {
+  return new Promise<void>((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve()
+      return
     }
 
-    return () => { if (raf) cancelAnimationFrame(raf) }
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve())
+    })
+  })
+}
+
+export default function LoadingScreen({ onComplete }: { onComplete: () => void }) {
+  const [progress, setProgress] = useState(8)
+  const [status, setStatus] = useState('Preparing interface')
+  const [exiting, setExiting] = useState(false)
+  const [gone, setGone] = useState(false)
+  const targetRef = useRef(8)
+
+  useEffect(() => {
+    const step = window.setInterval(() => {
+      setProgress((current) => {
+        const target = targetRef.current
+        const next = current + (target - current) * 0.14
+
+        if (target === 100 && next > 99.5) return 100
+        if (Math.abs(target - next) < 0.12) return target
+        return next
+      })
+    }, 16)
+
+    return () => window.clearInterval(step)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    let loadedAssets = 0
+    let exitTimer = 0
+    let goneTimer = 0
+
+    const minimumDisplay = new Promise((resolve) => window.setTimeout(resolve, 900))
+    const failSafe = new Promise((resolve) => window.setTimeout(resolve, 2200))
+    const fontsReady = 'fonts' in document ? document.fonts.ready.catch(() => undefined) : Promise.resolve()
+
+    targetRef.current = 16
+
+    const assetPromises = CRITICAL_ASSETS.map((src) =>
+      preloadImage(src).then(() => {
+        loadedAssets += 1
+        if (cancelled) return
+
+        setStatus(loadedAssets < CRITICAL_ASSETS.length ? 'Loading material assets' : 'Finalizing layout')
+        targetRef.current = 16 + (loadedAssets / CRITICAL_ASSETS.length) * 58
+      })
+    )
+
+    Promise.race([
+      Promise.all([Promise.all(assetPromises), waitForInitialPaint(), fontsReady, minimumDisplay]),
+      failSafe,
+    ]).then(() => {
+      if (cancelled) return
+
+      setStatus('Ready')
+      targetRef.current = 100
+
+      exitTimer = window.setTimeout(() => {
+        if (cancelled) return
+        setExiting(true)
+
+        goneTimer = window.setTimeout(() => {
+          if (cancelled) return
+          setGone(true)
+          onComplete()
+        }, 320)
+      }, 240)
+    })
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(exitTimer)
+      window.clearTimeout(goneTimer)
+    }
   }, [onComplete])
 
   if (gone) return null
 
   return (
     <motion.div
-      initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-      animate={exiting ? {
-        scale: 0.06,
-        x: typeof window !== 'undefined' ? -window.innerWidth * 0.455 : 0,
-        y: typeof window !== 'undefined' ? -window.innerHeight * 0.455 : 0,
-        opacity: 0,
-      } : {}}
-      transition={{ duration: 0.65, ease: [0.76, 0, 0.24, 1] }}
+      initial={{ opacity: 1 }}
+      animate={exiting ? { opacity: 0, scale: 1.01 } : { opacity: 1, scale: 1 }}
+      transition={{ duration: 0.32, ease: [0.25, 0, 0.2, 1] }}
       style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
         backgroundColor: '#f5f1e8',
-        pointerEvents: 'none',
+        color: '#1a1714',
       }}
     >
-      <canvas
-        ref={canvasRef}
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse 66% 56% at 50% 44%, rgba(178,155,127,0.15) 0%, transparent 68%)',
+          pointerEvents: 'none',
+        }}
       />
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+          opacity: 0.018,
+          mixBlendMode: 'multiply',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div
+        style={{
+          position: 'relative',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '32px',
+        }}
+      >
+        <div
+          style={{
+            width: 'min(92vw, 420px)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Image
+            src="/branding/logo-black-numu.png"
+            alt="NUMU"
+            width={240}
+            height={96}
+            priority
+            style={{
+              width: 'auto',
+              height: '72px',
+              display: 'block',
+              mixBlendMode: 'multiply',
+            }}
+          />
+
+          <p
+            className="font-sans uppercase tracking-[0.22em]"
+            style={{
+              fontSize: '0.625rem',
+              opacity: 0.42,
+              marginTop: '28px',
+            }}
+          >
+            Preparing material system
+          </p>
+
+          <div
+            style={{
+              width: '100%',
+              height: '2px',
+              backgroundColor: 'rgba(26,23,20,0.12)',
+              marginTop: '18px',
+              overflow: 'hidden',
+            }}
+          >
+            <motion.div
+              style={{
+                width: `${progress}%`,
+                height: '100%',
+                backgroundColor: '#1a1714',
+                transformOrigin: 'left center',
+              }}
+            />
+          </div>
+
+          <div
+            className="font-sans uppercase tracking-[0.16em]"
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: '10px',
+              fontSize: '0.5625rem',
+              opacity: 0.42,
+            }}
+          >
+            <span>{status}</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+        </div>
+      </div>
     </motion.div>
   )
 }

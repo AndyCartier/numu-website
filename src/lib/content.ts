@@ -146,7 +146,6 @@ export function loadVisitorContent(): VisitorContent {
       label: '07 — Contact',
       heading: 'Specify NUMU.',
       ctas: [
-        { label: 'Specify NUMU for your next project', href: 'mailto:andy@numu.bio' },
         { label: 'Explore the material system', href: '#material' },
       ],
     },
@@ -159,10 +158,10 @@ export function loadInvestorContent(): InvestorContent {
       lines: ['A bio-engineered', 'material', 'platform.'],
       sublabel: 'Investor Overview — Confidential',
       meta: 'The GCC imports 100% of its construction foam. NUMU is building the first local bio-composites platform.',
-      cta: { label: 'View opportunity', href: '#forces' },
+      cta: { label: 'View opportunity', href: '#traction' },
     },
     forces: {
-      label: '01 — Market Forces',
+      label: '03 — Why Now',
       heading: 'Three forces converging now.',
       items: [
         {
@@ -183,17 +182,17 @@ export function loadInvestorContent(): InvestorContent {
       ],
     },
     market: {
-      label: '02 — Market',
+      label: '07 — Market',
       heading: 'A market that grows as NUMU grows.',
       body: "NUMU's addressable market expands in layers as the platform activates new revenue engines. Each phase unlocks a larger opportunity on the same material infrastructure.",
     },
     platform: {
-      label: '03 — Platform',
+      label: '04 — Platform',
       heading: 'NUMU is a material platform, not a single product.',
       body: 'Acoustics is the entry point. The system expands into insulation, interior materials, and construction systems. Each layer compounds proprietary knowledge and manufacturing advantage.',
     },
     revenue_engines: {
-      label: '04 — Revenue Engines',
+      label: '05 — Revenue Engines',
       heading: 'Four engines. One platform.',
       body: 'One material system, four sequenced revenue engines. Each has its own buyer, pricing logic, and activation horizon. They compound on shared production infrastructure and shared feedstock relationships.',
       engines: [
@@ -256,10 +255,10 @@ export function loadInvestorContent(): InvestorContent {
       ],
     },
     traction: {
-      label: '08 — Traction',
+      label: '02 — What Exists Today',
       heading: 'Two installations. One lab. Real feedstock.',
       items: [
-        '2 pilot installations completed — Netherlands 2022, Dubai 2025',
+        'Installations: Netherlands 2022 (completed) + Dubai 2026 Q2 (in progress, KAVE)',
         'Production lab operational — AED 180K founder capital deployed',
         'Process repeatability validated with local UAE agricultural feedstock',
         'Architect and developer pipeline active — conversion expected post-certification',
@@ -269,7 +268,7 @@ export function loadInvestorContent(): InvestorContent {
       ],
     },
     roadmap: {
-      label: '10 — Roadmap',
+      label: '09 — Roadmap',
       heading: 'Phased platform expansion.',
       phases: [
         {
@@ -308,12 +307,12 @@ export function loadInvestorContent(): InvestorContent {
       ],
     },
     business_model: {
-      label: '11 — Business Model',
+      label: '10 — Business Model',
       heading: 'High-margin products transitioning to platform licensing.',
       body: 'Design-led products at premium price points establish brand and margin. Licensing the material platform to regional manufacturers scales without proportional capex.',
     },
     team: {
-      label: '12 — Team',
+      label: '11 — Team',
       heading: 'One founder. Two cofounders. One CGO.',
       body: 'NUMU is built by people who execute, not scientists. The team combines mycelium industrialization, construction finance, IP strategy, and commercial growth.',
       members: [
@@ -348,7 +347,7 @@ export function loadInvestorContent(): InvestorContent {
       ],
     },
     use_of_funds: {
-      label: '13 — Use of Funds',
+      label: '12 — Use of Funds',
       heading: 'AED 2.2M to build the first certified bio-material manufacturing system in the GCC.',
       total: 'AED 2.2M',
       items: [
@@ -360,10 +359,10 @@ export function loadInvestorContent(): InvestorContent {
       ],
     },
     cta: {
-      label: '14 — Next Step',
+      label: '13 — Next Step',
       heading: 'Request the full investor deck.',
       body: 'Raising AED 2.2M to build the first certified bio-material manufacturing system in the GCC.',
-      href: 'mailto:Andy@numu.bio',
+      href: '#contact',
     },
   }
 }

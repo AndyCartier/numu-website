@@ -83,6 +83,8 @@ const SOCIAL = [
   },
 ]
 
+type ContactRequestType = 'investor_deck' | 'project' | 'samples'
+
 function SocialLinks({ dark = false }: { dark?: boolean }) {
   const base = dark ? 'rgba(245,241,232,1)' : 'rgba(26,23,20,1)'
   const borderCol = dark ? 'rgba(245,241,232,0.18)' : 'rgba(26,23,20,0.18)'
@@ -120,6 +122,123 @@ function SocialLinks({ dark = false }: { dark?: boolean }) {
           {s.icon}
         </a>
       ))}
+    </div>
+  )
+}
+
+function DirectContactForm({
+  requestType,
+  source,
+  submitLabel,
+  dark = false,
+}: {
+  requestType: ContactRequestType
+  source: string
+  submitLabel: string
+  dark?: boolean
+}) {
+  const [email, setEmail] = useState('')
+  const [website, setWebsite] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
+
+  const border = dark ? '1px solid rgba(245,241,232,0.22)' : BORDER
+  const buttonBorder = dark ? '1px solid rgba(245,241,232,0.22)' : '1px solid rgba(26,23,20,0.55)'
+  const buttonBg = dark ? 'rgba(245,241,232,0.1)' : 'rgba(26,23,20,0.07)'
+  const inputColor = dark ? 'rgba(245,241,232,0.85)' : 'rgba(26,23,20,0.88)'
+  const primaryTextOpacity = dark ? 0.76 : 0.68
+  const secondaryTextOpacity = dark ? 0.34 : 0.48
+  const errorTextOpacity = dark ? 0.55 : 0.58
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email || status === 'loading') return
+
+    setStatus('loading')
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, website, requestType, source }),
+      })
+
+      if (!res.ok) throw new Error('Request failed')
+
+      setStatus('sent')
+      setEmail('')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  if (status === 'sent') {
+    return (
+      <div className="max-w-lg">
+        <p className="font-sans text-base" style={{ opacity: primaryTextOpacity, lineHeight: 1.6 }}>
+          Request sent.
+        </p>
+        <p className="font-sans text-sm mt-2" style={{ opacity: secondaryTextOpacity, lineHeight: 1.6 }}>
+          Your request has been sent to andy@numu.bio.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-lg">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+        <input
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={website}
+          onChange={e => setWebsite(e.target.value)}
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            width: 1,
+            height: 1,
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
+        />
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="your@email.com"
+          disabled={status === 'loading'}
+          className="font-sans flex-1 px-5 py-4 bg-transparent outline-none"
+          style={{
+            border,
+            fontSize: '0.875rem',
+            color: inputColor,
+            opacity: status === 'loading' ? 0.5 : 0.88,
+          }}
+        />
+        <button
+          type="submit"
+          disabled={status === 'loading'}
+          className="font-sans uppercase tracking-[0.14em] px-7 py-4 flex-shrink-0"
+          style={{
+            border: buttonBorder,
+            backgroundColor: buttonBg,
+            fontSize: '0.75rem',
+            cursor: status === 'loading' ? 'wait' : 'pointer',
+            opacity: status === 'loading' ? 0.55 : 1,
+            transition: 'background-color 0.2s, opacity 0.2s',
+          }}
+        >
+          {status === 'loading' ? 'Sending…' : submitLabel}
+        </button>
+      </form>
+      {status === 'error' && (
+        <p className="font-sans text-xs mt-3" style={{ opacity: errorTextOpacity }}>
+          Sending is temporarily unavailable. Please try again shortly.
+        </p>
+      )}
     </div>
   )
 }
@@ -232,7 +351,7 @@ function SporeField() {
       return {
         segs: [{ x: sx, y: sy }],
         angle: a,
-        speed: 1.4 + Math.random() * 2.2,
+        speed: 2.2 + Math.random() * 2.8,
         wobble: (Math.random() - 0.5) * 0.09,
         width: w,
         alpha: 0,
@@ -246,7 +365,10 @@ function SporeField() {
     }
 
     const MAX_SEGS = 55
-    const hyphae: Root[] = Array.from({ length: 38 }, makeRoot)
+    const BASE_COUNT = 16   // sparse phase
+    const PEAK_COUNT = 52   // dense phase
+    const CYCLE_TICKS = 1080 // ~18s at 60fps
+    const hyphae: Root[] = Array.from({ length: BASE_COUNT }, makeRoot)
 
     type Spore = { x: number; y: number; vx: number; vy: number; r: number; alpha: number; targetAlpha: number; phase: number; freq: number }
     const makeSpore = (): Spore => ({
@@ -269,15 +391,19 @@ function SporeField() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       tick++
 
+      // Density breathing: sine wave from BASE_COUNT→PEAK_COUNT→BASE_COUNT per cycle
+      const breathPhase = (tick % CYCLE_TICKS) / CYCLE_TICKS
+      const breathWave = Math.sin(breathPhase * Math.PI)  // 0 → 1 → 0
+      const densityTarget = BASE_COUNT + Math.round((PEAK_COUNT - BASE_COUNT) * breathWave)
+
       for (const h of hyphae) {
-        h.alpha += (h.targetAlpha - h.alpha) * 0.014
+        h.alpha += (h.targetAlpha - h.alpha) * 0.016
 
         if (h.growing) {
           if (h.segs.length < MAX_SEGS) {
             h.angle += h.wobble + (Math.random() - 0.5) * 0.032
             const last = h.segs[h.segs.length - 1]
             h.segs.push({ x: last.x + Math.cos(h.angle) * h.speed, y: last.y + Math.sin(h.angle) * h.speed })
-            // Branch from current tip (crash-safe)
             if (!h.branched && h.segs.length >= h.branchAt && h.width > 0.5) {
               h.branched = true
               const tip = h.segs[h.segs.length - 1]
@@ -285,7 +411,7 @@ function SporeField() {
                 const child = makeRoot(tip.x, tip.y, h.angle + (Math.random() > 0.5 ? 1 : -1) * (0.4 + Math.random() * 0.5), h.width * 0.55)
                 child.targetAlpha = h.targetAlpha * 0.75
                 hyphae.push(child)
-                if (hyphae.length > 55) hyphae.splice(0, 1)
+                if (hyphae.length > 62) hyphae.splice(0, 1)
               }
             }
           } else {
@@ -295,7 +421,11 @@ function SporeField() {
         }
 
         if (!h.growing && h.alpha < 0.003) {
-          Object.assign(h, makeRoot())
+          // Only respawn if we're below the current density target
+          const alive = hyphae.filter(x => x.growing || x.alpha > 0.01).length
+          if (alive < densityTarget) {
+            Object.assign(h, makeRoot())
+          }
           continue
         }
 
@@ -373,7 +503,7 @@ function HyphaeField() {
     }
     resize()
 
-    const MAX_SEGS = 85
+    const MAX_SEGS = 110
 
     type Hypha = {
       pts: [number, number][]
@@ -389,22 +519,22 @@ function HyphaeField() {
     const make = (): Hypha => {
       const cw = canvas.width
       const ch = canvas.height
-      const spread = Math.min(cw, ch) * 0.26
+      const spread = Math.min(cw, ch) * 0.22
       const ox = cw * 0.5 + (Math.random() - 0.5) * spread
-      const oy = ch * 0.46 + (Math.random() - 0.5) * spread * 0.7
+      const oy = ch * 0.5 + (Math.random() - 0.5) * spread * 0.55
       return {
         pts: [[ox, oy]],
         angle: Math.random() * Math.PI * 2,
         alpha: 0,
-        targetAlpha: 0.04 + Math.random() * 0.09,
-        width: 0.3 + Math.random() * 0.65,
-        speed: 1.1 + Math.random() * 1.3,
+        targetAlpha: 0.18 + Math.random() * 0.26,
+        width: 0.7 + Math.random() * 1.25,
+        speed: 0.95 + Math.random() * 1.25,
         growing: true,
-        wobble: (Math.random() - 0.5) * 0.055,
+        wobble: (Math.random() - 0.5) * 0.05,
       }
     }
 
-    const N = 50
+    const N = 96
     const hyphae: Hypha[] = Array.from({ length: N }, make)
     let raf: number
 
@@ -542,7 +672,7 @@ function ProductionFeature() {
     <section className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
       <div className="max-w-[1440px] mx-auto">
         <div className="mb-10">
-          <p className="font-sans text-label uppercase tracking-[0.18em] mb-3" style={{ opacity: 0.38 }}>Production — Dubai lab</p>
+          <p className="font-sans text-label uppercase tracking-[0.18em] mb-3" style={{ opacity: 0.38 }}>Production</p>
           <p className="font-sans text-base max-w-lg" style={{ opacity: 0.48, lineHeight: 1.75 }}>
             NUMU operates an active production lab in Dubai since 2025. Material is grown and pressed from regional agricultural waste — no imports, no synthetic resins.
           </p>
@@ -691,9 +821,7 @@ function ProcessCarousel() {
 }
 
 // ─── KAVE countdown + feature section ────────────────────────────────────────
-// Target: July 1, 2026 — approximately 1.5 months from launch (May 2026)
-
-const KAVE_TARGET_DATE = new Date('2026-07-01T00:00:00')
+const KAVE_TARGET_DATE = new Date('2026-06-30T00:00:00')
 
 function KaveCountdown() {
   const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
@@ -750,7 +878,7 @@ function BeyondSlideshow() {
     return () => clearInterval(id)
   }, [])
   return (
-    <div className="relative w-full overflow-hidden mb-3" style={{ aspectRatio: '16/9' }}>
+    <div className="relative w-full overflow-hidden mb-4" style={{ aspectRatio: '4/3', backgroundColor: 'rgba(128,128,128,0.06)' }}>
       {BEYOND_SLIDES.map((src, i) => (
         <div key={src} style={{ position: 'absolute', inset: 0, backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: i === slide ? 1 : 0, transition: 'opacity 1s ease-in-out' }} />
       ))}
@@ -807,49 +935,19 @@ function KaveSection() {
 // ─── Investor contact form ────────────────────────────────────────────────────
 
 function InvestorContact({ iv }: { iv: InvestorContent }) {
-  const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email || status === 'loading') return
-    setStatus('loading')
-    try {
-      const res = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
-      setStatus(res.ok ? 'sent' : 'error')
-    } catch { setStatus('error') }
-  }
-
   return (
     <div className="rounded-sm px-10 md:px-16 py-16 md:py-20" style={{ backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)' }}>
       <ILabel text={iv.cta.label} />
       <h2 className="font-display text-headline mb-6 max-w-2xl">{iv.cta.heading}</h2>
       <p className="font-sans text-base leading-[1.75] mb-6 max-w-xl" style={{ opacity: 0.55 }}>{iv.cta.body}</p>
-      {status === 'sent' ? (
-        <div className="mt-6 max-w-lg">
-          <p className="font-sans text-base" style={{ opacity: 0.75, lineHeight: 1.6 }}>Request received. We&apos;ll be in touch shortly.</p>
-          <p className="font-sans text-xs mt-3" style={{ opacity: 0.3 }}>Sent to andy@numu.bio</p>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 mt-6 max-w-lg">
-          <input
-            type="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="your@email.com" required disabled={status === 'loading'}
-            className="flex-1 font-sans text-sm px-5 py-3.5 bg-transparent outline-none"
-            style={{ border: '1px solid rgba(245,241,232,0.22)', color: 'rgba(245,241,232,0.85)', opacity: status === 'loading' ? 0.5 : 1 }}
-          />
-          <button
-            type="submit" disabled={status === 'loading'}
-            className="font-sans text-label uppercase tracking-[0.14em] px-7 py-3.5 flex-shrink-0"
-            style={{ backgroundColor: 'rgba(245,241,232,0.1)', border: '1px solid rgba(245,241,232,0.22)', cursor: status === 'loading' ? 'wait' : 'pointer', opacity: status === 'loading' ? 0.55 : 1, transition: 'opacity 0.2s' }}
-          >
-            {status === 'loading' ? 'Sending…' : 'Request Deck →'}
-          </button>
-        </form>
-      )}
-      {status === 'error' && (
-        <p className="font-sans text-xs mt-3" style={{ opacity: 0.4 }}>Something went wrong — email andy@numu.bio directly.</p>
-      )}
+      <div className="mt-6">
+        <DirectContactForm
+          requestType="investor_deck"
+          source="investor-contact"
+          submitLabel="Request Deck →"
+          dark
+        />
+      </div>
       <div className="mt-10 pt-8 flex flex-col sm:flex-row sm:items-center gap-6" style={{ borderTop: '1px solid rgba(245,241,232,0.1)' }}>
         <p className="font-sans text-label uppercase tracking-[0.16em]" style={{ opacity: 0.28 }}>Connect</p>
         <SocialLinks dark />
@@ -1108,7 +1206,6 @@ function RevenueEngines({ data }: { data: InvestorContent['revenue_engines'] }) 
 
 function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
   const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
   const MAX_VAL = 35
 
   return (
@@ -1119,90 +1216,101 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
       <h3 className="font-display mb-14" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
         {data.heading}
       </h3>
-      <div className="flex items-end gap-4 md:gap-8" style={{ height: 300 }}>
-        {data.years.map((yr, i) => {
-          const lowPct = (yr.low / MAX_VAL) * 100
-          const rangePct = ((yr.high - yr.low) / MAX_VAL) * 100
-          const isLast = i === data.years.length - 1
+      <div className="rounded-sm px-4 py-8 md:px-8 md:py-10" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
+        <div className="flex items-end gap-4 md:gap-10" style={{ height: 'clamp(340px, 38vw, 430px)' }}>
+          {data.years.map((yr, i) => {
+            const lowPct = (yr.low / MAX_VAL) * 100
+            const highPct = (yr.high / MAX_VAL) * 100
+            const displayLowPct = yr.low > 0 ? Math.max(lowPct, 6) : 0
+            const displayHighPct = Math.max(highPct, displayLowPct + (yr.high > yr.low ? 4.5 : 0))
+            const displayRangePct = Math.max(displayHighPct - displayLowPct, yr.high > yr.low ? 4.5 : 0)
+            const isLast = i === data.years.length - 1
 
-          return (
-            <div key={yr.year} className="flex-1 flex flex-col items-center gap-3" style={{ height: '100%' }}>
-              <div className="flex-1 flex flex-col justify-end w-full" style={{ position: 'relative' }}>
-                {/* Floating count-up label above bar */}
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '0px' }}
-                  transition={{ duration: 0.4, delay: 0.8 + i * 0.15 }}
-                  style={{ position: 'absolute', bottom: `${(yr.high / MAX_VAL) * 100 + 2}%`, left: 0, right: 0, textAlign: 'center' }}
-                >
-                  <span className="font-sans" style={{ fontSize: 10, opacity: 0.45, letterSpacing: '0.06em', color: isLast ? ACCENT : undefined }}>
-                    <CountUp to={yr.high} suffix="M" prefix="AED " duration={1.2 + i * 0.1} />
-                  </span>
-                </motion.div>
-
-                {/* Range bar */}
-                <motion.div
-                  initial={{ scaleY: 0 }}
-                  whileInView={{ scaleY: 1 }}
-                  viewport={{ once: true, margin: '0px' }}
-                  transition={{ duration: 0.75, delay: 0.25 + i * 0.15, ease: [0.25, 0, 0.2, 1] }}
-                  style={{
-                    position: 'absolute', bottom: `${lowPct}%`, left: 0, right: 0,
-                    height: `${rangePct}%`,
-                    backgroundColor: isLast ? `${ACCENT}44` : 'rgba(245,241,232,0.2)',
-                    transformOrigin: 'bottom',
-                  }}
-                />
-                {/* Base bar */}
-                <motion.div
-                  initial={{ scaleY: 0 }}
-                  whileInView={{ scaleY: 1 }}
-                  viewport={{ once: true, margin: '0px' }}
-                  transition={{ duration: 0.75, delay: 0.15 + i * 0.15, ease: [0.25, 0, 0.2, 1] }}
-                  style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0,
-                    height: `${lowPct}%`,
-                    backgroundColor: isLast ? ACCENT : i === 0 ? 'rgba(245,241,232,0.45)' : 'rgba(245,241,232,0.72)',
-                    transformOrigin: 'bottom',
-                  }}
-                />
-              </div>
-              <div className="text-center">
-                <p className="font-display text-sm md:text-base" style={{ letterSpacing: '-0.01em', opacity: isLast ? 1 : 0.75, color: isLast ? ACCENT : undefined }}>{yr.label}</p>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.35 }}>{yr.year}</p>
-                {yr.year === 'Y1' && (
+            return (
+              <div key={yr.year} className="flex-1 flex flex-col items-center gap-4" style={{ height: '100%' }}>
+                <div className="flex-1 flex flex-col justify-end w-full" style={{ position: 'relative', maxWidth: 240, margin: '0 auto' }}>
+                  <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, backgroundColor: 'rgba(245,241,232,0.08)' }} />
                   <motion.div
-                    initial={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: 8 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '0px' }}
-                    transition={{ duration: 0.5, delay: 0.7 }}
-                    className="mt-4 inline-block px-3 py-2.5"
-                    style={{ border: '1.5px solid rgba(245,241,232,0.28)', backgroundColor: 'rgba(245,241,232,0.05)', minWidth: 96 }}
+                    transition={{ duration: 0.4, delay: 0.8 + i * 0.15 }}
+                    style={{ position: 'absolute', bottom: `${displayHighPct + 3}%`, left: 0, right: 0, textAlign: 'center' }}
                   >
-                    <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: 'rgba(245,241,232,0.6)', whiteSpace: 'nowrap' }}>Current Raise</p>
-                    <p className="font-display" style={{ fontSize: 15, color: 'rgba(245,241,232,0.82)', letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 3 }}>AED 2.2M</p>
+                    <span className="font-sans" style={{ fontSize: 11, opacity: 0.58, letterSpacing: '0.08em', color: isLast ? ACCENT : undefined }}>
+                      <CountUp to={yr.high} suffix="M" prefix="AED " duration={1.2 + i * 0.1} />
+                    </span>
                   </motion.div>
-                )}
-                {yr.year === 'Y3' && (
+
                   <motion.div
-                    initial={{ opacity: 0, y: 6 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ scaleY: 0 }}
+                    whileInView={{ scaleY: 1 }}
                     viewport={{ once: true, margin: '0px' }}
-                    transition={{ duration: 0.5, delay: 1.0 }}
-                    className="mt-4 inline-block px-3 py-2.5"
-                    style={{ border: `1.5px solid ${ACCENT}88`, backgroundColor: `${ACCENT}18`, minWidth: 96 }}
-                  >
-                    <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: ACCENT, opacity: 0.72, whiteSpace: 'nowrap' }}>Series A</p>
-                    <p className="font-display" style={{ fontSize: 17, color: ACCENT, letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 3 }}>AED 11M</p>
-                  </motion.div>
-                )}
+                    transition={{ duration: 0.75, delay: 0.25 + i * 0.15, ease: [0.25, 0, 0.2, 1] }}
+                    style={{
+                      position: 'absolute',
+                      bottom: `${displayLowPct}%`,
+                      left: 0,
+                      right: 0,
+                      height: `${displayRangePct}%`,
+                      backgroundColor: isLast ? `${ACCENT}4d` : 'rgba(245,241,232,0.22)',
+                      boxShadow: 'inset 0 0 0 1px rgba(245,241,232,0.07)',
+                      transformOrigin: 'bottom',
+                    }}
+                  />
+                  <motion.div
+                    initial={{ scaleY: 0 }}
+                    whileInView={{ scaleY: 1 }}
+                    viewport={{ once: true, margin: '0px' }}
+                    transition={{ duration: 0.75, delay: 0.15 + i * 0.15, ease: [0.25, 0, 0.2, 1] }}
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: `${displayLowPct}%`,
+                      backgroundColor: isLast ? ACCENT : i === 0 ? 'rgba(245,241,232,0.52)' : 'rgba(245,241,232,0.78)',
+                      boxShadow: 'inset 0 0 0 1px rgba(245,241,232,0.08)',
+                      transformOrigin: 'bottom',
+                    }}
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="font-display text-base md:text-lg" style={{ letterSpacing: '-0.01em', opacity: isLast ? 1 : 0.8, color: isLast ? ACCENT : undefined }}>{yr.label}</p>
+                  <p className="font-sans text-label uppercase tracking-[0.16em] mt-1.5" style={{ opacity: 0.42 }}>{yr.year}</p>
+                  {yr.year === 'Y1' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '0px' }}
+                      transition={{ duration: 0.5, delay: 0.7 }}
+                      className="mt-4 inline-block px-3.5 py-3"
+                      style={{ border: '1.5px solid rgba(245,241,232,0.32)', backgroundColor: 'rgba(245,241,232,0.06)', minWidth: 110 }}
+                    >
+                      <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: 'rgba(245,241,232,0.64)', whiteSpace: 'nowrap' }}>Current Raise</p>
+                      <p className="font-display" style={{ fontSize: 16, color: 'rgba(245,241,232,0.84)', letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 4 }}>AED 2.2M</p>
+                    </motion.div>
+                  )}
+                  {yr.year === 'Y3' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '0px' }}
+                      transition={{ duration: 0.5, delay: 1.0 }}
+                      className="mt-4 inline-block px-3.5 py-3"
+                      style={{ border: `1.5px solid ${ACCENT}88`, backgroundColor: `${ACCENT}18`, minWidth: 110 }}
+                    >
+                      <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: ACCENT, opacity: 0.76, whiteSpace: 'nowrap' }}>Series A</p>
+                      <p className="font-display" style={{ fontSize: 18, color: ACCENT, letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 4 }}>AED 11M</p>
+                    </motion.div>
+                  )}
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
-      <div className="mt-8 flex items-center gap-6" style={{ opacity: 0.35 }}>
+      <div className="mt-8 flex items-center gap-6" style={{ opacity: 0.46 }}>
         <div className="flex items-center gap-2">
           <div style={{ width: 12, height: 12, backgroundColor: 'rgba(245,241,232,0.7)' }} />
           <p className="font-sans text-label uppercase tracking-[0.12em]">Base case</p>
@@ -1212,7 +1320,7 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
           <p className="font-sans text-label uppercase tracking-[0.12em]">Upside range</p>
         </div>
       </div>
-      <p className="font-sans text-label mt-5" style={{ opacity: 0.22 }}>
+      <p className="font-sans text-label mt-5" style={{ opacity: 0.32 }}>
         * Projections assume successful certification by month 18 and activation of E3 specification channel. Base case excludes licensing revenue.
       </p>
     </div>
@@ -1605,72 +1713,113 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
 function BusinessModelStreams() {
   return (
     <div className="mt-16" style={{ borderTop: INV_BORDER }}>
-      {/* Branching paths diagram */}
-      <div className="mt-10 mb-10 flex justify-center">
-        <svg viewBox="0 0 560 100" style={{ width: '100%', maxWidth: 560, display: 'block' }}>
-          {/* Platform source node */}
-          <motion.rect x={218} y={8} width={124} height={32} rx={2}
-            fill={`${ACCENT}14`} stroke={ACCENT} strokeWidth={1.2}
-            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-            viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
-          />
-          <text x={280} y={29} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={8} fill={ACCENT} fillOpacity={0.85} letterSpacing={1.2}>MYCELIUM PLATFORM</text>
+      <div className="mt-10 mb-12 flex justify-center">
+        <div className="w-full max-w-[920px] rounded-sm px-6 py-8 md:px-10 md:py-10" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
+          <p className="font-sans text-label uppercase tracking-[0.18em] mb-6 text-center" style={{ opacity: 0.38 }}>
+            Platform monetization structure
+          </p>
+          <div className="md:hidden">
+            <div
+              className="rounded-sm px-4 py-5"
+              style={{ border: '1px solid rgba(245,241,232,0.08)', backgroundColor: 'rgba(245,241,232,0.02)' }}
+            >
+              <div className="flex justify-center">
+                <div
+                  className="px-4 py-3"
+                  style={{ border: `1px solid ${ACCENT}`, backgroundColor: `${ACCENT}14`, borderRadius: 4 }}
+                >
+                  <p className="font-sans uppercase tracking-[0.16em] text-center" style={{ fontSize: '0.625rem', color: ACCENT }}>
+                    Mycelium Platform
+                  </p>
+                </div>
+              </div>
+              <div className="mx-auto" style={{ width: 1, height: 18, backgroundColor: 'rgba(245,241,232,0.22)' }} />
+              <div className="grid grid-cols-1 gap-3">
+                <div
+                  className="px-4 py-4"
+                  style={{ border: `1px solid ${ACCENT}88`, backgroundColor: `${ACCENT}12`, borderRadius: 4 }}
+                >
+                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.625rem', color: ACCENT, opacity: 0.82 }}>
+                    Design Products
+                  </p>
+                  <p className="font-sans" style={{ fontSize: '0.875rem', lineHeight: 1.6, opacity: 0.72 }}>
+                    High-margin direct products sold into near-term architecture and design demand.
+                  </p>
+                </div>
+                <div
+                  className="px-4 py-4"
+                  style={{ border: '1px solid rgba(245,241,232,0.16)', backgroundColor: 'rgba(245,241,232,0.03)', borderRadius: 4 }}
+                >
+                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.625rem', opacity: 0.62 }}>
+                    Material Licensing
+                  </p>
+                  <p className="font-sans" style={{ fontSize: '0.875rem', lineHeight: 1.6, opacity: 0.58 }}>
+                    Scalable platform licensing to regional manufacturers without proportional capex.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <svg className="hidden md:block" viewBox="0 0 760 180" style={{ width: '100%', maxWidth: 760, margin: '0 auto' }}>
+            <motion.rect x={290} y={18} width={180} height={40} rx={3}
+              fill={`${ACCENT}14`} stroke={ACCENT} strokeWidth={1.25}
+              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+              viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
+            />
+            <text x={380} y={43} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={11} fill={ACCENT} fillOpacity={0.9} letterSpacing={1.5}>MYCELIUM PLATFORM</text>
 
-          {/* Fork lines */}
-          <motion.line x1={280} y1={40} x2={280} y2={58}
-            stroke={ACCENT} strokeWidth={1.2}
-            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.3 }}
-          />
-          <motion.line x1={100} y1={58} x2={460} y2={58}
-            stroke="rgba(245,241,232,0.2)" strokeWidth={0.8}
-            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-            viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }}
-          />
-          <motion.line x1={100} y1={58} x2={100} y2={72}
-            stroke={ACCENT} strokeWidth={1.2}
-            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.55 }}
-          />
-          <motion.line x1={460} y1={58} x2={460} y2={72}
-            stroke="rgba(245,241,232,0.3)" strokeWidth={0.85}
-            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.6 }}
-          />
+            <motion.line x1={380} y1={58} x2={380} y2={84}
+              stroke={ACCENT} strokeWidth={1.3}
+              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.3 }}
+            />
+            <motion.line x1={190} y1={84} x2={570} y2={84}
+              stroke="rgba(245,241,232,0.2)" strokeWidth={1}
+              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+              viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }}
+            />
+            <motion.line x1={190} y1={84} x2={190} y2={108}
+              stroke={ACCENT} strokeWidth={1.3}
+              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.55 }}
+            />
+            <motion.line x1={570} y1={84} x2={570} y2={108}
+              stroke="rgba(245,241,232,0.34)" strokeWidth={1.05}
+              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.6 }}
+            />
 
-          {/* Stream 01 */}
-          <motion.rect x={18} y={72} width={164} height={20} rx={1.5}
-            fill={`${ACCENT}12`} stroke={ACCENT} strokeWidth={1.0}
-            initial={{ opacity: 0, y: 4 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.7 }}
-          />
-          <text x={100} y={86} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={7.5} fill={ACCENT} fillOpacity={0.8} letterSpacing={0.8}>DESIGN PRODUCTS — HIGH MARGIN</text>
+            <motion.rect x={54} y={108} width={272} height={34} rx={2.5}
+              fill={`${ACCENT}12`} stroke={ACCENT} strokeWidth={1.05}
+              initial={{ opacity: 0, y: 5 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.7 }}
+            />
+            <text x={190} y={130} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={10.5} fill={ACCENT} fillOpacity={0.88} letterSpacing={1.1}>DESIGN PRODUCTS — HIGH MARGIN</text>
 
-          {/* Stream 02 */}
-          <motion.rect x={378} y={72} width={164} height={20} rx={1.5}
-            fill="rgba(245,241,232,0.04)" stroke="rgba(245,241,232,0.28)" strokeWidth={0.9}
-            initial={{ opacity: 0, y: 4 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.75 }}
-          />
-          <text x={460} y={86} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={7.5} fill="rgba(245,241,232,0.55)" letterSpacing={0.8}>MATERIAL LICENSING — SCALABLE</text>
-        </svg>
+            <motion.rect x={434} y={108} width={272} height={34} rx={2.5}
+              fill="rgba(245,241,232,0.04)" stroke="rgba(245,241,232,0.28)" strokeWidth={0.95}
+              initial={{ opacity: 0, y: 5 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.75 }}
+            />
+            <text x={570} y={130} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={10.5} fill="rgba(245,241,232,0.62)" letterSpacing={1.1}>MATERIAL LICENSING — SCALABLE</text>
+          </svg>
+        </div>
       </div>
 
-      {/* Stream cards */}
       <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.12)' }}>
         {[
           { stream: 'Stream 01', title: 'Design Products', desc: 'Grown acoustic panels and pressed composite boards sold direct to interior designers, architects, and events clients. Two production routes, one material system. High margin. Immediate market. Brand-establishing.', bullets: ['Direct sale', 'High margin', 'Near-term revenue'], accent: true },
           { stream: 'Stream 02', title: 'Material Licensing', desc: 'Licensing the material platform to regional manufacturers. Scalable without proportional capex. Compounds proprietary IP.', bullets: ['Platform fee', 'Scalable', 'Long-term compounding'], accent: false },
         ].map(s => (
-          <div key={s.stream} className="p-10 md:p-14" style={{ backgroundColor: '#0e0e0e' }}>
-            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.35, color: s.accent ? ACCENT : undefined }}>{s.stream}</p>
-            <p className="font-display text-2xl md:text-3xl mb-6" style={{ color: s.accent ? undefined : undefined, opacity: s.accent ? 1 : 0.75 }}>{s.title}</p>
-            <p className="font-sans text-base leading-[1.75] mb-10" style={{ opacity: 0.55 }}>{s.desc}</p>
+          <div key={s.stream} className="p-10 md:p-16" style={{ backgroundColor: '#0f0f0d' }}>
+            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.4, color: s.accent ? ACCENT : undefined }}>{s.stream}</p>
+            <p className="font-display text-[2rem] md:text-[2.6rem] mb-6" style={{ letterSpacing: '-0.03em', opacity: s.accent ? 1 : 0.8 }}>{s.title}</p>
+            <p className="font-sans text-base md:text-[1.0625rem] leading-[1.85] mb-10" style={{ opacity: 0.68 }}>{s.desc}</p>
             <div style={{ borderTop: INV_BORDER_SUBTLE, paddingTop: 24 }}>
               {s.bullets.map(b => (
                 <div key={b} className="flex items-center gap-3 mb-3">
                   <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: s.accent ? ACCENT : 'rgba(245,241,232,1)', opacity: s.accent ? 0.8 : 0.35 }} />
-                  <p className="font-sans text-sm" style={{ opacity: 0.5 }}>{b}</p>
+                  <p className="font-sans text-sm md:text-[0.9375rem]" style={{ opacity: 0.62 }}>{b}</p>
                 </div>
               ))}
             </div>
@@ -1740,7 +1889,7 @@ function TeamMemberCard({ member, i, large }: { member: InvestorContent['team'][
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
-          <p className="font-sans text-label" style={{ fontSize: 9, opacity: 0.18, letterSpacing: '0.1em' }}>Photo coming soon</p>
+          <p className="font-sans text-label" style={{ fontSize: 9, opacity: 0.42, letterSpacing: '0.16em' }}>Portrait — archival</p>
         </div>
       )}
     </div>
@@ -1792,15 +1941,43 @@ function FounderEcosystem() {
 const MAX_VIDEO_TIME = 90  // seconds — trim point
 
 function LabVideo() {
+  const containerRef = useRef<HTMLDivElement>(null)
   const ref = useRef<HTMLVideoElement>(null)
+  const userPausedRef = useRef(false)
   const [playing, setPlaying] = useState(false)
   const [ready, setReady] = useState(false)
   const [progress, setProgress] = useState(0)
   const [hovering, setHovering] = useState(false)
+  const inView = useInView(containerRef, { once: false, amount: 0.35 })
 
-  const play = () => { ref.current?.play(); setPlaying(true) }
-  const pause = () => { ref.current?.pause(); setPlaying(false) }
-  const toggle = (e: React.MouseEvent) => { e.stopPropagation(); playing ? pause() : play() }
+  const play = () => {
+    const video = ref.current
+    if (!video) return
+
+    void video.play().then(() => {
+      setPlaying(true)
+    }).catch(() => {
+      setPlaying(false)
+    })
+  }
+
+  const pause = () => {
+    ref.current?.pause()
+    setPlaying(false)
+  }
+
+  const toggle = (e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    if (playing) {
+      userPausedRef.current = true
+      pause()
+      return
+    }
+
+    userPausedRef.current = false
+    play()
+  }
 
   useEffect(() => {
     const v = ref.current
@@ -1813,6 +1990,19 @@ function LabVideo() {
     return () => v.removeEventListener('timeupdate', onTime)
   }, [ready])
 
+  useEffect(() => {
+    if (!ready) return
+
+    if (inView && !userPausedRef.current) {
+      play()
+      return
+    }
+
+    if (!inView && playing) {
+      pause()
+    }
+  }, [inView, ready, playing])
+
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return
     const rect = e.currentTarget.getBoundingClientRect()
@@ -1823,10 +2013,11 @@ function LabVideo() {
 
   return (
     <div
+      ref={containerRef}
       className="relative w-full overflow-hidden"
       style={{ aspectRatio: '16/9', backgroundColor: 'rgba(128,128,128,0.05)' }}
-      onMouseEnter={() => { setHovering(true); ready && play() }}
-      onMouseLeave={() => { setHovering(false); ready && pause() }}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
     >
       <video
         ref={ref}
@@ -1834,27 +2025,29 @@ function LabVideo() {
         muted
         loop
         playsInline
-        onLoadedData={() => setReady(true)}
+        preload="metadata"
+        poster="/images/products/biofoam_detail.png"
+        onCanPlay={() => setReady(true)}
         onEnded={() => { if (ref.current) { ref.current.currentTime = 0; ref.current.play() } }}
         className="w-full h-full object-cover block"
-        style={{ display: ready ? 'block' : 'none' }}
+        style={{ opacity: ready ? 1 : 0.92, transition: 'opacity 0.25s ease' }}
         suppressHydrationWarning
       />
 
       {/* Placeholder */}
       {!ready && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3" style={{ border: '1px solid rgba(128,128,128,0.1)' }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3" style={{ border: '1px solid rgba(128,128,128,0.1)', backgroundColor: 'rgba(26,23,20,0.08)' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" width={28} height={28} style={{ opacity: 0.18 }}>
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
-          <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.5625rem', opacity: 0.28 }}>Production lab — process documentation</p>
+          <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.5625rem', opacity: 0.28 }}>Loading process documentation</p>
         </div>
       )}
 
       {/* Play hint — only when ready and not yet played */}
       {ready && !playing && !hovering && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.5rem', opacity: 0.38 }}>Hover to play</p>
+          <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.5rem', opacity: 0.38 }}>Process documentation</p>
         </div>
       )}
 
@@ -1905,16 +2098,6 @@ function LabVideo() {
 // ─── Explore CTA ──────────────────────────────────────────────────────────────
 
 function ExploreCTA() {
-  const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email) return
-    window.location.href = `mailto:andy@numu.bio?subject=Sample Request&body=From: ${encodeURIComponent(email)}%0A%0AI would like to request samples of NUMU PALMYCO™.`
-    setSent(true)
-  }
-
   return (
     <VSection id="specify">
       <VLabel text="Specify NUMU" />
@@ -1924,37 +2107,11 @@ function ExploreCTA() {
       <p className="font-sans leading-[1.75] max-w-xl mb-14" style={{ fontSize: '1rem', opacity: 0.55 }}>
         Samples, specification sheets, and project conversations for architects, interior designers, and fit-out teams. Based in Dubai. Delivering regionally.
       </p>
-      {sent ? (
-        <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: 12, opacity: 0.55 }}>Opening your email client — we'll be in touch.</p>
-      ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-lg">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="your@email.com"
-            className="font-sans flex-1 px-5 py-4 bg-transparent"
-            style={{
-              border: BORDER, outline: 'none', fontSize: '0.875rem', opacity: 0.75,
-              color: 'inherit',
-            }}
-          />
-          <button
-            type="submit"
-            className="font-sans uppercase tracking-[0.14em] px-7 py-4 flex-shrink-0"
-            style={{
-              border: '1px solid rgba(26,23,20,0.55)',
-              backgroundColor: 'rgba(26,23,20,0.07)',
-              fontSize: '0.75rem',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s',
-            }}
-          >
-            Request samples →
-          </button>
-        </form>
-      )}
+      <DirectContactForm
+        requestType="samples"
+        source="public-specify"
+        submitLabel="Request samples →"
+      />
     </VSection>
   )
 }
@@ -2037,7 +2194,7 @@ function VisitorView({ v }: { v: VisitorContent }) {
               </p>
             </div>
             <div className="mt-auto pt-12" style={{ borderTop: '1px solid rgba(128,128,128,0.1)', marginTop: 'auto' }}>
-              <p className="font-sans uppercase tracking-[0.16em] mb-5" style={{ fontSize: 9, opacity: 0.35 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mb-5" style={{ fontSize: 9, opacity: 0.55 }}>
                 Substrate inputs — regional agricultural residues
               </p>
               <div className="grid grid-cols-2 gap-4 mb-12">
@@ -2046,28 +2203,28 @@ function VisitorView({ v }: { v: VisitorContent }) {
                   <div className="relative w-full mb-3" style={{ aspectRatio: '1/1' }}>
                     <Image src="/images/materials/palm_leaf_substrate.png" alt="Palm leaf agricultural substrate from UAE date palm pruning waste" fill unoptimized className="object-contain object-center" sizes="(max-width: 1024px) 50vw, 25vw" />
                   </div>
-                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.04em' }}>Palm leaf fibre</p>
-                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.32 }}>UAE date palm pruning waste, the region&apos;s largest agricultural residue stream.</p>
+                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.7, letterSpacing: '0.04em' }}>Palm leaf fibre</p>
+                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.5 }}>UAE date palm pruning waste, the region&apos;s largest agricultural residue stream.</p>
                 </div>
                 <div>
                   <div className="relative w-full mb-3" style={{ aspectRatio: '1/1' }}>
                     <Image src="/images/materials/hemp_shivs.jpg" alt="Plant fibre blend — mixed agricultural by-products sourced regionally" fill unoptimized className="object-cover object-center" sizes="(max-width: 1024px) 50vw, 25vw" style={{ mixBlendMode: 'multiply' }} />
                   </div>
-                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.04em' }}>Plant fibre blend</p>
-                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.32 }}>Mixed agricultural by-products sourced regionally.</p>
+                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.7, letterSpacing: '0.04em' }}>Plant fibre blend</p>
+                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.5 }}>Mixed agricultural by-products sourced regionally.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-4" style={{ border: '1px solid rgba(128,128,128,0.1)', backgroundColor: 'rgba(128,128,128,0.03)' }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'rgba(26,23,20,0.4)', flexShrink: 0, marginTop: 5 }} />
                 <div>
-                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.04em' }}>Spent mushroom substrate (SMS)</p>
-                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.32 }}>A waste stream already generated by regional commercial mushroom farms. Near-zero feedstock cost. Powers the pressed board production line.</p>
+                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.7, letterSpacing: '0.04em' }}>Spent mushroom substrate (SMS)</p>
+                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.5 }}>A waste stream already generated by regional commercial mushroom farms. Near-zero feedstock cost. Powers the pressed board production line.</p>
                 </div>
               </div>
             </div>
             {/* Production routes */}
             <div className="pt-12 mt-12" style={{ borderTop: '1px solid rgba(128,128,128,0.1)' }}>
-              <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: 9, opacity: 0.35 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: 9, opacity: 0.55 }}>
                 Production routes
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2076,7 +2233,7 @@ function VisitorView({ v }: { v: VisitorContent }) {
                     <Image src="/images/products/Chair.jpeg" alt="Grown mycelium chair — NUMU material formed into product application" fill unoptimized className="object-contain object-center" sizes="(max-width: 640px) 100vw, 50vw" style={{ mixBlendMode: 'multiply' }} />
                   </div>
                   <div className="p-5">
-                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.45 }}>Grown</p>
+                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.62 }}>Grown</p>
                     <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
                       Mycelium cultivated inside proprietary molds over a controlled growth cycle, then heat-stabilized into a finished form. Produces distinctive surface texture and complex three-dimensional form factors.
                     </p>
@@ -2088,7 +2245,7 @@ function VisitorView({ v }: { v: VisitorContent }) {
                     <Image src="/images/products/pressed_detail.png" alt="Pressed mycelium board close-up — surface texture and cross-section detail" fill unoptimized className="object-cover object-center" sizes="(max-width: 640px) 100vw, 50vw" />
                   </div>
                   <div className="p-5">
-                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.45 }}>Pressed</p>
+                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.62 }}>Pressed</p>
                     <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
                       Spent mycelium biomass shredded and heat-pressed directly into flat board formats. Minutes of press time rather than weeks of cultivation.
                     </p>
@@ -2101,69 +2258,6 @@ function VisitorView({ v }: { v: VisitorContent }) {
           <div className="relative overflow-hidden aspect-[3/4] lg:aspect-auto">
             <Image src="/images/products/biofoam_detail.png" alt="NUMU PALMYCO™ — material study" fill className="object-cover object-center" sizes="(max-width: 1024px) 100vw, 50vw" />
           </div>
-        </div>
-      </VSection>
-
-      {/* Applications */}
-      <VSection id="applications">
-        <VLabel text="The Platform" />
-        <VHeading text="One material platform, many applications." />
-        <p className="font-sans leading-[1.75] mb-3 max-w-2xl" style={{ fontSize: '1rem', opacity: 0.58 }}>
-          Acoustic panels are the entry product. The platform expands across four revenue lines, each running on the same material system and the same production infrastructure.
-        </p>
-        <p className="font-sans leading-[1.75] mb-14 max-w-2xl" style={{ fontSize: '0.9375rem', opacity: 0.38 }}>
-          Grown PALMYCO™ enters the market through decorative acoustic panels, scales through certified architectural specification, and extends into thermal wall assemblies. Pressed PALMYCO™ serves events, brand activations, and non-structural interior applications, with scalable throughput on a separate production line. Packaging and regional licensing open in phase two.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {[
-            {
-              title: 'Acoustic — Grown',
-              tagline: 'Decorative and specification-grade mycelium panels for interior architecture. First product: FOLD.',
-              status: 'Active',
-              active: true,
-              image: '/images/materials/acoustic_render_05.png',
-              imageAlt: 'NUMU grown acoustic panels — FOLD product line, interior architecture',
-            },
-            {
-              title: 'Boards — Pressed',
-              tagline: 'Heat-pressed mycelium composite boards for events, brand activations, and temporary architecture.',
-              status: 'Active',
-              active: true,
-              image: '/images/applications/event_board.png',
-              imageAlt: 'NUMU pressed mycelium composite board — event and temporary architecture application',
-            },
-            {
-              title: 'Thermal',
-              tagline: 'Passive insulation grown from palm fibre, designed for hot-climate wall assemblies.',
-              status: 'In Development',
-              active: false,
-              image: '/images/applications/thermal_panel_wall.png',
-              imageAlt: 'NUMU thermal panel — wall assembly integration',
-            },
-            {
-              title: 'Packaging',
-              tagline: 'Molded protective forms, compostable alternative to petroleum-based foams.',
-              status: 'In Development',
-              active: false,
-              image: '/images/applications/packaging_protective.png',
-              imageAlt: 'NUMU protective packaging — molded mycelium form',
-            },
-          ].map(app => (
-            <div key={app.title} style={{ border: BORDER }}>
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
-                <Image src={app.image} alt={app.imageAlt} fill className="object-cover object-center" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw" />
-                <div className="absolute bottom-3 left-3">
-                  <span className="font-sans uppercase" style={{ fontSize: 9, letterSpacing: '0.14em', padding: '4px 8px', backgroundColor: app.active ? 'rgba(26,23,20,0.82)' : 'rgba(26,23,20,0.48)', color: '#f5f1e8' }}>
-                    {app.status}
-                  </span>
-                </div>
-              </div>
-              <div className="px-5 py-6">
-                <p className="font-display mb-2" style={{ fontSize: '1.25rem', letterSpacing: '-0.02em', opacity: app.active ? 1 : 0.55 }}>{app.title}</p>
-                <p className="font-sans leading-relaxed" style={{ fontSize: 13, opacity: app.active ? 0.48 : 0.32 }}>{app.tagline}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </VSection>
 
@@ -2232,61 +2326,196 @@ function VisitorView({ v }: { v: VisitorContent }) {
               { field: 'End of life', value: '100% bio-based, biodegradable under natural composting conditions' },
             ].map(spec => (
               <div key={spec.field} className="px-6 py-7" style={{ backgroundColor: 'rgba(26,23,20,0.03)' }}>
-                <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.5625rem', opacity: 0.35 }}>{spec.field}</p>
-                <p className="font-sans" style={{ fontSize: '0.875rem', opacity: 0.72 }}>{spec.value}</p>
+                <p className="font-sans uppercase tracking-[0.12em] mb-2.5" style={{ fontSize: '0.625rem', opacity: 0.4 }}>{spec.field}</p>
+                <p className="font-sans" style={{ fontSize: '0.9375rem', opacity: 0.78 }}>{spec.value}</p>
               </div>
             ))}
           </div>
         </div>
       </VSection>
 
-      {/* Thermal application detail */}
+      {/* Installations — moved up: proof of execution, right after FOLD */}
+      <VSection id="installations">
+        <VLabel text="03 — Installations" />
+        <VHeading text="Two installations. Real conditions." />
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-start">
+          <div className="h-full p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.02)' }}>
+            <BeyondSlideshow />
+            <VLabel text="Netherlands — 2022" />
+            <p className="font-display text-xl md:text-2xl mt-1">Beyond Chrysant</p>
+            <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.875rem', opacity: 0.56 }}>
+              Prototype installation demonstrating the folded acoustic language in a built exhibition context.
+            </p>
+          </div>
+          <div className="h-full p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.02)' }}>
+            <div className="relative mb-4 overflow-hidden" style={{ aspectRatio: '4/3', backgroundColor: 'rgba(128,128,128,0.06)' }}>
+              <Image src="/images/projects/acoustic%20render%2007.png" alt="KAVE — FOLD acoustic panel installation, Dubai 2026" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+            </div>
+            <VLabel text="Dubai, UAE — 2026 Q2 · in progress" />
+            <p className="font-display text-xl md:text-2xl mt-1">KAVE</p>
+            <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.875rem', opacity: 0.56 }}>
+              Current Dubai client installation translating FOLD into a live interior environment.
+            </p>
+          </div>
+        </div>
+      </VSection>
+
+      {/* KAVE — dedicated section with countdown */}
+      <KaveSection />
+
+      {/* Specify NUMU CTA */}
+      <ExploreCTA />
+
+      {/* 04 Process */}
+      <section id="process" style={{ borderTop: BORDER, paddingTop: '5rem', paddingBottom: '4rem' }}>
+        {/* Title — compact, above the diagram */}
+        <div className="px-6 md:px-12 mb-6 max-w-[1440px] mx-auto">
+          <VLabel text={v.process.label} />
+          <VHeading text={v.process.heading} />
+        </div>
+        {/* Diagram — full bleed, no max-width constraint */}
+        <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+          <ProcessDiagram />
+        </div>
+      </section>
+
+      {/* Production feature */}
+      <ProductionFeature />
+
+      {/* Lab Process Feature */}
+      <section id="lab" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
+        <div className="max-w-[1440px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-12 lg:gap-20 items-start">
+            <div>
+              <h2 className="font-display mb-8" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', lineHeight: 1.05, letterSpacing: '-0.03em' }}>
+                The process, documented.
+              </h2>
+              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
+                PALMYCO™ is produced in our active production lab. This footage documents the full process cycle — substrate preparation, mycelium inoculation, growth, heat-stabilization, and finishing. No renders, no simulations. Real production conditions, repeatable process.
+              </p>
+              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.28 }}>
+                Duration — 1 min 34 sec
+              </p>
+            </div>
+            <div>
+              <LabVideo />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Process carousel */}
+      <ProcessCarousel />
+
+      {/* Applications — platform horizons */}
+      <VSection id="applications">
+        <VLabel text="07 — Platform Horizons" />
+        <VHeading text="One material platform. Current product. Future lines." />
+        <p className="font-sans leading-[1.75] mb-3 max-w-2xl" style={{ fontSize: '1rem', opacity: 0.62 }}>
+          Acoustic panels are the entry product, available now. The platform expands across four revenue lines, each running on the same material system and the same production infrastructure.
+        </p>
+        <p className="font-sans leading-[1.75] mb-14 max-w-2xl" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
+          PALMYCO™ — the grown line — enters the market through decorative acoustic panels, scales through certified architectural specification, and extends into thermal wall assemblies. The pressed-board line — built from spent mushroom substrate on the same production infrastructure — serves events, brand activations, and non-structural interior applications. Packaging and regional licensing open in phase two.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {[
+            {
+              title: 'Acoustic — Grown',
+              tagline: 'Decorative and specification-grade mycelium panels for interior architecture. First product: FOLD.',
+              status: 'Active',
+              active: true,
+              image: '/images/materials/acoustic_render_05.png',
+              imageAlt: 'NUMU grown acoustic panels — FOLD product line, interior architecture',
+            },
+            {
+              title: 'Boards — Pressed',
+              tagline: 'Heat-pressed mycelium composite boards for events, brand activations, and temporary architecture.',
+              status: 'Active',
+              active: true,
+              image: '/images/applications/event_board.png',
+              imageAlt: 'NUMU pressed mycelium composite board — event and temporary architecture application',
+            },
+            {
+              title: 'Thermal',
+              tagline: 'Passive insulation grown from palm fibre, designed for hot-climate wall assemblies.',
+              status: 'In Development',
+              active: false,
+              image: '/images/applications/thermal_panel_wall.png',
+              imageAlt: 'NUMU thermal panel — wall assembly integration',
+            },
+            {
+              title: 'Packaging',
+              tagline: 'Molded protective forms, compostable alternative to petroleum-based foams.',
+              status: 'In Development',
+              active: false,
+              image: '/images/applications/packaging_protective.png',
+              imageAlt: 'NUMU protective packaging — molded mycelium form',
+            },
+          ].map(app => (
+            <div key={app.title} style={{ border: BORDER }}>
+              <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
+                <Image src={app.image} alt={app.imageAlt} fill className="object-cover object-center" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw" />
+                <div className="absolute bottom-3 left-3">
+                  <span className="font-sans uppercase" style={{ fontSize: 9, letterSpacing: '0.14em', padding: '4px 8px', backgroundColor: app.active ? 'rgba(26,23,20,0.82)' : 'rgba(26,23,20,0.48)', color: '#f5f1e8' }}>
+                    {app.status}
+                  </span>
+                </div>
+              </div>
+              <div className="px-5 py-6">
+                <p className="font-display mb-2" style={{ fontSize: '1.25rem', letterSpacing: '-0.02em', opacity: app.active ? 1 : 0.55 }}>{app.title}</p>
+                <p className="font-sans leading-relaxed" style={{ fontSize: 13, opacity: app.active ? 0.6 : 0.42 }}>{app.tagline}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </VSection>
+
+      {/* Platform horizon — Thermal */}
       <section id="thermal" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.5 }}>Applications — Thermal</p>
+          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.55 }}>Platform horizon — Thermal</p>
           <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-12 lg:gap-20 items-start">
             <div className="w-full overflow-hidden">
               <Image src="/images/applications/thermal_panel_wall.png" alt="NUMU thermal panel — wall integration" width={2400} height={1350} style={{ width: '100%', height: 'auto', display: 'block' }} sizes="(max-width: 1440px) 100vw, 60vw" />
             </div>
             <div className="lg:pt-4">
-              <p className="font-display mb-6" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.75rem)', lineHeight: '1.1', letterSpacing: '-0.025em', opacity: 0.8 }}>
+              <p className="font-display mb-6" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.75rem)', lineHeight: '1.1', letterSpacing: '-0.025em', opacity: 0.85 }}>
                 Bio-based thermal systems.
               </p>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.48 }}>
+              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>
                 NUMU materials can be integrated within wall assemblies to provide passive thermal performance. The porous structure of the material enables insulation while remaining breathable.
               </p>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.48 }}>
+              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>
                 Designed for hot climates, the system supports reduced energy demand and improved indoor comfort without synthetic foams.
               </p>
-              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.28 }}>
-                Currently in development — NUMU material platform
+              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.42 }}>
+                In development — opens after certification of the acoustic line
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Packaging application detail */}
+      {/* Platform horizon — Packaging */}
       <section id="packaging" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.5 }}>Applications — Packaging</p>
+          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.55 }}>Platform horizon — Packaging</p>
 
-          {/* Main layout: text (wider) left, image right */}
           <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-12 lg:gap-20 items-start mb-16">
             <div>
-              <p className="font-display mb-6" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.75rem)', lineHeight: '1.1', letterSpacing: '-0.025em', opacity: 0.8 }}>
+              <p className="font-display mb-6" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.75rem)', lineHeight: '1.1', letterSpacing: '-0.025em', opacity: 0.85 }}>
                 Molded protection, grown not manufactured.
               </p>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
+              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.6 }}>
                 NUMU materials can be shaped into protective packaging forms — a compostable alternative to petroleum-based foams. Each piece is grown into shape from agricultural waste, maintaining shock absorption while remaining fully biodegradable at end of life.
               </p>
-              <p className="font-sans leading-[1.75] mb-10" style={{ fontSize: '0.9375rem', opacity: 0.45 }}>
+              <p className="font-sans leading-[1.75] mb-10" style={{ fontSize: '0.9375rem', opacity: 0.5 }}>
                 Working with mycelium means manufacturing with a living material system. Each object is grown from natural fibers, shaped through biological growth, and stabilized into a functional product. Sustainability is not added afterward — it is built into the material process itself.
               </p>
-              <p className="font-sans uppercase tracking-[0.16em] mb-1" style={{ fontSize: 10, opacity: 0.32 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mb-1" style={{ fontSize: 10, opacity: 0.48 }}>
                 Scalable application — logistics and product protection
               </p>
-              <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: 10, opacity: 0.22 }}>
+              <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: 10, opacity: 0.42 }}>
                 European pathway — Biomyc partnership, LOI signed
               </p>
             </div>
@@ -2295,9 +2524,8 @@ function VisitorView({ v }: { v: VisitorContent }) {
             </div>
           </div>
 
-          {/* Material comparison: Styrofoam vs Mycelium */}
           <div>
-            <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ fontSize: '0.5625rem', opacity: 0.32 }}>Material comparison</p>
+            <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ fontSize: '0.5625rem', opacity: 0.5 }}>Material comparison</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
               {[
                 {
@@ -2324,13 +2552,13 @@ function VisitorView({ v }: { v: VisitorContent }) {
                 },
               ].map((col) => (
                 <div key={col.name} className="px-7 py-8" style={{ backgroundColor: col.highlight ? 'rgba(26,23,20,0.04)' : 'rgba(26,23,20,0.01)' }}>
-                  <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: '0.5625rem', opacity: col.highlight ? 0.65 : 0.28 }}>{col.name}</p>
+                  <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: '0.5625rem', opacity: col.highlight ? 0.72 : 0.5 }}>{col.name}</p>
                   {col.items.map((item, j) => (
                     <div key={j} className="flex items-start gap-3 mb-3">
-                      <span style={{ fontSize: 7, opacity: col.highlight ? 0.55 : 0.28, flexShrink: 0, marginTop: 4 }}>
+                      <span style={{ fontSize: 7, opacity: col.highlight ? 0.6 : 0.42, flexShrink: 0, marginTop: 4 }}>
                         {col.highlight ? '◆' : '○'}
                       </span>
-                      <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: col.highlight ? 0.68 : 0.42 }}>{item}</p>
+                      <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: col.highlight ? 0.72 : 0.55 }}>{item}</p>
                     </div>
                   ))}
                 </div>
@@ -2340,56 +2568,11 @@ function VisitorView({ v }: { v: VisitorContent }) {
         </div>
       </section>
 
-      {/* 04 Process */}
-      <section id="process" style={{ borderTop: BORDER, paddingTop: '5rem', paddingBottom: '4rem' }}>
-        {/* Title — compact, above the diagram */}
-        <div className="px-6 md:px-12 mb-6 max-w-[1440px] mx-auto">
-          <VLabel text={v.process.label} />
-          <VHeading text={v.process.heading} />
-        </div>
-        {/* Diagram — full bleed, no max-width constraint */}
-        <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto' }}>
-          <ProcessDiagram />
-        </div>
-      </section>
-
-      {/* Production feature */}
-      <ProductionFeature />
-
-      {/* Lab Process Feature */}
-      <section id="lab" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
-        <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.5 }}>Production lab — Dubai</p>
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-12 lg:gap-20 items-start">
-            <div>
-              <h2 className="font-display mb-8" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', lineHeight: 1.05, letterSpacing: '-0.03em' }}>
-                The process, documented.
-              </h2>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
-                PALMYCO™ is produced in our active Dubai production lab. This footage documents the full process cycle — substrate preparation, mycelium inoculation, growth, heat-stabilization, and finishing. Shot prior to the Dubai lab setup. No renders, no simulations. Real production conditions, repeatable process.
-              </p>
-              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.28 }}>
-                Duration — 1 min 34 sec
-              </p>
-            </div>
-            <div>
-              <LabVideo />
-              <p className="font-sans uppercase tracking-[0.14em] mt-3" style={{ fontSize: 9, opacity: 0.28 }}>
-                Lab footage, Dubai, 2025–2026. Unedited sequence.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Process carousel */}
-      <ProcessCarousel />
-
       {/* Manifesto */}
       <section id="manifesto" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-16" style={{ fontSize: '0.6875rem', opacity: 0.48 }}>Manifesto</p>
-          <h2 className="font-sans uppercase tracking-[0.14em] mb-14" style={{ fontSize: '0.6875rem', opacity: 0.54 }}>What we believe.</h2>
+          <p className="font-sans uppercase tracking-[0.18em] mb-16" style={{ fontSize: '0.6875rem', opacity: 0.55 }}>Manifesto</p>
+          <h2 className="font-sans uppercase tracking-[0.14em] mb-14" style={{ fontSize: '0.6875rem', opacity: 0.6 }}>What we believe.</h2>
           <div>
             {[
               'Performance before narrative.',
@@ -2417,33 +2600,6 @@ function VisitorView({ v }: { v: VisitorContent }) {
           </div>
         </div>
       </section>
-
-      {/* Installations */}
-      <VSection id="installations">
-        <VLabel text="Installations" />
-        <VHeading text="Two installations. Real conditions." />
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <BeyondSlideshow />
-            <VLabel text="Netherlands — 2022" />
-            <p className="font-display text-xl md:text-2xl mt-1">Beyond Chrysant</p>
-          </div>
-          {/* KAVE gets its own dedicated section below — see KaveSection */}
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-            <p className="font-sans leading-[1.75] max-w-sm mb-4" style={{ fontSize: '0.9375rem', opacity: 0.48 }}>
-              A second installation — KAVE, Dubai 2025 — is currently in progress. See below.
-            </p>
-            <VLabel text="Dubai, UAE — 2025" />
-            <p className="font-display text-xl md:text-2xl mt-1">KAVE</p>
-          </div>
-        </div>
-      </VSection>
-
-      {/* KAVE — dedicated section with countdown */}
-      <KaveSection />
-
-      {/* Specify NUMU CTA */}
-      <ExploreCTA />
 
       {/* 06 Founder */}
       <VSection id="founder">
@@ -2473,6 +2629,13 @@ function VisitorView({ v }: { v: VisitorContent }) {
         <p className="font-sans mb-12 max-w-md" style={{ fontSize: '0.9375rem', lineHeight: 1.75, opacity: 0.5 }}>
           Based in Dubai. Samples, project consultation, and specification support for architects, interior designers, and fit-out teams.
         </p>
+        <div className="mb-14">
+          <DirectContactForm
+            requestType="project"
+            source="public-contact"
+            submitLabel="Send project inquiry →"
+          />
+        </div>
         <div className="flex flex-col sm:flex-row gap-4 mb-24">
           {v.contact.ctas.map((cta, i) => (
             <a
@@ -2501,9 +2664,111 @@ function VisitorView({ v }: { v: VisitorContent }) {
 function InvestorView({ iv }: { iv: InvestorContent }) {
   return (
     <>
-      {/* 01 Problem — Three Forces */}
+      {/* 02 — What Exists Today (Traction) */}
+      <ISection id="traction">
+        <ILabel text="02 — What Exists Today" />
+        <IHeading text={iv.traction.heading} />
+        {/* Centered content container — stats + list + photos */}
+        <div style={{ maxWidth: 880, marginLeft: 'auto', marginRight: 'auto' }}>
+          {/* Traction stats */}
+          <div className="grid grid-cols-3 gap-px mt-8 mb-2" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
+            {[
+              { to: 180, prefix: 'AED ', suffix: 'K', label: 'Founder capital deployed' },
+              { to: 2, prefix: '', suffix: '', label: 'Real installations built' },
+              { to: 7, prefix: '', suffix: 'yrs', label: 'Operational experience' },
+            ].map((s, i) => (
+              <div key={s.label} className="px-6 py-6" style={{ backgroundColor: '#0e0e0e' }}>
+                <p className="font-display mb-1" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', letterSpacing: '-0.04em', lineHeight: 1, color: ACCENT }}>
+                  <span style={{ fontSize: '0.5em', opacity: 0.7 }}>{s.prefix}</span>
+                  <CountUp to={s.to} suffix={s.suffix} duration={1.1 + i * 0.1} />
+                </p>
+                <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.5, fontSize: '0.5625rem' }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-14 pl-5" style={{ borderTop: INV_BORDER, borderLeft: '2px solid rgba(245,241,232,0.18)' }}>
+            {iv.traction.items.map((item, i) => (
+              <div key={item} className="flex items-start gap-5 py-5" style={{ borderBottom: i < iv.traction.items.length - 1 ? INV_BORDER_SUBTLE : 'none', lineHeight: 2 }}>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} className="flex-shrink-0 mt-2" style={{ opacity: 0.6 }}>
+                  <polyline points="2,8 6,12 14,4" />
+                </svg>
+                <p className="font-sans text-base md:text-lg leading-snug" style={{ opacity: 0.82 }}>{item}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
+            {[
+              {
+                project: 'Beyond Chrysant',
+                location: 'Netherlands — 2022',
+                caption: 'Beyond Chrysant — Netherlands, 2022',
+                brief: 'Beyond Chrysant — mycelium acoustic installation, Netherlands 2022.',
+                image: '/images/projects/Beyond01.png',
+                tint: 'grayscale(40%) brightness(0.92)',
+              },
+              {
+                project: 'KAVE',
+                location: 'Dubai, UAE — 2026 Q2 · in progress',
+                caption: 'KAVE — Dubai, UAE 2026 Q2',
+                brief: 'KAVE — FOLD acoustic panel installation, Dubai 2026 Q2 (in progress).',
+                image: '/images/projects/acoustic%20render%2007.png',
+                tint: 'grayscale(40%) brightness(0.92)',
+              },
+            ].map(inst => (
+              <div key={inst.project}>
+                <div className="relative mb-3 overflow-hidden" style={{ aspectRatio: '16/9', backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)' }}>
+                  <Image src={inst.image} alt={inst.brief} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" style={{ filter: inst.tint ?? 'none' }} />
+                </div>
+                <ILabel text={inst.location} />
+                <p className="font-display text-lg md:text-xl">{inst.project}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Featured In */}
+        <div className="mt-16" style={{ borderTop: INV_BORDER, paddingTop: 40 }}>
+          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.5 }}>Featured In</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
+            {[
+              { pub: 'Wallpaper*', headline: 'Postcard from Dubai Design Week 2024: the highlights', url: 'https://www.wallpaper.com/design-interiors/design-events/dubai-design-week-highlights', date: 'Nov 2024' },
+              { pub: 'The National', headline: 'How coral stones, reefs and mycelium inspired the winning Abwab projects', url: 'https://www.thenationalnews.com/arts-culture/art-design/2024/10/03/abwab-dubai-design-week-coral-stones-reefs-mycelium/', date: 'Oct 2024' },
+              { pub: 'STIRworld', headline: 'A decade on, Dubai Design Week is still growing alongside the MENA culture scene', url: 'https://www.stirworld.com/inspire-visits-a-decade-on-dubai-design-week-is-still-growing-alongside-the-mena-culture-scene', date: 'Nov 2024' },
+              { pub: 'Design Anthology', headline: 'Dubai Design Week Celebrates its Tenth Edition', url: 'https://design-anthology.com/story/dubai-design-week-2024', date: 'Jul 2025' },
+            ].map((item, i) => (
+              <motion.a
+                key={i}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '0px' }}
+                transition={{ duration: 0.4, delay: i * 0.08, ease: [0.25, 0, 0.2, 1] }}
+                className="flex flex-col gap-3 p-6"
+                style={{
+                  backgroundColor: '#0e0e0e',
+                  textDecoration: 'none',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(245,241,232,0.04)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#0e0e0e' }}
+              >
+                <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.625rem', opacity: 0.55, letterSpacing: '0.16em' }}>{item.pub}</p>
+                <p className="font-sans leading-[1.55] flex-1" style={{ fontSize: '0.8125rem', opacity: 0.76 }}>{item.headline}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="font-sans" style={{ fontSize: '0.625rem', opacity: 0.42, letterSpacing: '0.08em' }}>{item.date}</p>
+                  <span style={{ fontSize: '0.625rem', opacity: 0.42 }}>↗</span>
+                </div>
+              </motion.a>
+            ))}
+          </div>
+        </div>
+      </ISection>
+
+      {/* 03 — Why Now (Market Forces) */}
       <ISection id="forces">
-        <ILabel text={iv.forces.label} />
+        <ILabel text="03 — Why Now" />
         <IHeading text={iv.forces.heading} />
         <ThreeForces forces={iv.forces} />
         <InvestorMetricsStrip />
@@ -2587,18 +2852,10 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
         <CompetitiveGrid data={iv.competitive} />
       </ISection>
 
-      {/* 04 Market */}
-      <ISection id="market">
-        <ILabel text={iv.market.label} />
-        <IHeading text={iv.market.heading} />
-        <IBody text={iv.market.body} />
-        <MarketTAMDiagram />
-      </ISection>
-
-      {/* 07 Why NUMU Survives */}
+      {/* 06 Why NUMU Endures */}
       <ISection id="why-it-survives">
-        <ILabel text="07 — Why It Survives" />
-        <IHeading text="NUMU is structured against the failure pattern." />
+        <ILabel text="06 — Why It Endures" />
+        <IHeading text="Built around the pattern that has held." />
         {/* Pull-quote thesis */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -2609,21 +2866,21 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
           style={{ borderLeft: `3px solid ${ACCENT}`, backgroundColor: `${ACCENT}0a`, maxWidth: 680 }}
         >
           <p className="font-display" style={{ fontSize: 'clamp(1.125rem, 2vw, 1.5rem)', lineHeight: 1.55, letterSpacing: '-0.02em', color: ACCENT, opacity: 0.92 }}>
-            &ldquo;Specialty first. Margin first. Licensing scale later. The exact inverse of every failed player.&rdquo;
+            &ldquo;Specialty first. Margin first. Licensing scale later. The inverse of the heavy-capex playbook.&rdquo;
           </p>
         </motion.div>
 
         {/* Text + platform resilience diagram */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-12 lg:gap-16 items-start">
           <div className="space-y-0">
-            <p className="font-sans text-base md:text-lg leading-[1.85] pb-8" style={{ opacity: 0.65, borderBottom: INV_BORDER_SUBTLE }}>
-              The mycelium materials sector has two patterns. One failed publicly. Bolt Threads, MycoWorks, and other venture-capital-funded biomaterials ventures collapsed after attempting industrial-scale vertical integration against single-product dependency. The other persisted quietly. Ecovative, Mogu, and Grown.bio operate profitably in Europe and the US, scaled deliberately through specialty production, diversified revenue, and licensing rather than owned industrial capex.
+            <p className="font-sans text-base md:text-lg leading-[1.85] pb-8" style={{ opacity: 0.72, borderBottom: INV_BORDER_SUBTLE }}>
+              The mycelium materials sector has shown two distinct patterns. Several heavily venture-funded entrants — including Bolt Threads (Mylo) and MycoWorks — scaled back commercial operations after pursuing industrial-scale vertical integration tied to a single end-market. A separate cohort — Ecovative, Mogu, Grown.bio — has continued operating through specialty production, diversified revenue, and partner-led scale rather than owned industrial capex.
             </p>
-            <p className="font-sans text-base md:text-lg leading-[1.85] py-8" style={{ opacity: 0.65, borderBottom: INV_BORDER_SUBTLE }}>
-              NUMU is <em style={{ fontStyle: 'italic', color: ACCENT }}>structured against the failed pattern</em>, explicitly. Specialty-scale production, not industrial-scale vertical integration. Performance-led pricing, not sustainability premium. Four revenue engines on shared infrastructure, not a single-product bet. Licensing pathway to Year 3+ scale, not proportional capex.
+            <p className="font-sans text-base md:text-lg leading-[1.85] py-8" style={{ opacity: 0.72, borderBottom: INV_BORDER_SUBTLE }}>
+              NUMU is <em style={{ fontStyle: 'italic', color: ACCENT }}>structured around the pattern that has endured</em>. Specialty-scale production, not industrial vertical integration. Performance-led pricing, not sustainability premium. Four revenue engines on shared infrastructure, not a single-product bet. A licensing pathway to Year 3+ scale, not proportional capex.
             </p>
-            <p className="font-sans text-base md:text-lg leading-[1.85] pt-8" style={{ opacity: 0.65 }}>
-              The AED 2.2M raise funds an 18-month path to certified specification revenue and the operational foundation for regional licensing. It does not attempt to build a billion-dollar industrial facility on seed capital. That is the failure mode. NUMU is designed around it.
+            <p className="font-sans text-base md:text-lg leading-[1.85] pt-8" style={{ opacity: 0.7 }}>
+              The AED 2.2M raise funds an 18-month path to certified specification revenue and the operational foundation for regional licensing. It does not depend on building a heavy industrial facility on seed capital — the failure mode NUMU is designed to avoid.
             </p>
           </div>
 
@@ -2634,80 +2891,160 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             viewport={{ once: true, margin: '0px' }}
             transition={{ duration: 0.7, delay: 0.2, ease: [0.25, 0, 0.2, 1] }}
             className="lg:sticky lg:top-24"
-            style={{ border: INV_BORDER, backgroundColor: 'rgba(245,241,232,0.02)', padding: '32px 28px' }}
+            style={{ border: INV_BORDER, backgroundColor: 'rgba(245,241,232,0.03)', padding: '40px 34px' }}
           >
-            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.3, fontSize: '0.5625rem' }}>Platform structure — resilience diagram</p>
-            <svg viewBox="0 0 280 320" style={{ width: '100%', maxWidth: 280, display: 'block', margin: '0 auto' }}>
-              {/* Center node — Mycelium Platform */}
-              <motion.circle cx={140} cy={44} r={28}
-                fill={`${ACCENT}18`} stroke={ACCENT} strokeWidth={1.4}
-                initial={{ scale: 0, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }}
+            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8 text-center" style={{ opacity: 0.4, fontSize: '0.625rem' }}>Platform structure — resilience diagram</p>
+            <svg viewBox="0 0 460 360" style={{ width: '100%', maxWidth: 460, display: 'block', margin: '0 auto' }}>
+              <motion.rect
+                x={160}
+                y={18}
+                width={140}
+                height={56}
+                rx={28}
+                fill={`${ACCENT}14`}
+                stroke={ACCENT}
+                strokeWidth={1.5}
+                initial={{ opacity: 0, y: 6 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.45, delay: 0.24 }}
               />
-              <text x={140} y={40} textAnchor="middle" fontFamily="'Playfair Display',serif" fontSize={8.5} fill={ACCENT} fillOpacity={0.9} letterSpacing={0.5}>NUMU</text>
-              <text x={140} y={52} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={6.5} fill={ACCENT} fillOpacity={0.55} letterSpacing={1}>PLATFORM</text>
+              <text x={230} y={42} textAnchor="middle" fontFamily="'Playfair Display',serif" fontSize={15} fill={ACCENT} fillOpacity={0.94} letterSpacing={0.4}>NUMU</text>
+              <text x={230} y={59} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={9} fill={ACCENT} fillOpacity={0.66} letterSpacing={1.4}>PLATFORM</text>
 
-              {/* Branch lines */}
+              <motion.line x1={230} y1={74} x2={230} y2={104}
+                stroke={ACCENT} strokeWidth={1.35}
+                initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+                viewport={{ once: true }} transition={{ duration: 0.42, delay: 0.38 }}
+              />
+              <motion.line x1={80} y1={104} x2={380} y2={104}
+                stroke="rgba(245,241,232,0.18)" strokeWidth={1}
+                initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+                viewport={{ once: true }} transition={{ duration: 0.52, delay: 0.46 }}
+              />
+
               {[
-                { cx: 44, label1: 'Acoustics', label2: 'E1 + E3', col: ACCENT, active: true },
-                { cx: 140, label1: 'Packaging', label2: 'E2 + E4', col: 'rgba(245,241,232,0.6)', active: false },
-                { cx: 236, label1: 'Thermal', label2: 'E4 future', col: 'rgba(245,241,232,0.4)', active: false },
-              ].map((branch, bi) => (
-                <g key={bi}>
-                  {/* Vertical stem */}
-                  <motion.line x1={140} y1={72} x2={branch.cx} y2={128}
-                    stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.2)'} strokeWidth={branch.active ? 1.4 : 0.8}
-                    strokeDasharray={branch.active ? 'none' : '3 3'}
-                    initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-                    viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.5 + bi * 0.12 }}
-                  />
-                  {/* Branch node */}
-                  <motion.circle cx={branch.cx} cy={148} r={branch.active ? 22 : 18}
-                    fill={branch.active ? `${ACCENT}15` : 'rgba(245,241,232,0.04)'}
-                    stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.22)'} strokeWidth={branch.active ? 1.4 : 0.85}
-                    initial={{ scale: 0, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }}
-                    viewport={{ once: true }} transition={{ duration: 0.45, delay: 0.7 + bi * 0.12 }}
-                  />
-                  <text x={branch.cx} y={144} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={7} fill={branch.col} letterSpacing={0.5}>{branch.label1}</text>
-                  <text x={branch.cx} y={155} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={5.5} fill={branch.col} fillOpacity={0.55} letterSpacing={0.8}>{branch.label2}</text>
-                  {/* Revenue path indicator */}
-                  <motion.line x1={branch.cx} y1={170} x2={branch.cx} y2={210}
-                    stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.15)'} strokeWidth={branch.active ? 1.2 : 0.7}
-                    initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.9 + bi * 0.12 }}
-                  />
-                  <motion.text x={branch.cx} y={225} textAnchor="middle"
-                    fontFamily="'Inter',sans-serif" fontSize={6} fill={branch.col} fillOpacity={branch.active ? 0.55 : 0.28} letterSpacing={0.6}
-                    initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }} transition={{ duration: 0.4, delay: 1.0 + bi * 0.12 }}
-                  >
-                    Independent revenue
-                  </motion.text>
-                  <motion.text x={branch.cx} y={236} textAnchor="middle"
-                    fontFamily="'Inter',sans-serif" fontSize={6} fill={branch.col} fillOpacity={branch.active ? 0.55 : 0.25} letterSpacing={0.6}
-                    initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }} transition={{ duration: 0.4, delay: 1.05 + bi * 0.12 }}
-                  >
-                    path
-                  </motion.text>
-                </g>
-              ))}
+                { x: 28, y: 120, w: 112, h: 54, title: 'Acoustics', sub: 'E1 + E3', active: true },
+                { x: 174, y: 120, w: 112, h: 54, title: 'Packaging', sub: 'E2 + E4', active: false },
+                { x: 320, y: 120, w: 112, h: 54, title: 'Thermal', sub: 'E4 future', active: false },
+              ].map((branch, bi) => {
+                const cx = branch.x + branch.w / 2
 
-              {/* Fallback note */}
-              <motion.text x={140} y={278} textAnchor="middle"
-                fontFamily="'Inter',sans-serif" fontSize={6.5} fill="rgba(245,241,232,1)" fillOpacity={0.28} letterSpacing={1}
-                initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-                viewport={{ once: true }} transition={{ duration: 0.4, delay: 1.3 }}
+                return (
+                  <g key={branch.title}>
+                    <motion.line
+                      x1={cx}
+                      y1={104}
+                      x2={cx}
+                      y2={120}
+                      stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.22)'}
+                      strokeWidth={branch.active ? 1.35 : 1}
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      whileInView={{ pathLength: 1, opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.38, delay: 0.58 + bi * 0.08 }}
+                    />
+                    <motion.rect
+                      x={branch.x}
+                      y={branch.y}
+                      width={branch.w}
+                      height={branch.h}
+                      rx={27}
+                      fill={branch.active ? `${ACCENT}12` : 'rgba(245,241,232,0.03)'}
+                      stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.2)'}
+                      strokeWidth={branch.active ? 1.35 : 1}
+                      initial={{ opacity: 0, y: 5 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: 0.66 + bi * 0.08 }}
+                    />
+                    <text
+                      x={cx}
+                      y={151}
+                      textAnchor="middle"
+                      fontFamily="'Inter',sans-serif"
+                      fontSize={10.5}
+                      fill={branch.active ? ACCENT : 'rgba(245,241,232,0.76)'}
+                      letterSpacing={0.25}
+                    >
+                      {branch.title}
+                    </text>
+                    <text
+                      x={cx}
+                      y={166}
+                      textAnchor="middle"
+                      fontFamily="'Inter',sans-serif"
+                      fontSize={8.5}
+                      fill={branch.active ? ACCENT : 'rgba(245,241,232,0.46)'}
+                      letterSpacing={1}
+                    >
+                      {branch.sub}
+                    </text>
+                    <motion.line
+                      x1={cx}
+                      y1={174}
+                      x2={cx}
+                      y2={234}
+                      stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.16)'}
+                      strokeWidth={branch.active ? 1.2 : 0.85}
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      whileInView={{ pathLength: 1, opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.38, delay: 0.76 + bi * 0.08 }}
+                    />
+                    <text
+                      x={cx}
+                      y={260}
+                      textAnchor="middle"
+                      fontFamily="'Inter',sans-serif"
+                      fontSize={8.5}
+                      fill={branch.active ? 'rgba(178,155,127,0.72)' : 'rgba(245,241,232,0.36)'}
+                      letterSpacing={0.7}
+                    >
+                      Independent revenue
+                    </text>
+                    <text
+                      x={cx}
+                      y={275}
+                      textAnchor="middle"
+                      fontFamily="'Inter',sans-serif"
+                      fontSize={8.5}
+                      fill={branch.active ? 'rgba(178,155,127,0.72)' : 'rgba(245,241,232,0.36)'}
+                      letterSpacing={0.7}
+                    >
+                      path
+                    </text>
+                  </g>
+                )
+              })}
+
+              <motion.rect
+                x={134}
+                y={300}
+                width={192}
+                height={28}
+                rx={14}
+                fill="rgba(245,241,232,0.03)"
+                stroke="rgba(245,241,232,0.12)"
+                strokeWidth={0.9}
+                initial={{ opacity: 0, y: 4 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 1.05 }}
+              />
+              <text
+                x={230}
+                y={318}
+                textAnchor="middle"
+                fontFamily="'Inter',sans-serif"
+                fontSize={9}
+                fill="rgba(245,241,232,0.48)"
+                letterSpacing={1}
               >
                 If one path is delayed, others continue
-              </motion.text>
-              <motion.line x1={40} y1={268} x2={240} y2={268}
-                stroke="rgba(245,241,232,0.1)" strokeWidth={0.7}
-                initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-                viewport={{ once: true }} transition={{ duration: 0.4, delay: 1.25 }}
-              />
+              </text>
             </svg>
-            <p className="font-sans text-label mt-6 text-center" style={{ opacity: 0.22, fontSize: '0.5rem', letterSpacing: '0.06em' }}>
+            <p className="font-sans text-label mt-6 text-center" style={{ opacity: 0.34, fontSize: '0.5625rem', letterSpacing: '0.06em' }}>
               Shared production infrastructure — each branch activates independently
             </p>
           </motion.div>
@@ -2740,114 +3077,24 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
         </div>
       </ISection>
 
-      {/* 08 Traction */}
-      <ISection id="traction">
-        <ILabel text={iv.traction.label} />
-        <IHeading text={iv.traction.heading} />
-        {/* Centered content container — stats + list + photos */}
-        <div style={{ maxWidth: 880, marginLeft: 'auto', marginRight: 'auto' }}>
-          {/* Traction stats */}
-          <div className="grid grid-cols-3 gap-px mt-8 mb-2" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
-            {[
-              { to: 180, prefix: 'AED ', suffix: 'K', label: 'Founder capital deployed' },
-              { to: 2, prefix: '', suffix: '', label: 'Real installations built' },
-              { to: 7, prefix: '', suffix: 'yrs', label: 'Operational experience' },
-            ].map((s, i) => (
-              <div key={s.label} className="px-6 py-6" style={{ backgroundColor: '#0e0e0e' }}>
-                <p className="font-display mb-1" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', letterSpacing: '-0.04em', lineHeight: 1, color: ACCENT }}>
-                  <span style={{ fontSize: '0.5em', opacity: 0.7 }}>{s.prefix}</span>
-                  <CountUp to={s.to} suffix={s.suffix} duration={1.1 + i * 0.1} />
-                </p>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.32, fontSize: '0.5625rem' }}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-14 pl-5" style={{ borderTop: INV_BORDER, borderLeft: '2px solid rgba(245,241,232,0.18)' }}>
-            {iv.traction.items.map((item, i) => (
-              <div key={item} className="flex items-start gap-5 py-5" style={{ borderBottom: i < iv.traction.items.length - 1 ? INV_BORDER_SUBTLE : 'none', lineHeight: 2 }}>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} className="flex-shrink-0 mt-2" style={{ opacity: 0.6 }}>
-                  <polyline points="2,8 6,12 14,4" />
-                </svg>
-                <p className="font-sans text-base md:text-lg leading-snug" style={{ opacity: 0.78 }}>{item}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
-            {[
-              {
-                project: 'Beyond Chrysant',
-                location: 'Netherlands — 2022',
-                caption: 'Beyond Chrysant — Netherlands, 2022',
-                brief: 'Beyond Chrysant — mycelium acoustic installation, Netherlands 2022.',
-              },
-              {
-                project: 'KAVE',
-                location: 'Dubai, UAE — 2025',
-                caption: 'KAVE — Dubai, UAE 2025',
-                brief: 'KAVE — FOLD acoustic panel installation, Dubai 2025.',
-              },
-            ].map(inst => (
-              <div key={inst.project}>
-                <div className="mb-3">
-                  <ImagePlaceholder aspect="16:9" brief={inst.brief} label={inst.caption} />
-                </div>
-                <ILabel text={inst.location} />
-                <p className="font-display text-lg md:text-xl">{inst.project}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Featured In */}
-        <div className="mt-16" style={{ borderTop: INV_BORDER, paddingTop: 40 }}>
-          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.35 }}>Featured In</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
-            {[
-              { pub: 'Wallpaper*', headline: 'Postcard from Dubai Design Week 2024: the highlights', url: 'https://www.wallpaper.com/design-interiors/design-events/dubai-design-week-highlights', date: 'Nov 2024' },
-              { pub: 'The National', headline: 'How coral stones, reefs and mycelium inspired the winning Abwab projects', url: 'https://www.thenationalnews.com/arts-culture/art-design/2024/10/03/abwab-dubai-design-week-coral-stones-reefs-mycelium/', date: 'Oct 2024' },
-              { pub: 'STIRworld', headline: 'A decade on, Dubai Design Week is still growing alongside the MENA culture scene', url: 'https://www.stirworld.com/inspire-visits-a-decade-on-dubai-design-week-is-still-growing-alongside-the-mena-culture-scene', date: 'Nov 2024' },
-              { pub: 'Design Anthology', headline: 'Dubai Design Week Celebrates its Tenth Edition', url: 'https://design-anthology.com/story/dubai-design-week-2024', date: 'Jul 2025' },
-            ].map((item, i) => (
-              <motion.a
-                key={i}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '0px' }}
-                transition={{ duration: 0.4, delay: i * 0.08, ease: [0.25, 0, 0.2, 1] }}
-                className="flex flex-col gap-3 p-6"
-                style={{
-                  backgroundColor: '#0e0e0e',
-                  textDecoration: 'none',
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(245,241,232,0.04)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#0e0e0e' }}
-              >
-                <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.625rem', opacity: 0.45, letterSpacing: '0.16em' }}>{item.pub}</p>
-                <p className="font-sans leading-[1.55] flex-1" style={{ fontSize: '0.8125rem', opacity: 0.72 }}>{item.headline}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="font-sans" style={{ fontSize: '0.625rem', opacity: 0.28, letterSpacing: '0.08em' }}>{item.date}</p>
-                  <span style={{ fontSize: '0.625rem', opacity: 0.28 }}>↗</span>
-                </div>
-              </motion.a>
-            ))}
-          </div>
-        </div>
+      {/* 07 Market — positioned after the resilience thesis */}
+      <ISection id="market">
+        <ILabel text="07 — Market" />
+        <IHeading text={iv.market.heading} />
+        <IBody text={iv.market.body} />
+        <MarketTAMDiagram />
       </ISection>
 
-      {/* 09 Founder Credibility */}
+      {/* 08 Founder Credibility */}
       <ISection id="founder-credibility">
-        <ILabel text="09 — Founder" />
+        <ILabel text="08 — Founder" />
         <IHeading text="Not a research project. An operator." />
         <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.1)' }}>
           {[
             { num: '7', unit: 'YEARS', label: 'Operational mycelium industrialization, Europe and Middle East' },
             { num: '2', unit: 'PATENTS', label: 'Process-level IP (Belgium)' },
             { num: '1', unit: 'BOOK', label: 'Designing Mycelium, Routledge 2024' },
-            { num: '2', unit: 'INSTALLATIONS', label: 'Real conditions, documented (Netherlands 2022, Dubai 2025)' },
+            { num: '2', unit: 'INSTALLATIONS', label: 'Real conditions, documented (Netherlands 2022 — built; Dubai 2026 Q2 — in progress)' },
           ].map((stat, i) => (
             <motion.div
               key={stat.unit}
@@ -2882,7 +3129,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
               Andy dropped out of university to open his own design studio. He built a practice around material experimentation, product development, and applied design — working with manufacturers and clients across Europe and the Middle East. That path led to mycelium, not through academia, but through the practical problem of industrializing a biological process at production scale.
             </p>
             <p className="font-sans text-base leading-[1.85] mb-6" style={{ opacity: 0.55 }}>
-              He has set up labs, run growth cycles, failed batches, fixed processes, and shipped real installations — Netherlands 2022, Dubai 2025. He holds process-level patents in Belgium and published in the Routledge reference volume for bio-based material design. He is not a researcher who started a company. He is a builder who learned through real-world evidence what works in production and what does not.
+              He has set up labs, run growth cycles, failed batches, fixed processes, and shipped real installations — Netherlands 2022 (built); Dubai 2026 Q2 (KAVE, in progress). He holds process-level patents in Belgium and published in the Routledge reference volume for bio-based material design. He is not a researcher who started a company. He is a builder who learned through real-world evidence what works in production and what does not.
             </p>
             <p className="font-sans text-base leading-[1.85]" style={{ opacity: 0.48 }}>
               Andy also holds co-founder positions in UFO (US, pressed mycelium composites) and Hyphen (US, bio-materials ecosystem) — relationships that extend NUMU&apos;s long-term technology and IP pipeline without diverting operational focus. Approximately 90% of his time is dedicated to NUMU. The point is not the credentials. The point is that he has already paid the tuition, on two continents, in real production conditions. NUMU is built on that foundation.
@@ -2897,7 +3144,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             {[
               { year: '2024', text: 'Chapter author — Designing with Mycelium, Routledge (global reference volume for bio-based material design)' },
               { year: '2022–23', text: '2 process-level patents filed — Belgium (mycelium composite formation and no-mold growth technique)' },
-              { year: '2025', text: 'KAVE acoustic installation — live deployment, Dubai (first mycelium acoustic installation in the GCC)' },
+              { year: '2026 Q2', text: 'KAVE acoustic installation — in progress, Dubai (first mycelium acoustic installation in the GCC)' },
               { year: '2022', text: 'Beyond Chrysant installation — Netherlands (multi-panel grown acoustic system, public documentation)' },
               { year: 'Ongoing', text: 'Academic partnerships — De Montfort University, American University of Sharjah, Heriot-Watt Dubai, DIDI' },
               { year: 'Ongoing', text: '7+ years applied industrialization — mycelium composites, EU and GCC production environments' },
@@ -3076,7 +3323,9 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
           src={isInvestor ? '/branding/logo-numu.png' : '/branding/logo-black-numu.png'}
           alt="NUMU" width={240} height={96}
           className="h-16 md:h-20 w-auto object-contain"
-          style={isInvestor ? { filter: 'brightness(0) invert(1) sepia(1) saturate(0) brightness(0.92)' } : {}}
+          style={isInvestor
+            ? { filter: 'brightness(0) invert(1) sepia(1) saturate(0) brightness(0.92)' }
+            : { mixBlendMode: 'multiply' }}
           priority
         />
         <div className="flex items-center" style={{ border: BORDER, borderRadius: 999, padding: 3 }}>
@@ -3126,8 +3375,15 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
 
       {/* Hero 2 — product visual */}
       <section
-        className="relative flex flex-col items-center justify-end px-6 pb-20 text-center"
-        style={{ height: '100vh', minHeight: 600, borderTop: BORDER, overflow: 'hidden' }}
+        className="relative flex flex-col items-center justify-center px-6 text-center"
+        style={{
+          height: '100vh',
+          minHeight: 600,
+          borderTop: BORDER,
+          overflow: 'hidden',
+          paddingTop: isInvestor ? '7rem' : '6rem',
+          paddingBottom: isInvestor ? '5rem' : '6.5rem',
+        }}
       >
         {/* Background — visitor: spore field, investor: 3D rotating panel */}
         {!isInvestor ? (
@@ -3135,7 +3391,7 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
             {/* Soft warm center glow — full-bleed, no clip */}
             <div style={{
               position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-              background: 'radial-gradient(ellipse 68% 60% at 50% 44%, rgba(178,155,127,0.13) 0%, transparent 65%)',
+              background: 'radial-gradient(ellipse 74% 64% at 50% 40%, rgba(178,155,127,0.16) 0%, transparent 67%)',
             }} />
             <SporeField />
           </>
@@ -3144,7 +3400,11 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
             {/* Subtle warm center glow for investor */}
             <div style={{
               position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-              background: 'radial-gradient(ellipse 55% 50% at 50% 44%, rgba(178,155,127,0.07) 0%, transparent 62%)',
+              background: 'radial-gradient(ellipse 58% 54% at 50% 46%, rgba(178,155,127,0.11) 0%, transparent 64%)',
+            }} />
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+              background: 'radial-gradient(circle at 50% 52%, rgba(245,241,232,0.035) 0%, transparent 42%)',
             }} />
             <HyphaeField />
           </>
@@ -3152,36 +3412,45 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
 
         {/* Bottom vignette — softens transition to first content section */}
         <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '38%', zIndex: 1, pointerEvents: 'none',
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '32%', zIndex: 1, pointerEvents: 'none',
           background: isInvestor
             ? 'linear-gradient(to top, rgba(14,14,14,0.65) 0%, transparent 100%)'
             : 'linear-gradient(to top, rgba(245,241,232,0.88) 0%, transparent 100%)',
         }} />
 
-        {/* Foam block cutout — FILE: /public/images/hero/biofoam-cutout.jpg
-             Use a PNG or cutout photo of a foam block. mixBlendMode:multiply
-             makes white/light areas transparent on cream background. */}
+        {/* Foam block cutout — FILE: /public/images/hero/mycofoam_block_01.png
+             Using the existing PNG keeps the hero dependable in local/dev and deploy. */}
         {!isInvestor && (
           <div style={{
-            position: 'absolute', bottom: '14%', left: '50%',
+            position: 'absolute', bottom: '24%', left: '50%',
             transform: 'translateX(-50%)',
-            width: 'min(48vw, 380px)',
+            width: 'min(54vw, 440px)',
             zIndex: 1,
             pointerEvents: 'none',
             mixBlendMode: 'multiply' as React.CSSProperties['mixBlendMode'],
-            opacity: 0.38,
+            opacity: 0.46,
+            filter: 'contrast(1.02) saturate(0.88)',
           }}>
-            <img
-              src="/images/hero/biofoam-cutout.jpg"
+            <Image
+              src="/images/hero/mycofoam_block_01.png"
               alt=""
               aria-hidden
+              width={440}
+              height={440}
               style={{ width: '100%', height: 'auto', display: 'block' }}
             />
           </div>
         )}
 
-        <div className="relative w-full max-w-[1440px] mx-auto text-center" style={{ zIndex: 2 }}>
-          <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.38, fontSize: '0.6875rem' }}>
+        <div
+          className="relative w-full mx-auto text-center"
+          style={{
+            zIndex: 2,
+            maxWidth: isInvestor ? 960 : 1080,
+            transform: isInvestor ? 'translateY(-4vh)' : 'translateY(-3vh)',
+          }}
+        >
+          <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.44, fontSize: '0.75rem' }}>
             {isInvestor ? investor.hero.sublabel : visitor.hero.sublabel}
           </p>
           {(isInvestor ? investor.hero.lines : visitor.hero.lines).map((line, i) => (
@@ -3189,25 +3458,42 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
               key={i}
               className="font-display block text-center"
               style={{
-                fontSize: isInvestor ? 'clamp(1.875rem, 4.5vw, 3.75rem)' : 'clamp(2.5rem, 6vw, 5.5rem)',
-                lineHeight: 1.1,
+                fontSize: isInvestor ? 'clamp(2.6rem, 5.2vw, 4.75rem)' : 'clamp(2.9rem, 6.3vw, 6.2rem)',
+                lineHeight: 1.02,
                 letterSpacing: '-0.03em',
               }}
             >{line}</h2>
           ))}
-          <div className="mt-10 pt-8 flex flex-col items-center" style={{ borderTop: BORDER }}>
-            <p className="font-sans text-label uppercase tracking-[0.14em] mb-8" style={{ opacity: 0.38 }}>
+          <div
+            className="mt-8 pt-6 flex flex-col items-center mx-auto"
+            style={{ borderTop: BORDER, width: isInvestor ? 'min(100%, 820px)' : 'min(100%, 780px)' }}
+          >
+            <p className="font-sans text-label uppercase tracking-[0.14em] mb-8" style={{ opacity: 0.44 }}>
               {isInvestor ? investor.hero.meta : visitor.hero.meta}
             </p>
             <a
               href={isInvestor ? investor.hero.cta.href : visitor.hero.cta.href}
-              className="font-sans text-label uppercase tracking-[0.14em] px-6 py-3.5 border inline-block"
+              className="font-sans text-label uppercase tracking-[0.14em] px-7 py-4 border inline-block"
               style={{ borderColor: 'rgba(128,128,128,0.4)', transition: 'border-color 0.2s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = isInvestor ? 'rgba(245,241,232,0.7)' : 'rgba(26,23,20,0.6)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(128,128,128,0.4)' }}
             >
               {isInvestor ? investor.hero.cta.label : visitor.hero.cta.label} ↓
             </a>
+            {isInvestor && (
+              <div className="mt-10 grid grid-cols-3 gap-px overflow-hidden rounded-sm" style={{ backgroundColor: 'rgba(245,241,232,0.2)', maxWidth: 700, width: '100%' }}>
+                {[
+                  { v: 'AED 2.2M', l: 'Raise' },
+                  { v: '18 mo', l: 'Runway to certified spec' },
+                  { v: 'UAE', l: 'Production + first market' },
+                ].map(s => (
+                  <div key={s.l} className="px-4 py-4 md:px-5 md:py-5" style={{ backgroundColor: 'rgba(14,14,14,0.86)' }}>
+                    <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.35rem)', letterSpacing: '-0.02em', lineHeight: 1.1, color: ACCENT }}>{s.v}</p>
+                    <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.5625rem', opacity: 0.52 }}>{s.l}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
