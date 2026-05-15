@@ -5,6 +5,13 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { motion, AnimatePresence, useInView, useMotionValue, useTransform, animate } from 'framer-motion'
 import type { VisitorContent, InvestorContent } from '@/lib/content'
+import {
+  cancelIdleTask,
+  DEFERRED_IMAGE_ASSETS,
+  DEFERRED_VIDEO_ASSETS,
+  requestIdleTask,
+  warmMediaAssets,
+} from './preloadAssets'
 
 const LoadingScreen = dynamic(() => import('./LoadingScreen'), { ssr: false })
 import ProcessDiagram from '@/components/ProcessDiagram'
@@ -82,6 +89,27 @@ const SOCIAL = [
     ),
   },
 ]
+
+const TEAM_PHOTO_MAP: Record<string, string> = {
+  founder: '/images/founder/Portrait.PNG',
+  benjamin: '/images/founder/benjamin_2026.png',
+  othman: '/images/founder/othman_2026.png',
+  matthew: '/images/founder/matthew_2026.png',
+}
+
+const PUBLIC_TEAM_PHOTO_MAP: Record<string, string> = {
+  founder: '/images/founder/processed/andy_public_v2.png',
+  benjamin: '/images/founder/benjamin_2026.png',
+  othman: '/images/founder/othman_2026.png',
+  matthew: '/images/founder/matthew_2026.png',
+}
+
+const PUBLIC_TEAM_BLURBS: Record<string, string> = {
+  founder: 'Leads industrialization, production development, and material execution across Europe and the GCC.',
+  benjamin: 'Oversees finance, construction economics, and the operational discipline behind scale.',
+  othman: 'Leads IP, legal structure, and long-term defensibility of the platform.',
+  matthew: 'Drives partnerships, pipeline development, and commercial growth for early deployments.',
+}
 
 type ContactRequestType = 'investor_deck' | 'project' | 'samples'
 
@@ -304,6 +332,72 @@ function HoverVideo({ src, className, style }: { src: string; className?: string
       </div>
     </div>
   )
+}
+
+function AutoplayVideoBlock({
+  src,
+  poster,
+  altLabel,
+  preload = 'metadata',
+  className,
+  style,
+  overlay,
+}: {
+  src: string
+  poster?: string
+  altLabel?: string
+  preload?: 'none' | 'metadata' | 'auto'
+  className?: string
+  style?: React.CSSProperties
+  overlay?: React.ReactNode
+}) {
+  return (
+    <div className="relative w-full h-full overflow-hidden" style={{ backgroundColor: '#1a1714' }}>
+      {poster && (
+        <Image
+          src={poster}
+          alt={altLabel ?? ''}
+          fill
+          aria-hidden={altLabel ? undefined : true}
+          className="object-cover object-center"
+          sizes="(max-width: 1024px) 100vw, 50vw"
+        />
+      )}
+
+      <video
+        src={src}
+        poster={poster}
+        preload={preload}
+        autoPlay
+        muted
+        loop
+        playsInline
+        className={className}
+        style={style}
+        suppressHydrationWarning
+      />
+
+      {overlay}
+    </div>
+  )
+}
+
+function BackgroundAssetWarmup() {
+  useEffect(() => {
+    const idleHandle = requestIdleTask(() => {
+      void warmMediaAssets({
+        images: DEFERRED_IMAGE_ASSETS,
+        videos: DEFERRED_VIDEO_ASSETS,
+        concurrency: 2,
+      })
+    }, 1500)
+
+    return () => {
+      cancelIdleTask(idleHandle)
+    }
+  }, [])
+
+  return null
 }
 
 // ─── Spore Field — visitor hero: organic growing hyphae + spore flutter ────────
@@ -608,7 +702,7 @@ function VSection({ id, children }: { id: string; children: React.ReactNode }) {
 
 function VLabel({ text }: { text: string }) {
   return (
-    <p className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.65 }}>
+    <p className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.68, fontSize: 'clamp(0.68rem, 1.2vw, 0.78rem)' }}>
       {text}
     </p>
   )
@@ -624,7 +718,7 @@ function VHeading({ text }: { text: string }) {
 
 function VBody({ text }: { text: string }) {
   return (
-    <p className="font-sans text-base md:text-[1.0625rem] leading-[1.75] mb-12 max-w-2xl" style={{ opacity: 0.65 }}>
+    <p className="font-sans text-base md:text-[1.0625rem] leading-[1.75] mb-12 max-w-2xl" style={{ opacity: 0.7 }}>
       {text}
     </p>
   )
@@ -679,14 +773,14 @@ function ProductionFeature() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-[1.75fr_1fr] gap-3">
           <div className="relative overflow-hidden" style={{ aspectRatio: '16/9' }}>
-            <Image src="/images/founder/founder_in_action.png" alt="NUMU production lab — Dubai 2025" fill unoptimized className="object-cover object-center" sizes="(max-width: 768px) 100vw, 65vw" />
+            <Image src="/images/founder/founder_in_action.jpg" alt="NUMU production lab — Dubai 2025" fill unoptimized className="object-cover object-center" sizes="(max-width: 768px) 100vw, 65vw" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
-              '/images/projects/Screenshot%202026-05-13%20at%2014.30.07.png',
-              '/images/projects/Screenshot%202026-05-13%20at%2014.30.58.png',
-              '/images/projects/Screenshot%202026-05-13%20at%2014.31.48.png',
-              '/images/projects/Screenshot%202026-05-13%20at%2014.32.42.png',
+              '/images/projects/production_detail_01.jpg',
+              '/images/projects/production_detail_02.jpg',
+              '/images/projects/production_detail_03.jpg',
+              '/images/projects/production_detail_04.jpg',
             ].map((src, i) => (
               <div key={i} className="relative overflow-hidden" style={{ aspectRatio: '1/1' }}>
                 <Image src={src} alt={`Production lab detail ${i + 1}`} fill unoptimized className="object-cover object-center" sizes="20vw" />
@@ -704,12 +798,12 @@ function ProductionFeature() {
 const CAROUSEL_ITEMS = [
   { src: '/images/textures/texture_closeup_01.jpg', alt: 'Material surface — texture study', label: 'Surface texture' },
   { src: '/images/products/biofoam_detail.png', alt: 'Biofoam block — material study', label: 'Biofoam material' },
-  { src: '/images/founder/founder_in_action.png', alt: 'Production lab — process documentation', label: 'Lab process' },
+  { src: '/images/founder/founder_in_action.jpg', alt: 'Production lab — process documentation', label: 'Lab process' },
   { src: '/images/textures/texture_closeup_02.jpg', alt: 'Material surface — detail', label: 'Surface detail' },
   { src: '/images/products/fold_solo_panel.png', alt: 'FOLD panel — product study', label: 'FOLD panel' },
   { src: '/images/hero/mycofoam_block_01.png', alt: 'Mycofoam composite block', label: 'Composite form' },
   { src: '/images/applications/event_board.png', alt: 'Pressed composite board — test batch', label: 'Pressed board' },
-  { src: '/images/projects/Mymo01.png', alt: 'Mymo — material experiment', label: 'Mymo' },
+  { src: '/images/projects/Mymo01.jpg', alt: 'Mymo — material experiment', label: 'Mymo' },
   { src: '/images/products/fold_context_scale.png', alt: 'FOLD installation — scale context', label: 'Scale context' },
   { src: '/images/projects/Insulation.jpeg', alt: 'Mycelium insulation — material research', label: 'Insulation' },
   { src: '/images/projects/Kinoko.jpeg', alt: 'Kinoko project — grown form', label: 'Kinoko' },
@@ -866,9 +960,9 @@ function KaveCountdown() {
 }
 
 const BEYOND_SLIDES = [
-  '/images/projects/Beyond01.png',
-  '/images/projects/Beyond02.png',
-  '/images/projects/Mymo01.png',
+  '/images/projects/Beyond01.jpg',
+  '/images/projects/Beyond02.jpg',
+  '/images/projects/Mymo01.jpg',
 ]
 
 function BeyondSlideshow() {
@@ -900,7 +994,7 @@ function KaveSection() {
       <div
         style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/projects/acoustic%20render%2007.png)',
+          backgroundImage: 'url(/images/projects/acoustic_render_07.jpg)',
           backgroundSize: 'cover', backgroundPosition: 'center',
           filter: 'blur(2px)',
           transform: 'scale(1.05)',
@@ -1863,25 +1957,18 @@ function UseOfFundsChart({ items }: { items: InvestorContent['use_of_funds']['it
 function TeamMemberCard({ member, i, large }: { member: InvestorContent['team']['members'][0]; i: number; large?: boolean }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '0px' })
-
-  const photoMap: Record<string, string> = {
-    founder: '/images/founder/Portrait.PNG',
-    benjamin: '/images/founder/benjamin.png',
-    othman: '/images/founder/othman.png',
-    matthew: '/images/founder/matthew.png',
-  }
-  const photoSrc = photoMap[member.imageKey]
+  const photoSrc = TEAM_PHOTO_MAP[member.imageKey]
 
   const PhotoSlot = () => (
-    <div className="relative mb-8 overflow-hidden" style={{ aspectRatio: large ? '3/2' : '1/1', backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)' }}>
+    <div className="relative mb-8 overflow-hidden" style={{ aspectRatio: '4/5', backgroundColor: '#1e1b17', border: '1px solid rgba(245,241,232,0.08)' }}>
       {photoSrc ? (
         <Image
           src={photoSrc}
           alt={member.name}
           fill
           className="object-cover object-top"
-          sizes={large ? '(max-width: 768px) 100vw, 60vw' : '300px'}
-          style={{ filter: 'grayscale(100%)' }}
+          sizes="(max-width: 768px) 50vw, 25vw"
+          style={{ filter: 'grayscale(100%) contrast(1.05)' }}
         />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
@@ -1918,6 +2005,48 @@ function TeamGrid({ members }: { members: InvestorContent['team']['members'] }) 
       {members.map((m, i) => (
         <TeamMemberCard key={m.name} member={m} i={i} />
       ))}
+    </div>
+  )
+}
+
+function PublicTeamCard({ member }: { member: InvestorContent['team']['members'][0] }) {
+  const photoSrc = PUBLIC_TEAM_PHOTO_MAP[member.imageKey] ?? TEAM_PHOTO_MAP[member.imageKey]
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Fixed 4:5 portrait container — same for all four */}
+      <div
+        className="relative mb-5 overflow-hidden"
+        style={{
+          aspectRatio: '4/5',
+          backgroundColor: '#f5f1e8',
+          border: '1px solid rgba(26,23,20,0.08)',
+        }}
+      >
+        {photoSrc && (
+          <Image
+            src={photoSrc}
+            alt={member.name}
+            fill
+            className="object-cover object-top"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+          />
+        )}
+      </div>
+      <div
+        className="pt-4 px-1"
+        style={{ borderTop: '1px solid rgba(26,23,20,0.08)' }}
+      >
+        <p className="font-display mb-1" style={{ fontSize: '1.35rem', lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+          {member.name}
+        </p>
+        <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.7rem', opacity: 0.58 }}>
+          {member.role}
+        </p>
+        <p className="font-sans leading-[1.7]" style={{ fontSize: '0.9rem', opacity: 0.62 }}>
+          {PUBLIC_TEAM_BLURBS[member.imageKey] ?? member.bio}
+        </p>
+      </div>
     </div>
   )
 }
@@ -2040,14 +2169,14 @@ function LabVideo() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" width={28} height={28} style={{ opacity: 0.18 }}>
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
-          <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.5625rem', opacity: 0.28 }}>Loading process documentation</p>
+          <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.625rem', opacity: 0.4 }}>Loading process documentation</p>
         </div>
       )}
 
       {/* Play hint — only when ready and not yet played */}
       {ready && !playing && !hovering && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.5rem', opacity: 0.38 }}>Process documentation</p>
+          <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.625rem', opacity: 0.48 }}>Process documentation</p>
         </div>
       )}
 
@@ -2147,7 +2276,7 @@ function PartnersStrip() {
 
 // ─── Visitor view ─────────────────────────────────────────────────────────────
 
-function VisitorView({ v }: { v: VisitorContent }) {
+function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: InvestorContent['team']['members'] }) {
   return (
     <>
       {/* 01 Statement */}
@@ -2166,13 +2295,19 @@ function VisitorView({ v }: { v: VisitorContent }) {
             </p>
           </div>
           <div className="relative overflow-hidden">
-            <video src="/videos/numu_timelapse.mp4" poster="/images/products/biofoam_detail.png" autoPlay muted loop playsInline className="w-full block" suppressHydrationWarning />
-            <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-start px-8 pb-8" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)', paddingTop: 100 }}>
-              <p className="font-display text-white mb-2" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}>Material in motion</p>
-              <p className="font-sans text-white" style={{ fontSize: '0.8125rem', opacity: 0.6, lineHeight: 1.6, maxWidth: 340 }}>
-                A material grown over time — not manufactured. From agricultural fibres to structural form, the process unfolds through controlled biological growth over 5–7 days.
-              </p>
-            </div>
+            <AutoplayVideoBlock
+              src="/videos/numu_timelapse.mp4"
+              preload="auto"
+              className="w-full block"
+              overlay={
+                <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-start px-6 md:px-8 pb-6 md:pb-8" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)', paddingTop: 100 }}>
+                  <p className="font-display text-white mb-2" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}>Material in motion</p>
+                  <p className="font-sans text-white" style={{ fontSize: 'clamp(0.875rem, 1.8vw, 0.95rem)', opacity: 0.72, lineHeight: 1.6, maxWidth: 340 }}>
+                    A material grown over time, not manufactured. From agricultural fibres to structural form, the process unfolds through controlled biological growth over 5–7 days.
+                  </p>
+                </div>
+              }
+            />
           </div>
         </div>
       </VSection>
@@ -2230,7 +2365,7 @@ function VisitorView({ v }: { v: VisitorContent }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div style={{ border: '1px solid rgba(128,128,128,0.14)' }}>
                   <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
-                    <Image src="/images/products/Chair.jpeg" alt="Grown mycelium chair — NUMU material formed into product application" fill unoptimized className="object-contain object-center" sizes="(max-width: 640px) 100vw, 50vw" style={{ mixBlendMode: 'multiply' }} />
+                    <Image src="/images/products/Chair.jpg" alt="Grown mycelium chair — NUMU material formed into product application" fill unoptimized className="object-contain object-center" sizes="(max-width: 640px) 100vw, 50vw" style={{ mixBlendMode: 'multiply' }} />
                   </div>
                   <div className="p-5">
                     <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.62 }}>Grown</p>
@@ -2242,7 +2377,7 @@ function VisitorView({ v }: { v: VisitorContent }) {
                 </div>
                 <div style={{ border: '1px solid rgba(128,128,128,0.14)' }}>
                   <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
-                    <Image src="/images/products/pressed_detail.png" alt="Pressed mycelium board close-up — surface texture and cross-section detail" fill unoptimized className="object-cover object-center" sizes="(max-width: 640px) 100vw, 50vw" />
+                    <Image src="/images/products/pressed_detail.jpg" alt="Pressed mycelium board close-up — surface texture and cross-section detail" fill unoptimized className="object-cover object-center" sizes="(max-width: 640px) 100vw, 50vw" />
                   </div>
                   <div className="p-5">
                     <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.62 }}>Pressed</p>
@@ -2300,7 +2435,14 @@ function VisitorView({ v }: { v: VisitorContent }) {
           </div>
           <div>
             <div className="relative overflow-hidden w-full" style={{ aspectRatio: '4/3' }}>
-              <video src="/videos/numu_story.mp4" poster="/images/products/fold_hero_interior.png" autoPlay muted loop playsInline className="w-full h-full object-cover block" suppressHydrationWarning />
+              <AutoplayVideoBlock
+                src="/videos/numu_story.mp4"
+                poster="/images/products/fold_hero_interior.png"
+                altLabel="FOLD installation render while the animation loads"
+                preload="metadata"
+                className="w-full h-full object-cover block"
+                style={{ objectFit: 'cover' }}
+              />
             </div>
             <p className="font-sans uppercase tracking-[0.14em] mt-2" style={{ fontSize: 9, opacity: 0.3 }}>
               Render — Urban concrete installation, variation
@@ -2349,7 +2491,7 @@ function VisitorView({ v }: { v: VisitorContent }) {
           </div>
           <div className="h-full p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.02)' }}>
             <div className="relative mb-4 overflow-hidden" style={{ aspectRatio: '4/3', backgroundColor: 'rgba(128,128,128,0.06)' }}>
-              <Image src="/images/projects/acoustic%20render%2007.png" alt="KAVE — FOLD acoustic panel installation, Dubai 2026" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+              <Image src="/images/projects/acoustic_render_07.jpg" alt="KAVE — FOLD acoustic panel installation, Dubai 2026" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
             </div>
             <VLabel text="Dubai, UAE — 2026 Q2 · in progress" />
             <p className="font-display text-xl md:text-2xl mt-1">KAVE</p>
@@ -2520,7 +2662,7 @@ function VisitorView({ v }: { v: VisitorContent }) {
               </p>
             </div>
             <div className="w-full overflow-hidden" style={{ position: 'relative', aspectRatio: '1/1' }}>
-              <Image src="/images/applications/packaging01.png" alt="NUMU mycelium packaging — protective molded form grown from agricultural waste" fill unoptimized className="object-cover object-center" sizes="(max-width: 768px) 100vw, 50vw" />
+              <Image src="/images/applications/packaging01.jpg" alt="NUMU mycelium packaging — protective molded form grown from agricultural waste" fill unoptimized className="object-cover object-center" sizes="(max-width: 768px) 100vw, 50vw" />
             </div>
           </div>
 
@@ -2601,22 +2743,15 @@ function VisitorView({ v }: { v: VisitorContent }) {
         </div>
       </section>
 
-      {/* 06 Founder */}
-      <VSection id="founder">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-16 lg:gap-20 items-start">
-          <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
-            <Image src="/images/founder/Portrait.PNG" alt="NUMU Founder" fill className="object-cover object-top" sizes="(max-width: 1024px) 100vw, 55vw" />
-          </div>
-          <div className="lg:pt-4 flex flex-col justify-between h-full">
-            <div>
-              <VLabel text={v.founder.label} />
-              <VHeading text={v.founder.heading} />
-              <VBody text={v.founder.body} />
-            </div>
-            <div className="pt-8 mt-auto" style={{ borderTop: BORDER }}>
-              <VLabel text={v.founder.role} />
-            </div>
-          </div>
+      {/* Team */}
+      <VSection id="team">
+        <VLabel text="08 — Team" />
+        <VHeading text="Built by a team already executing." />
+        <VBody text="NUMU is not a solo-founder story. The company combines industrialization, construction finance, IP strategy, and commercial growth to turn the material platform into real projects." />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          {teamMembers.map((member) => (
+            <PublicTeamCard key={member.name} member={member} />
+          ))}
         </div>
       </VSection>
 
@@ -2703,7 +2838,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
                 location: 'Netherlands — 2022',
                 caption: 'Beyond Chrysant — Netherlands, 2022',
                 brief: 'Beyond Chrysant — mycelium acoustic installation, Netherlands 2022.',
-                image: '/images/projects/Beyond01.png',
+                image: '/images/projects/Beyond01.jpg',
                 tint: 'grayscale(40%) brightness(0.92)',
               },
               {
@@ -2711,7 +2846,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
                 location: 'Dubai, UAE — 2026 Q2 · in progress',
                 caption: 'KAVE — Dubai, UAE 2026 Q2',
                 brief: 'KAVE — FOLD acoustic panel installation, Dubai 2026 Q2 (in progress).',
-                image: '/images/projects/acoustic%20render%2007.png',
+                image: '/images/projects/acoustic_render_07.jpg',
                 tint: 'grayscale(40%) brightness(0.92)',
               },
             ].map(inst => (
@@ -3286,6 +3421,8 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
 
   return (
     <div style={{ backgroundColor: theme.bg, color: theme.fg, minHeight: '100vh', transition: 'background-color 0.6s cubic-bezier(0.25,0,0.2,1), color 0.6s cubic-bezier(0.25,0,0.2,1)', position: 'relative' }}>
+      <BackgroundAssetWarmup />
+
       {/* Subtle grain overlay — adds depth without visual noise */}
       {!isInvestor && (
         <div aria-hidden style={{
@@ -3347,11 +3484,25 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
       {/* Hero 1 — identity */}
       <section className="flex flex-col items-center justify-center text-center px-6" style={{ height: '100vh', minHeight: 600, position: 'relative' }}>
         <h1 className="font-display" style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em' }}>NUMU</h1>
-        <p lang="ar" className="font-display mt-4" style={{ fontSize: 'clamp(1.5rem, 4vw, 3.5rem)', lineHeight: 1.1, opacity: 0.38, letterSpacing: '0.02em' }}>نُمُوّ</p>
-        <p className="font-sans mt-5 uppercase tracking-[0.18em]" style={{ fontSize: '0.625rem', opacity: 0.46 }}>
+        <p
+          lang="ar"
+          dir="rtl"
+          className="mt-4"
+          style={{
+            fontFamily: '"Geeza Pro", "Noto Naskh Arabic", serif',
+            fontSize: 'clamp(1.65rem, 3.1vw, 2.8rem)',
+            lineHeight: 1.05,
+            opacity: 0.48,
+            letterSpacing: 0,
+            unicodeBidi: 'plaintext',
+          }}
+        >
+          نُمُوّ
+        </p>
+        <p className="font-sans mt-5 uppercase tracking-[0.18em]" style={{ fontSize: 'clamp(0.72rem, 1.1vw, 0.8rem)', opacity: 0.56 }}>
           UAE — Bio-composites platform
         </p>
-        <p className="font-sans mt-6" style={{ fontSize: 'clamp(0.8125rem, 1vw, 0.9375rem)', opacity: 0.60, letterSpacing: '0.06em', lineHeight: 1.7 }}>
+        <p className="font-sans mt-6" style={{ fontSize: 'clamp(0.9rem, 1vw, 0.98rem)', opacity: 0.68, letterSpacing: '0.04em', lineHeight: 1.7 }}>
           Grown, not manufactured.
         </p>
         {/* Scroll indicator */}
@@ -3437,6 +3588,7 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
               aria-hidden
               width={440}
               height={440}
+              priority
               style={{ width: '100%', height: 'auto', display: 'block' }}
             />
           </div>
@@ -3500,7 +3652,7 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
 
       {/* Page content */}
       <div style={{ opacity: transitioning ? 0 : 1, transition: 'opacity 0.35s cubic-bezier(0.25,0,0.2,1)' }}>
-        {isInvestor ? <InvestorView iv={investor} /> : <VisitorView v={visitor} />}
+        {isInvestor ? <InvestorView iv={investor} /> : <VisitorView v={visitor} teamMembers={investor.team.members} />}
       </div>
 
     </div>

@@ -3,22 +3,17 @@
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-
-const CRITICAL_ASSETS = [
-  '/branding/logo-black-numu.png',
-  '/branding/logo-numu.png',
-  '/images/hero/mycofoam_block_01.png',
-  '/images/products/biofoam_detail.png',
-]
-
-function preloadImage(src: string) {
-  return new Promise<void>((resolve) => {
-    const img = new window.Image()
-    img.onload = () => resolve()
-    img.onerror = () => resolve()
-    img.src = src
-  })
-}
+import {
+  cancelIdleTask,
+  CRITICAL_IMAGE_ASSETS,
+  DEFERRED_IMAGE_ASSETS,
+  DEFERRED_VIDEO_ASSETS,
+  NEXT_SWEEP_IMAGE_ASSETS,
+  NEXT_SWEEP_VIDEO_ASSETS,
+  preloadImage,
+  requestIdleTask,
+  warmMediaAssets,
+} from './preloadAssets'
 
 function waitForInitialPaint() {
   return new Promise<void>((resolve) => {
@@ -58,27 +53,63 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
   useEffect(() => {
     let cancelled = false
     let loadedAssets = 0
+    let warmedAssets = 0
     let exitTimer = 0
     let goneTimer = 0
+    let idleHandle: ReturnType<typeof requestIdleTask> = 0
 
     const minimumDisplay = new Promise((resolve) => window.setTimeout(resolve, 900))
-    const failSafe = new Promise((resolve) => window.setTimeout(resolve, 2200))
+    const failSafe = new Promise((resolve) => window.setTimeout(resolve, 2800))
     const fontsReady = 'fonts' in document ? document.fonts.ready.catch(() => undefined) : Promise.resolve()
 
     targetRef.current = 16
 
-    const assetPromises = CRITICAL_ASSETS.map((src) =>
-      preloadImage(src).then(() => {
-        loadedAssets += 1
-        if (cancelled) return
+    const criticalReady = Promise.all(
+      CRITICAL_IMAGE_ASSETS.map((src) =>
+        preloadImage(src, 'high').then(() => {
+          loadedAssets += 1
+          if (cancelled) return
 
-        setStatus(loadedAssets < CRITICAL_ASSETS.length ? 'Loading material assets' : 'Finalizing layout')
-        targetRef.current = 16 + (loadedAssets / CRITICAL_ASSETS.length) * 58
-      })
+          setStatus(loadedAssets < CRITICAL_IMAGE_ASSETS.length ? 'Loading key surfaces' : 'Warming next sections')
+          targetRef.current = 16 + (loadedAssets / CRITICAL_IMAGE_ASSETS.length) * 54
+        })
+      )
     )
 
+    const nextSweepReady = Promise.race([
+      warmMediaAssets({
+        images: NEXT_SWEEP_IMAGE_ASSETS,
+        videos: NEXT_SWEEP_VIDEO_ASSETS,
+        concurrency: 3,
+        onProgress: (completed, total) => {
+          warmedAssets = completed
+          if (cancelled || total === 0) return
+
+          setStatus(completed < total ? 'Warming media' : 'Preparing motion and video')
+          targetRef.current = Math.max(targetRef.current, 70 + (completed / total) * 22)
+        },
+      }),
+      new Promise((resolve) => window.setTimeout(resolve, 1100)),
+    ])
+
+    idleHandle = requestIdleTask(() => {
+      void warmMediaAssets({
+        images: DEFERRED_IMAGE_ASSETS,
+        videos: DEFERRED_VIDEO_ASSETS,
+        concurrency: 2,
+        onProgress: () => {
+          if (cancelled) return
+          const total = DEFERRED_IMAGE_ASSETS.length + DEFERRED_VIDEO_ASSETS.length
+          warmedAssets += 1
+          if (total > 0) {
+            targetRef.current = Math.max(targetRef.current, 92 + (warmedAssets / (NEXT_SWEEP_IMAGE_ASSETS.length + NEXT_SWEEP_VIDEO_ASSETS.length + total)) * 4)
+          }
+        },
+      })
+    }, 1300)
+
     Promise.race([
-      Promise.all([Promise.all(assetPromises), waitForInitialPaint(), fontsReady, minimumDisplay]),
+      Promise.all([criticalReady, nextSweepReady, waitForInitialPaint(), fontsReady, minimumDisplay]),
       failSafe,
     ]).then(() => {
       if (cancelled) return
@@ -100,6 +131,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
 
     return () => {
       cancelled = true
+      cancelIdleTask(idleHandle)
       window.clearTimeout(exitTimer)
       window.clearTimeout(goneTimer)
     }
