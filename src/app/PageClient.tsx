@@ -2574,7 +2574,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Inves
               tagline: 'Heat-pressed mycelium composite boards for events, brand activations, and temporary architecture.',
               status: 'Active',
               active: true,
-              image: '/images/applications/event_board.png',
+              image: '/images/applications/event_board.jpg',
               imageAlt: 'NUMU pressed mycelium composite board — event and temporary architecture application',
             },
             {
