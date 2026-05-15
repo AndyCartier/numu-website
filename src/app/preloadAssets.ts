@@ -20,14 +20,30 @@ export const NEXT_SWEEP_IMAGE_ASSETS = [
   '/images/products/fold_solo_panel.png',
   '/images/products/fold_hero_interior.png',
   '/images/products/fold_context_scale.png',
+  // First carousel items (visible without scrolling)
+  '/images/textures/texture_closeup_01.jpg',
+  '/images/products/biofoam_detail.png',
+  '/images/founder/founder_in_action.jpg',
+  '/images/textures/texture_closeup_02.jpg',
 ] as const
 
 export const DEFERRED_IMAGE_ASSETS = [
   '/images/applications/packaging01.jpg',
   '/images/applications/thermal_panel_wall.png',
   '/images/founder/Portrait.PNG',
-  '/images/founder/founder_in_action.jpg',
   '/images/projects/acoustic_render_07.jpg',
+  // Remaining carousel images
+  '/images/projects/Mymo01.jpg',
+  '/images/projects/Insulation.jpg',
+  '/images/projects/Kinoko.jpg',
+  '/images/projects/Kinoko02.jpg',
+  '/images/projects/Lamp01.jpg',
+  '/images/projects/Lamp02.jpg',
+  '/images/projects/Pressed_samples.jpg',
+  '/images/projects/Reroot_panels.jpg',
+  '/images/projects/Spora_panels.jpg',
+  '/images/projects/pressed_booth.jpg',
+  '/images/applications/event_board.jpg',
 ] as const
 
 export const NEXT_SWEEP_VIDEO_ASSETS: readonly VideoWarmupAsset[] = [
@@ -106,7 +122,7 @@ export function preloadVideoMetadata(asset: VideoWarmupAsset) {
 
     const video = document.createElement('video')
     let settled = false
-    const timeout = window.setTimeout(finish, 2800)
+    const timeout = window.setTimeout(finish, 4500)
 
     function finish() {
       if (settled) return

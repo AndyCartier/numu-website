@@ -58,8 +58,8 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
     let goneTimer = 0
     let idleHandle: ReturnType<typeof requestIdleTask> = 0
 
-    const minimumDisplay = new Promise((resolve) => window.setTimeout(resolve, 900))
-    const failSafe = new Promise((resolve) => window.setTimeout(resolve, 2800))
+    const minimumDisplay = new Promise((resolve) => window.setTimeout(resolve, 1400))
+    const failSafe = new Promise((resolve) => window.setTimeout(resolve, 5000))
     const fontsReady = 'fonts' in document ? document.fonts.ready.catch(() => undefined) : Promise.resolve()
 
     targetRef.current = 16
