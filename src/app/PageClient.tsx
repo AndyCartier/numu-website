@@ -352,7 +352,7 @@ function AutoplayVideoBlock({
   overlay?: React.ReactNode
 }) {
   return (
-    <div className="relative w-full h-full overflow-hidden" style={{ backgroundColor: '#1a1714' }}>
+    <div style={{ position: 'absolute', inset: 0, backgroundColor: '#1a1714', overflow: 'hidden' }}>
       {poster && (
         <Image
           src={poster}
@@ -372,8 +372,7 @@ function AutoplayVideoBlock({
         muted
         loop
         playsInline
-        className={className}
-        style={style}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', ...style }}
         suppressHydrationWarning
       />
 
@@ -2294,11 +2293,10 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Inves
               Alongside PALMYCO™, NUMU leverages spent mushroom substrate — a regional waste stream — to produce heat-pressed composite boards. Two distinct material outputs, shared production infrastructure, four revenue lines. Circular by design.
             </p>
           </div>
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
             <AutoplayVideoBlock
               src="/videos/numu_timelapse.mp4"
               preload="auto"
-              className="w-full block"
               overlay={
                 <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-start px-6 md:px-8 pb-6 md:pb-8" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)', paddingTop: 100 }}>
                   <p className="font-display text-white mb-2" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}>Material in motion</p>
