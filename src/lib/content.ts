@@ -37,6 +37,8 @@ export type TeamMember = {
   imageKey: string
 }
 
+export type PublicTeamMember = Pick<TeamMember, 'name' | 'role' | 'bio' | 'imageKey'>
+
 export type RevenueEngine = {
   id: string
   name: string
@@ -150,6 +152,35 @@ export function loadVisitorContent(): VisitorContent {
       ],
     },
   }
+}
+
+export function loadPublicTeamMembers(): PublicTeamMember[] {
+  return [
+    {
+      name: 'Andy Cartier',
+      role: 'Founder & CEO — Mycelium Industrialization',
+      bio: 'Leads industrialization, production development, and material execution across Europe and the GCC.',
+      imageKey: 'founder',
+    },
+    {
+      name: 'Benjamin Rieux',
+      role: 'Cofounder & CFO — Construction Finance',
+      bio: 'Oversees finance, construction economics, and the operational discipline behind scale.',
+      imageKey: 'benjamin',
+    },
+    {
+      name: 'Othman Ihrai',
+      role: 'Cofounder & Head of IP + Legal Strategy',
+      bio: 'Leads IP, legal structure, and long-term defensibility of the platform.',
+      imageKey: 'othman',
+    },
+    {
+      name: 'Matthew Zelitt',
+      role: 'Chief Growth Officer',
+      bio: 'Drives partnerships, pipeline development, and commercial growth for early deployments.',
+      imageKey: 'matthew',
+    },
+  ]
 }
 
 export function loadInvestorContent(): InvestorContent {

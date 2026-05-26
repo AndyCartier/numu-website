@@ -1,0 +1,704 @@
+/* ─── NUMU Investor Deck — Print + Screen CSS ──────────────────────────────── */
+
+/* PDF page definition — each slide occupies one page */
+@page {
+  size: 16in 9in;
+  margin: 0;
+}
+
+/* Preserve all background colors and images in print */
+@media print {
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html,
+  body {
+    width: 16in;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    background: #1a1714 !important;
+    overflow: visible;
+  }
+
+  .deck-root {
+    display: block;
+    width: 16in;
+    overflow: visible;
+  }
+
+  .deck-screen-frame {
+    width: auto;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .slide {
+    width: 16in;
+    height: 9in;
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    overflow: hidden;
+  }
+
+  .slide:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ─── Screen: scrollable slide preview ────────────────────────────────────── */
+@media screen {
+  html,
+  body {
+    background: #0d0b09 !important;
+    margin: 0;
+    padding: 0;
+    font-size: clamp(5px, 1vw, 16px);
+  }
+
+  .deck-root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+    padding: 1.4rem 0 3rem;
+    background: #0d0b09;
+  }
+
+  .deck-screen-frame {
+    width: min(calc(100vw - 2rem), 96rem);
+    border: 1px solid rgba(244, 239, 232, 0.08);
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #1a1714;
+    box-shadow:
+      0 0 0 1px rgba(244, 239, 232, 0.02),
+      0 30px 80px rgba(0, 0, 0, 0.36);
+  }
+
+  .slide {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 720px) {
+    .deck-root {
+      gap: 0.75rem;
+      padding: 0.75rem 0 1.5rem;
+    }
+
+    .deck-screen-frame {
+      width: calc(100vw - 0.75rem);
+      border-radius: 0.7rem;
+    }
+  }
+}
+
+/* ─── Shared slide structure ───────────────────────────────────────────────── */
+
+.slide {
+  position: relative;
+  background: #1a1714;
+  color: #f4efe8;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  box-sizing: border-box;
+}
+
+/* ─── Typography ───────────────────────────────────────────────────────────── */
+
+.deck-label {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(244, 239, 232, 0.52);
+  line-height: 1.4;
+}
+
+.deck-eyebrow {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c9a96e;
+  line-height: 1.4;
+}
+
+.deck-h1 {
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-size: 7.5rem;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: #f4efe8;
+  font-weight: 400;
+}
+
+.deck-h2 {
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-size: 4rem;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: #f4efe8;
+  font-weight: 400;
+}
+
+.deck-h3 {
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-size: 2rem;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: #f4efe8;
+  font-weight: 400;
+}
+
+.deck-body {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 1rem;
+  line-height: 1.72;
+  color: rgba(244, 239, 232, 0.80);
+}
+
+.deck-body-strong {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 1rem;
+  line-height: 1.72;
+  color: rgba(244, 239, 232, 0.95);
+}
+
+/* Hero stat — used for giant numbers that ARE the slide */
+.deck-hero-stat {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 7.5rem;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+  font-weight: 200;
+  color: #f4efe8;
+}
+
+.deck-hero-stat-gold {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 7.5rem;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+  font-weight: 200;
+  color: #c9a96e;
+}
+
+/* ─── Dividers ─────────────────────────────────────────────────────────────── */
+
+.deck-rule {
+  border: none;
+  border-top: 1px solid rgba(244, 239, 232, 0.12);
+  margin: 0;
+}
+
+.deck-rule-gold {
+  border: none;
+  border-top: 2px solid #c9a96e;
+  margin: 0;
+}
+
+/* ─── Slide-number badge ───────────────────────────────────────────────────── */
+
+.slide-num {
+  position: absolute;
+  bottom: 5%;
+  right: 6%;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 0.575rem;
+  letter-spacing: 0.16em;
+  color: rgba(244, 239, 232, 0.22);
+  text-transform: uppercase;
+}
+
+/* ─── Cover slide ──────────────────────────────────────────────────────────── */
+
+.slide-cover {
+  display: grid;
+  grid-template-columns: 55% 45%;
+}
+
+.slide-cover-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 7% 5% 6% 7%;
+  position: relative;
+  z-index: 1;
+}
+
+.slide-cover-right {
+  position: relative;
+  overflow: hidden;
+}
+
+.slide-cover-right img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.86;
+  display: block;
+}
+
+.slide-cover-right::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #1a1714 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* ─── Two-column layout ────────────────────────────────────────────────────── */
+
+.slide-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+}
+
+.slide-two-col-content {
+  padding: 6.5% 6% 6.5% 7%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid rgba(244, 239, 232, 0.08);
+}
+
+.slide-two-col-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.slide-two-col-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media screen {
+  .deck-root img {
+    image-rendering: auto;
+  }
+}
+
+/* ─── Three-column grid ────────────────────────────────────────────────────── */
+
+.slide-three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  height: 100%;
+}
+
+.col-card {
+  padding: 5.5% 5.5%;
+  border-right: 1px solid rgba(244, 239, 232, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.col-card:last-child {
+  border-right: none;
+}
+
+/* ─── Engine cards (replaces table) ───────────────────────────────────────── */
+
+.engine-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  flex: 1;
+}
+
+.engine-card {
+  padding: 5% 5%;
+  border-right: 1px solid rgba(244, 239, 232, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.engine-card:last-child {
+  border-right: none;
+}
+
+.engine-card-active {
+  background: rgba(201, 169, 110, 0.05);
+}
+
+.engine-margin {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 4rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-weight: 200;
+  color: #c9a96e;
+}
+
+.engine-margin-dim {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 4rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-weight: 200;
+  color: rgba(244, 239, 232, 0.35);
+}
+
+/* ─── Table styles ─────────────────────────────────────────────────────────── */
+
+.deck-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+}
+
+.deck-table th {
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(244, 239, 232, 0.52);
+  padding: 0.6rem 1.2rem 0.6rem 0;
+  text-align: left;
+  border-bottom: 1px solid rgba(244, 239, 232, 0.14);
+  font-weight: 400;
+}
+
+.deck-table td {
+  font-size: 0.9rem;
+  color: rgba(244, 239, 232, 0.88);
+  padding: 0.9rem 1.2rem 0.9rem 0;
+  border-bottom: 1px solid rgba(244, 239, 232, 0.08);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.deck-table tr:last-child td {
+  border-bottom: none;
+}
+
+.deck-table .numu-row td {
+  color: #f4efe8;
+  background: rgba(201, 169, 110, 0.08);
+}
+
+.deck-table .numu-row td:first-child {
+  border-left: 3px solid #c9a96e;
+  padding-left: calc(1.2rem - 3px);
+}
+
+/* ─── Check/cross icon helpers ─────────────────────────────────────────────── */
+
+.chk-yes {
+  color: #c9a96e;
+  font-size: 0.9rem;
+}
+
+.chk-no {
+  color: rgba(244, 239, 232, 0.22);
+  font-size: 0.9rem;
+}
+
+/* ─── Engine pills ─────────────────────────────────────────────────────────── */
+
+.engine-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 2px;
+  font-size: 0.575rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.engine-pill-active {
+  background: rgba(201, 169, 110, 0.18);
+  color: #d4b87a;
+  border: 1px solid rgba(201, 169, 110, 0.45);
+}
+
+.engine-pill-next {
+  background: rgba(244, 239, 232, 0.07);
+  color: rgba(244, 239, 232, 0.60);
+  border: 1px solid rgba(244, 239, 232, 0.15);
+}
+
+.engine-pill-future {
+  background: transparent;
+  color: rgba(244, 239, 232, 0.30);
+  border: 1px solid rgba(244, 239, 232, 0.08);
+}
+
+.engine-id {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: #c9a96e;
+  font-weight: 500;
+}
+
+/* ─── Roadmap columns ──────────────────────────────────────────────────────── */
+
+.roadmap-phase {
+  border-left: 1px solid rgba(244, 239, 232, 0.10);
+  padding: 0 0 0 1.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.roadmap-phase:first-child {
+  border-left: 3px solid #c9a96e;
+}
+
+/* ─── Team grid ────────────────────────────────────────────────────────────── */
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  /* photo fills space, text is fixed at bottom */
+  grid-template-rows: 1fr;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.team-card {
+  border-right: 1px solid rgba(244, 239, 232, 0.08);
+  padding: 0;
+  /* grid: photo takes 1fr, text takes auto */
+  display: grid;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+}
+
+.team-card:last-child {
+  border-right: none;
+}
+
+/* Photo fills the 1fr row — no aspect-ratio, no zoom */
+.team-photo-wrap {
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+}
+
+.team-photo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 30% from top shows face + chin + shoulders for most portrait shots */
+  object-position: center 30%;
+  display: block;
+  filter: saturate(0.85) sepia(0.05) brightness(1.02) contrast(1.05);
+}
+
+/* Subtle dark tint for consistency across different photo backgrounds */
+.team-photo-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 23, 20, 0.18);
+  pointer-events: none;
+}
+
+/* Text block — fixed height at bottom of each card */
+.team-text {
+  padding: 1.1rem 1.4rem 1.25rem;
+  border-top: 1px solid rgba(244, 239, 232, 0.08);
+}
+
+/* ─── Use of funds bar ─────────────────────────────────────────────────────── */
+
+.funds-bar-track {
+  height: 3px;
+  background: rgba(244, 239, 232, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.4rem;
+}
+
+.funds-bar-fill {
+  height: 100%;
+  background: #c9a96e;
+  border-radius: 2px;
+}
+
+/* ─── Moat grid ────────────────────────────────────────────────────────────── */
+
+.moat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.moat-item {
+  padding: 1.1rem 0;
+  padding-right: 3rem;
+  border-bottom: 1px solid rgba(244, 239, 232, 0.08);
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.moat-item:nth-child(odd) {
+  border-right: 1px solid rgba(244, 239, 232, 0.08);
+  padding-right: 2.5rem;
+}
+
+.moat-item:nth-child(even) {
+  padding-left: 2.5rem;
+  padding-right: 0;
+}
+
+.moat-num {
+  font-size: 0.575rem;
+  letter-spacing: 0.16em;
+  color: #c9a96e;
+  padding-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+/* ─── Traction stat blocks ─────────────────────────────────────────────────── */
+
+.traction-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border-top: 1px solid rgba(244, 239, 232, 0.10);
+  border-bottom: 1px solid rgba(244, 239, 232, 0.10);
+  padding: 2rem 0;
+  margin: 1.5rem 0;
+}
+
+.traction-stat-block {
+  padding-right: 2.5rem;
+  border-right: 1px solid rgba(244, 239, 232, 0.10);
+}
+
+.traction-stat-block:last-child {
+  border-right: none;
+  padding-right: 0;
+  padding-left: 2.5rem;
+}
+
+.traction-stat-block:nth-child(2) {
+  padding-left: 2.5rem;
+}
+
+.traction-stat-number {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 5rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-weight: 200;
+  color: #c9a96e;
+  display: block;
+}
+
+.traction-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(244, 239, 232, 0.06);
+}
+
+.traction-item:last-child {
+  border-bottom: none;
+}
+
+.traction-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #c9a96e;
+  margin-top: 0.52rem;
+  flex-shrink: 0;
+}
+
+/* ─── Ask slide ────────────────────────────────────────────────────────────── */
+
+.ask-amount {
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-size: 8rem;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  color: #f4efe8;
+  font-weight: 400;
+}
+
+.ask-meta-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 1px solid rgba(244, 239, 232, 0.12);
+  border-bottom: 1px solid rgba(244, 239, 232, 0.12);
+  padding: 1.1rem 0;
+  margin: 1.75rem 0 2rem;
+}
+
+.ask-meta-item {
+  border-right: 1px solid rgba(244, 239, 232, 0.10);
+  padding-right: 2rem;
+}
+
+.ask-meta-item:last-child {
+  border-right: none;
+  padding-left: 2rem;
+  padding-right: 0;
+}
+
+.ask-meta-item:nth-child(2) {
+  padding-left: 2rem;
+}
+
+.ask-meta-label {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(244, 239, 232, 0.45);
+  margin-bottom: 0.3rem;
+}
+
+.ask-meta-value {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 1.1rem;
+  color: #c9a96e;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* ─── Closing slide ────────────────────────────────────────────────────────── */
+
+.slide-closing {
+  background: #111009;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8% 12%;
+}

@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import Link from 'next/link'
 import { motion, AnimatePresence, useInView, useMotionValue, useTransform, animate } from 'framer-motion'
-import type { VisitorContent, InvestorContent } from '@/lib/content'
+import type { VisitorContent, InvestorContent, PublicTeamMember } from '@/lib/content'
 import {
   cancelIdleTask,
   DEFERRED_IMAGE_ASSETS,
@@ -168,6 +169,7 @@ function DirectContactForm({
   const [email, setEmail] = useState('')
   const [website, setWebsite] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('Sending is temporarily unavailable. Please try again shortly.')
 
   const border = dark ? '1px solid rgba(245,241,232,0.22)' : BORDER
   const buttonBorder = dark ? '1px solid rgba(245,241,232,0.22)' : '1px solid rgba(26,23,20,0.55)'
@@ -182,6 +184,7 @@ function DirectContactForm({
     if (!email || status === 'loading') return
 
     setStatus('loading')
+    setErrorMessage('Sending is temporarily unavailable. Please try again shortly.')
 
     try {
       const res = await fetch('/api/contact', {
@@ -190,7 +193,20 @@ function DirectContactForm({
         body: JSON.stringify({ email, website, requestType, source }),
       })
 
-      if (!res.ok) throw new Error('Request failed')
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null)
+        const message = typeof payload?.error === 'string' ? payload.error : 'Request failed'
+
+        if (res.status === 429) {
+          setErrorMessage('Too many attempts from this browser right now. Please wait a few minutes and try again.')
+        } else if (res.status === 400) {
+          setErrorMessage(message)
+        } else {
+          setErrorMessage('Sending is temporarily unavailable. Please try again shortly.')
+        }
+
+        throw new Error(message)
+      }
 
       setStatus('sent')
       setEmail('')
@@ -206,7 +222,7 @@ function DirectContactForm({
           Request sent.
         </p>
         <p className="font-sans text-sm mt-2" style={{ opacity: secondaryTextOpacity, lineHeight: 1.6 }}>
-          Your request has been sent to andy@numu.bio.
+          We&apos;ll review it and reply directly if there&apos;s a fit.
         </p>
       </div>
     )
@@ -262,9 +278,20 @@ function DirectContactForm({
           {status === 'loading' ? 'Sending…' : submitLabel}
         </button>
       </form>
+      <p className="font-sans text-xs mt-3" style={{ opacity: secondaryTextOpacity, lineHeight: 1.7 }}>
+        By submitting, you agree that NUMU may use your email to respond to this request in line with our{' '}
+        <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'underline' }}>
+          Privacy Policy
+        </Link>
+        {' '}and{' '}
+        <Link href="/terms" style={{ color: 'inherit', textDecoration: 'underline' }}>
+          Terms
+        </Link>
+        .
+      </p>
       {status === 'error' && (
         <p className="font-sans text-xs mt-3" style={{ opacity: errorTextOpacity }}>
-          Sending is temporarily unavailable. Please try again shortly.
+          {errorMessage}
         </p>
       )}
     </div>
@@ -1045,6 +1072,14 @@ function InvestorContact({ iv }: { iv: InvestorContent }) {
         <p className="font-sans text-label uppercase tracking-[0.16em]" style={{ opacity: 0.28 }}>Connect</p>
         <SocialLinks dark />
       </div>
+      <div className="mt-5 flex flex-wrap gap-4">
+        <Link href="/privacy" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.65rem', opacity: 0.42, textDecoration: 'none' }}>
+          Privacy Policy
+        </Link>
+        <Link href="/terms" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.65rem', opacity: 0.42, textDecoration: 'none' }}>
+          Terms of Use
+        </Link>
+      </div>
     </div>
   )
 }
@@ -1310,7 +1345,9 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
         {data.heading}
       </h3>
       <div className="rounded-sm px-4 py-8 md:px-8 md:py-10" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
-        <div className="flex items-end gap-4 md:gap-10" style={{ height: 'clamp(340px, 38vw, 430px)' }}>
+        {/* Shared baseline: bar zone is flex-1 (identical height for all cols).
+            Label zone is fixed height so badges don't push bars out of alignment. */}
+        <div className="flex items-stretch gap-4 md:gap-10" style={{ height: 'clamp(380px, 42vw, 480px)' }}>
           {data.years.map((yr, i) => {
             const lowPct = (yr.low / MAX_VAL) * 100
             const highPct = (yr.high / MAX_VAL) * 100
@@ -1318,11 +1355,16 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
             const displayHighPct = Math.max(highPct, displayLowPct + (yr.high > yr.low ? 4.5 : 0))
             const displayRangePct = Math.max(displayHighPct - displayLowPct, yr.high > yr.low ? 4.5 : 0)
             const isLast = i === data.years.length - 1
+            const hasBadge = yr.year === 'Y1' || yr.year === 'Y3'
 
             return (
-              <div key={yr.year} className="flex-1 flex flex-col items-center gap-4" style={{ height: '100%' }}>
-                <div className="flex-1 flex flex-col justify-end w-full" style={{ position: 'relative', maxWidth: 240, margin: '0 auto' }}>
-                  <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, backgroundColor: 'rgba(245,241,232,0.08)' }} />
+              <div key={yr.year} className="flex-1 flex flex-col" style={{ height: '100%' }}>
+                {/* Bar area — identical flex-1 height for every column */}
+                <div className="flex-1 w-full" style={{ position: 'relative', maxWidth: 240, margin: '0 auto', minHeight: 0 }}>
+                  {/* Shared baseline rule */}
+                  <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, backgroundColor: 'rgba(245,241,232,0.10)' }} />
+
+                  {/* Top value label — floats above bar top */}
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -1335,6 +1377,7 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
                     </span>
                   </motion.div>
 
+                  {/* Upside range bar */}
                   <motion.div
                     initial={{ scaleY: 0 }}
                     whileInView={{ scaleY: 1 }}
@@ -1351,6 +1394,8 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
                       transformOrigin: 'bottom',
                     }}
                   />
+
+                  {/* Base case bar */}
                   <motion.div
                     initial={{ scaleY: 0 }}
                     whileInView={{ scaleY: 1 }}
@@ -1368,35 +1413,42 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
                     }}
                   />
                 </div>
-                <div className="text-center">
+
+                {/* Label zone — fixed height so all bars share the same baseline.
+                    Height accounts for the tallest possible content (label + year + badge). */}
+                <div className="text-center flex-shrink-0" style={{ height: hasBadge ? 'auto' : 'auto', paddingTop: 14 }}>
                   <p className="font-display text-base md:text-lg" style={{ letterSpacing: '-0.01em', opacity: isLast ? 1 : 0.8, color: isLast ? ACCENT : undefined }}>{yr.label}</p>
                   <p className="font-sans text-label uppercase tracking-[0.16em] mt-1.5" style={{ opacity: 0.42 }}>{yr.year}</p>
-                  {yr.year === 'Y1' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 6 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: '0px' }}
-                      transition={{ duration: 0.5, delay: 0.7 }}
-                      className="mt-4 inline-block px-3.5 py-3"
-                      style={{ border: '1.5px solid rgba(245,241,232,0.32)', backgroundColor: 'rgba(245,241,232,0.06)', minWidth: 110 }}
-                    >
-                      <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: 'rgba(245,241,232,0.64)', whiteSpace: 'nowrap' }}>Current Raise</p>
-                      <p className="font-display" style={{ fontSize: 16, color: 'rgba(245,241,232,0.84)', letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 4 }}>AED 2.2M</p>
-                    </motion.div>
-                  )}
-                  {yr.year === 'Y3' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 6 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: '0px' }}
-                      transition={{ duration: 0.5, delay: 1.0 }}
-                      className="mt-4 inline-block px-3.5 py-3"
-                      style={{ border: `1.5px solid ${ACCENT}88`, backgroundColor: `${ACCENT}18`, minWidth: 110 }}
-                    >
-                      <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: ACCENT, opacity: 0.76, whiteSpace: 'nowrap' }}>Series A</p>
-                      <p className="font-display" style={{ fontSize: 18, color: ACCENT, letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 4 }}>AED 11M</p>
-                    </motion.div>
-                  )}
+
+                  {/* Funding badges — always reserve the same space so baseline stays locked */}
+                  <div style={{ height: 80, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 14 }}>
+                    {yr.year === 'Y1' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: '0px' }}
+                        transition={{ duration: 0.5, delay: 0.7 }}
+                        className="inline-block px-3.5 py-3"
+                        style={{ border: '1.5px solid rgba(245,241,232,0.32)', backgroundColor: 'rgba(245,241,232,0.06)', minWidth: 110 }}
+                      >
+                        <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: 'rgba(245,241,232,0.64)', whiteSpace: 'nowrap' }}>Current Raise</p>
+                        <p className="font-display" style={{ fontSize: 16, color: 'rgba(245,241,232,0.84)', letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 4 }}>AED 2.2M</p>
+                      </motion.div>
+                    )}
+                    {yr.year === 'Y3' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: '0px' }}
+                        transition={{ duration: 0.5, delay: 1.0 }}
+                        className="inline-block px-3.5 py-3"
+                        style={{ border: `1.5px solid ${ACCENT}88`, backgroundColor: `${ACCENT}18`, minWidth: 110 }}
+                      >
+                        <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: ACCENT, opacity: 0.76, whiteSpace: 'nowrap' }}>Series A</p>
+                        <p className="font-display" style={{ fontSize: 18, color: ACCENT, letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 4 }}>AED 11M</p>
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
               </div>
             )
@@ -2008,7 +2060,7 @@ function TeamGrid({ members }: { members: InvestorContent['team']['members'] }) 
   )
 }
 
-function PublicTeamCard({ member }: { member: InvestorContent['team']['members'][0] }) {
+function PublicTeamCard({ member }: { member: PublicTeamMember }) {
   const photoSrc = PUBLIC_TEAM_PHOTO_MAP[member.imageKey] ?? TEAM_PHOTO_MAP[member.imageKey]
 
   return (
@@ -2043,7 +2095,7 @@ function PublicTeamCard({ member }: { member: InvestorContent['team']['members']
           {member.role}
         </p>
         <p className="font-sans leading-[1.7]" style={{ fontSize: '0.9rem', opacity: 0.62 }}>
-          {PUBLIC_TEAM_BLURBS[member.imageKey] ?? member.bio}
+          {member.bio || PUBLIC_TEAM_BLURBS[member.imageKey]}
         </p>
       </div>
     </div>
@@ -2275,7 +2327,7 @@ function PartnersStrip() {
 
 // ─── Visitor view ─────────────────────────────────────────────────────────────
 
-function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: InvestorContent['team']['members'] }) {
+function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: PublicTeamMember[] }) {
   return (
     <>
       {/* 01 Statement */}
@@ -2785,6 +2837,14 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Inves
         <div className="pt-10 flex flex-col sm:flex-row sm:items-center gap-6" style={{ borderTop: BORDER }}>
           <Image src="/branding/logo-black-numu.png" alt="NUMU" width={120} height={48} className="h-10 w-auto object-contain" style={{ opacity: 0.30 }} />
           <SocialLinks />
+        </div>
+        <div className="mt-5 flex flex-wrap gap-4">
+          <Link href="/privacy" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.65rem', opacity: 0.52, textDecoration: 'none' }}>
+            Privacy Policy
+          </Link>
+          <Link href="/terms" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.65rem', opacity: 0.52, textDecoration: 'none' }}>
+            Terms of Use
+          </Link>
         </div>
         <PartnersStrip />
       </VSection>
@@ -3354,9 +3414,38 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
 
 // ─── Investor password gate ───────────────────────────────────────────────────
 
-function InvestorGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: () => void }) {
+function InvestorGate({
+  onUnlock,
+  onCancel,
+}: {
+  onUnlock: (code: string) => Promise<boolean>
+  onCancel: () => void
+}) {
   const [code, setCode] = useState('')
   const [shaking, setShaking] = useState(false)
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (!code || status === 'loading') return
+
+    setStatus('loading')
+    setError('')
+
+    const success = await onUnlock(code.trim())
+
+    if (success) {
+      return
+    }
+
+    setStatus('error')
+    setError('Access code not recognized.')
+    setShaking(true)
+    setCode('')
+    setTimeout(() => setShaking(false), 500)
+  }
 
   return (
     <motion.div
@@ -3370,23 +3459,28 @@ function InvestorGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: 
       >
         <p className="font-sans text-label uppercase tracking-[0.2em] mb-2" style={{ color: 'rgba(245,241,232,0.35)' }}>Investor Access</p>
         <p className="font-display mb-8" style={{ color: '#f5f1e8', fontSize: '1.5rem', letterSpacing: '-0.02em' }}>Enter access code</p>
-        <form onSubmit={e => {
-          e.preventDefault()
-          if (code === 'NUMU2026') { onUnlock() }
-          else { setShaking(true); setCode(''); setTimeout(() => setShaking(false), 500) }
-        }}>
+        <form onSubmit={handleSubmit}>
           <motion.input
-            type="password" value={code} onChange={e => setCode(e.target.value)}
+            type="password"
+            autoComplete="current-password"
+            value={code}
+            onChange={e => setCode(e.target.value)}
             placeholder="——————"
             animate={shaking ? { x: [-6, 6, -5, 5, -3, 3, 0] } : { x: 0 }}
             transition={{ duration: 0.4 }}
             className="w-full font-sans text-sm px-5 py-4 bg-transparent outline-none mb-4 tracking-[0.18em]"
-            style={{ border: shaking ? '1px solid rgba(180,60,60,0.6)' : '1px solid rgba(245,241,232,0.18)', color: 'rgba(245,241,232,0.9)', transition: 'border-color 0.2s' }}
+            disabled={status === 'loading'}
+            style={{ border: shaking || status === 'error' ? '1px solid rgba(180,60,60,0.6)' : '1px solid rgba(245,241,232,0.18)', color: 'rgba(245,241,232,0.9)', transition: 'border-color 0.2s', opacity: status === 'loading' ? 0.6 : 1 }}
           />
-          <button type="submit" className="w-full font-sans text-label uppercase tracking-[0.14em] py-3.5" style={{ backgroundColor: 'rgba(245,241,232,0.09)', border: '1px solid rgba(245,241,232,0.18)', color: 'rgba(245,241,232,0.8)', cursor: 'pointer' }}>
-            Enter →
+          <button type="submit" disabled={status === 'loading'} className="w-full font-sans text-label uppercase tracking-[0.14em] py-3.5" style={{ backgroundColor: 'rgba(245,241,232,0.09)', border: '1px solid rgba(245,241,232,0.18)', color: 'rgba(245,241,232,0.8)', cursor: status === 'loading' ? 'wait' : 'pointer', opacity: status === 'loading' ? 0.65 : 1 }}>
+            {status === 'loading' ? 'Checking…' : 'Enter →'}
           </button>
         </form>
+        {error && (
+          <p className="font-sans text-xs mt-4" style={{ color: 'rgba(245,241,232,0.58)', lineHeight: 1.6 }}>
+            {error}
+          </p>
+        )}
         <button onClick={onCancel} className="w-full font-sans text-label uppercase tracking-[0.12em] mt-4 py-2" style={{ opacity: 0.28, cursor: 'pointer' }}>
           Cancel
         </button>
@@ -3397,13 +3491,58 @@ function InvestorGate({ onUnlock, onCancel }: { onUnlock: () => void; onCancel: 
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function PageClient({ visitor, investor }: { visitor: VisitorContent; investor: InvestorContent }) {
+export default function PageClient({
+  visitor,
+  publicTeamMembers,
+}: {
+  visitor: VisitorContent
+  publicTeamMembers: PublicTeamMember[]
+}) {
+  const [investor, setInvestor] = useState<InvestorContent | null>(null)
   const [isInvestor, setIsInvestor] = useState(false)
   const [showGate, setShowGate] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
   const [loadingDone, setLoadingDone] = useState(false)
+  const [investorStatus, setInvestorStatus] = useState<'idle' | 'loading'>('idle')
 
-  const theme = isInvestor ? INVESTOR : VISITOR
+  const investorMode = isInvestor && investor !== null
+  const theme = investorMode ? INVESTOR : VISITOR
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function preloadInvestorAccess() {
+      const access = await fetch('/api/investor-access', { cache: 'no-store' }).catch(() => null)
+
+      if (!access?.ok || cancelled) {
+        return
+      }
+
+      const accessPayload = await access.json().catch(() => null)
+
+      if (!accessPayload?.ok || cancelled) {
+        return
+      }
+
+      const res = await fetch('/api/investor-content', { cache: 'no-store' }).catch(() => null)
+
+      if (!res?.ok || cancelled) {
+        return
+      }
+
+      const payload = await res.json().catch(() => null)
+
+      if (payload && !cancelled) {
+        setInvestor(payload)
+      }
+    }
+
+    void preloadInvestorAccess()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   function switchToInvestor() {
     setTransitioning(true)
@@ -3417,12 +3556,95 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
     setTimeout(() => { setIsInvestor(false); setTransitioning(false) }, 320)
   }
 
+  async function checkInvestorAccess() {
+    const res = await fetch('/api/investor-access', { cache: 'no-store' }).catch(() => null)
+
+    if (!res?.ok) {
+      return false
+    }
+
+    const payload = await res.json().catch(() => null)
+    return Boolean(payload?.ok)
+  }
+
+  async function fetchInvestorContent() {
+    setInvestorStatus('loading')
+
+    try {
+      const res = await fetch('/api/investor-content', { cache: 'no-store' })
+
+      if (!res.ok) {
+        return null
+      }
+
+      const payload = await res.json().catch(() => null)
+
+      if (!payload) {
+        return null
+      }
+
+      setInvestor(payload)
+      return payload as InvestorContent
+    } finally {
+      setInvestorStatus('idle')
+    }
+  }
+
+  async function handleInvestorUnlock(code: string) {
+    const res = await fetch('/api/investor-access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    }).catch(() => null)
+
+    if (!res?.ok) {
+      return false
+    }
+
+    const payload = await fetchInvestorContent()
+
+    if (!payload) {
+      return false
+    }
+
+    setShowGate(false)
+    switchToInvestor()
+    return true
+  }
+
+  async function handleInvestorClick() {
+    if (investorMode || investorStatus === 'loading') {
+      return
+    }
+
+    if (investor) {
+      switchToInvestor()
+      return
+    }
+
+    const hasAccess = await checkInvestorAccess()
+
+    if (!hasAccess) {
+      setShowGate(true)
+      return
+    }
+
+    const payload = await fetchInvestorContent()
+
+    if (payload) {
+      switchToInvestor()
+      return
+    }
+
+    setShowGate(true)
+  }
+
   return (
     <div style={{ backgroundColor: theme.bg, color: theme.fg, minHeight: '100vh', transition: 'background-color 0.6s cubic-bezier(0.25,0,0.2,1), color 0.6s cubic-bezier(0.25,0,0.2,1)', position: 'relative' }}>
       <BackgroundAssetWarmup />
 
       {/* Subtle grain overlay — adds depth without visual noise */}
-      {!isInvestor && (
+      {!investorMode && (
         <div aria-hidden style={{
           position: 'fixed', inset: 0, zIndex: 9998, pointerEvents: 'none',
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
@@ -3438,7 +3660,7 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
       <AnimatePresence>
         {showGate && (
           <InvestorGate
-            onUnlock={() => { setShowGate(false); switchToInvestor() }}
+            onUnlock={handleInvestorUnlock}
             onCancel={() => setShowGate(false)}
           />
         )}
@@ -3448,30 +3670,31 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
       <nav
         className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 h-16 md:h-20 flex items-center justify-between"
         style={{
-          backgroundColor: isInvestor ? 'rgba(14,14,14,0.82)' : 'rgba(245,241,232,0.82)',
+          backgroundColor: investorMode ? 'rgba(14,14,14,0.82)' : 'rgba(245,241,232,0.82)',
           backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
           borderBottom: BORDER,
           transition: 'background-color 0.6s cubic-bezier(0.25,0,0.2,1)',
         }}
       >
         <Image
-          src={isInvestor ? '/branding/logo-numu.png' : '/branding/logo-black-numu.png'}
+          src={investorMode ? '/branding/logo-numu.png' : '/branding/logo-black-numu.png'}
           alt="NUMU" width={240} height={96}
           className="h-16 md:h-20 w-auto object-contain"
-          style={isInvestor
+          style={investorMode
             ? { filter: 'brightness(0) invert(1) sepia(1) saturate(0) brightness(0.92)' }
             : { mixBlendMode: 'multiply' }}
           priority
         />
         <div className="flex items-center" style={{ border: BORDER, borderRadius: 999, padding: 3 }}>
           {[
-            { label: 'Explore', active: !isInvestor, onClick: () => { if (isInvestor) switchToVisitor() } },
-            { label: 'Investor', active: isInvestor, onClick: () => { if (!isInvestor) setShowGate(true) } },
+            { id: 'explore', label: 'Explore', active: !investorMode, onClick: () => { if (investorMode) switchToVisitor() } },
+            { id: 'investor', label: investorStatus === 'loading' ? 'Checking…' : 'Investor', active: investorMode, onClick: handleInvestorClick },
           ].map(btn => (
             <button
-              key={btn.label} onClick={btn.onClick}
+              key={btn.id} onClick={() => { void btn.onClick() }}
               className="px-4 py-1.5 font-sans text-label uppercase tracking-[0.1em] rounded-full transition-colors duration-200"
-              style={{ backgroundColor: btn.active ? (isInvestor ? 'rgba(245,241,232,0.14)' : 'rgba(26,23,20,0.12)') : 'transparent', cursor: 'pointer' }}
+              disabled={investorStatus === 'loading' && btn.id === 'investor'}
+              style={{ backgroundColor: btn.active ? (investorMode ? 'rgba(245,241,232,0.14)' : 'rgba(26,23,20,0.12)') : 'transparent', cursor: investorStatus === 'loading' && btn.id === 'investor' ? 'wait' : 'pointer', opacity: investorStatus === 'loading' && btn.id === 'investor' ? 0.8 : 1 }}
             >
               {btn.label}
             </button>
@@ -3530,12 +3753,12 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
           minHeight: 600,
           borderTop: BORDER,
           overflow: 'hidden',
-          paddingTop: isInvestor ? '7rem' : '6rem',
-          paddingBottom: isInvestor ? '5rem' : '6.5rem',
+          paddingTop: investorMode ? '7rem' : '6rem',
+          paddingBottom: investorMode ? '5rem' : '6.5rem',
         }}
       >
         {/* Background — visitor: spore field, investor: 3D rotating panel */}
-        {!isInvestor ? (
+        {!investorMode ? (
           <>
             {/* Soft warm center glow — full-bleed, no clip */}
             <div style={{
@@ -3562,14 +3785,14 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
         {/* Bottom vignette — softens transition to first content section */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, height: '32%', zIndex: 1, pointerEvents: 'none',
-          background: isInvestor
+          background: investorMode
             ? 'linear-gradient(to top, rgba(14,14,14,0.65) 0%, transparent 100%)'
             : 'linear-gradient(to top, rgba(245,241,232,0.88) 0%, transparent 100%)',
         }} />
 
         {/* Foam block cutout — FILE: /public/images/hero/mycofoam_block_01.png
              Using the existing PNG keeps the hero dependable in local/dev and deploy. */}
-        {!isInvestor && (
+        {!investorMode && (
           <div style={{
             position: 'absolute', bottom: '24%', left: '50%',
             transform: 'translateX(-50%)',
@@ -3596,19 +3819,19 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
           className="relative w-full mx-auto text-center"
           style={{
             zIndex: 2,
-            maxWidth: isInvestor ? 960 : 1080,
-            transform: isInvestor ? 'translateY(-4vh)' : 'translateY(-3vh)',
+            maxWidth: investorMode ? 960 : 1080,
+            transform: investorMode ? 'translateY(-4vh)' : 'translateY(-3vh)',
           }}
         >
           <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.44, fontSize: '0.75rem' }}>
-            {isInvestor ? investor.hero.sublabel : visitor.hero.sublabel}
+            {investorMode && investor ? investor.hero.sublabel : visitor.hero.sublabel}
           </p>
-          {(isInvestor ? investor.hero.lines : visitor.hero.lines).map((line, i) => (
+          {(investorMode && investor ? investor.hero.lines : visitor.hero.lines).map((line, i) => (
             <h2
               key={i}
               className="font-display block text-center"
               style={{
-                fontSize: isInvestor ? 'clamp(2.6rem, 5.2vw, 4.75rem)' : 'clamp(2.9rem, 6.3vw, 6.2rem)',
+                fontSize: investorMode ? 'clamp(2.6rem, 5.2vw, 4.75rem)' : 'clamp(2.9rem, 6.3vw, 6.2rem)',
                 lineHeight: 1.02,
                 letterSpacing: '-0.03em',
               }}
@@ -3616,21 +3839,21 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
           ))}
           <div
             className="mt-8 pt-6 flex flex-col items-center mx-auto"
-            style={{ borderTop: BORDER, width: isInvestor ? 'min(100%, 820px)' : 'min(100%, 780px)' }}
+            style={{ borderTop: BORDER, width: investorMode ? 'min(100%, 820px)' : 'min(100%, 780px)' }}
           >
             <p className="font-sans text-label uppercase tracking-[0.14em] mb-8" style={{ opacity: 0.44 }}>
-              {isInvestor ? investor.hero.meta : visitor.hero.meta}
+              {investorMode && investor ? investor.hero.meta : visitor.hero.meta}
             </p>
             <a
-              href={isInvestor ? investor.hero.cta.href : visitor.hero.cta.href}
+              href={investorMode && investor ? investor.hero.cta.href : visitor.hero.cta.href}
               className="font-sans text-label uppercase tracking-[0.14em] px-7 py-4 border inline-block"
               style={{ borderColor: 'rgba(128,128,128,0.4)', transition: 'border-color 0.2s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = isInvestor ? 'rgba(245,241,232,0.7)' : 'rgba(26,23,20,0.6)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = investorMode ? 'rgba(245,241,232,0.7)' : 'rgba(26,23,20,0.6)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(128,128,128,0.4)' }}
             >
-              {isInvestor ? investor.hero.cta.label : visitor.hero.cta.label} ↓
+              {investorMode && investor ? investor.hero.cta.label : visitor.hero.cta.label} ↓
             </a>
-            {isInvestor && (
+            {investorMode && (
               <div className="mt-10 grid grid-cols-3 gap-px overflow-hidden rounded-sm" style={{ backgroundColor: 'rgba(245,241,232,0.2)', maxWidth: 700, width: '100%' }}>
                 {[
                   { v: 'AED 2.2M', l: 'Raise' },
@@ -3650,7 +3873,7 @@ export default function PageClient({ visitor, investor }: { visitor: VisitorCont
 
       {/* Page content */}
       <div style={{ opacity: transitioning ? 0 : 1, transition: 'opacity 0.35s cubic-bezier(0.25,0,0.2,1)' }}>
-        {isInvestor ? <InvestorView iv={investor} /> : <VisitorView v={visitor} teamMembers={investor.team.members} />}
+        {investorMode && investor ? <InvestorView iv={investor} /> : <VisitorView v={visitor} teamMembers={publicTeamMembers} />}
       </div>
 
     </div>
