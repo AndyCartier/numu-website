@@ -53,6 +53,10 @@ export type Force = {
   id: string
   title: string
   body: string
+  stat?: string
+  statCountTo?: number
+  statPrefix?: string
+  statSuffix?: string
 }
 
 export type CompetitorRow = {
@@ -62,6 +66,7 @@ export type CompetitorRow = {
   bio: boolean
   local: boolean
   certified: boolean
+  certifiedPartial?: boolean
   feedstock: boolean
   design: boolean
   numu: boolean
@@ -197,18 +202,30 @@ export function loadInvestorContent(): InvestorContent {
       items: [
         {
           id: 'policy',
-          title: 'Policy',
-          body: 'UAE Net Zero 2050, Operation 300 Billion, and emerging GCC circular-economy mandates are shifting procurement toward bio-based and locally sourced construction materials. Specifiers are already under compliance pressure on flagship projects.',
+          title: 'Policy Tailwinds',
+          body: 'UAE Net Zero 2050 and GCC circular mandates are pushing procurement toward local bio-based materials. Compliance pressure is active now — not aspirational. The regulation window is already open.',
+          stat: '2050',
+          statCountTo: 2050,
+          statPrefix: '',
+          statSuffix: '',
         },
         {
           id: 'supply',
           title: 'Supply Gap',
-          body: 'The GCC imports 100% of its construction acoustic and thermal foam. There is no local bio-material manufacturer. Every panel, every roll, every board arrives by ship — exposed to tariffs, lead times, and currency risk.',
+          body: '100% of GCC acoustic and thermal construction foam is imported. Zero local manufacturers exist. Every panel ships in — tariffs, lead times, and currency risk. The gap is structural and immediate.',
+          stat: '100%',
+          statCountTo: 100,
+          statPrefix: '',
+          statSuffix: '%',
         },
         {
           id: 'reset',
-          title: 'Industry Reset',
-          body: "A new generation of GCC architects and developers is actively replacing synthetic materials in premium fit-outs. Bio-based has moved from niche to specification-level requirement in the region's top-tier projects.",
+          title: 'Market Reset',
+          body: 'Bolt Threads and MycoWorks raised over $300M combined chasing industrial-scale vertical integration. Both collapsed in 2024–2025. The field is cleared for disciplined regional specialists — exactly what NUMU is.',
+          stat: '$300M+',
+          statCountTo: 300,
+          statPrefix: '$',
+          statSuffix: 'M+',
         },
       ],
     },
@@ -240,9 +257,9 @@ export function loadInvestorContent(): InvestorContent {
           id: 'E2',
           name: 'Pressed Composite Boards',
           price: 'AED 200–500 / m²',
-          margin: '50–65%',
+          margin: '36–40%',
           activation: '0–12 months',
-          desc: 'Heat-pressed mycelium boards for events, brand activations, and temporary architecture. Built from spent mushroom substrate, a regional waste stream. Near-zero feedstock cost.',
+          desc: 'Heat-pressed mycelium boards for events, brand activations, and temporary architecture. Built from spent mushroom substrate, a regional waste stream. Near-zero feedstock cost. High volume potential.',
           status: 'active',
         },
         {
@@ -256,83 +273,94 @@ export function loadInvestorContent(): InvestorContent {
         },
         {
           id: 'E4',
-          name: 'Expansion: Packaging and Licensing',
-          price: 'Anchor-client + licensing',
-          margin: '30–45%',
+          name: 'Packaging · Thermal · Licensing',
+          price: 'AED 130–220 / m²',
+          margin: '28–42%',
           activation: '18–36 months',
-          desc: 'Biodegradable packaging via existing Biomyc LOI. Regional licensing to GCC manufacturing partners. Thermal insulation as certification allows. Scale without proportional capex.',
+          desc: 'Biomyc inbound packaging tech plus thermal insulation replacing imported mineral wool / PU foam at construction scale. Regional GCC licensing to manufacturing partners. Volume engine unlocked by in-house spawn at Series A.',
           status: 'future',
         },
       ],
     },
     revenue_chart: {
       label: 'Revenue Projection',
-      heading: 'AED 17–33M revenue by Year 4.',
+      heading: '$10M+ revenue by Year 5.',
       years: [
-        { year: 'Y1', low: 1, high: 2, label: 'AED 1–2M' },
-        { year: 'Y2', low: 4.7, high: 9.4, label: 'AED 4.7–9.4M' },
-        { year: 'Y3', low: 11.5, high: 22, label: 'AED 11.5–22M' },
-        { year: 'Y4', low: 17, high: 33, label: 'AED 17–33M' },
+        { year: 'Y1', low: 0.1, high: 0.15, label: '$126K' },
+        { year: 'Y2', low: 0.6, high: 0.85, label: '$701K' },
+        { year: 'Y3', low: 1.5, high: 2.3, label: '$1.90M' },
+        { year: 'Y4', low: 2.8, high: 4.0, label: '$3.41M' },
+        { year: 'Y5', low: 7.5, high: 12.7, label: '$10.1M' },
       ],
     },
     competitive: {
       label: 'Competitive Position',
       heading: 'No direct comparable exists in the GCC.',
       players: [
-        { name: 'Synthetic Imports', origin: 'Imported', price: 'AED 400–600', bio: false, local: false, certified: true, feedstock: false, design: false, numu: false },
+        { name: 'Synthetic Imports', origin: 'EU / Asia', price: 'AED 400–600', bio: false, local: false, certified: true, feedstock: false, design: false, numu: false },
         { name: 'Desertboard', origin: 'UAE', price: '~AED 1,100', bio: false, local: true, certified: false, feedstock: false, design: false, numu: false },
         { name: 'Ecovative (US)', origin: 'Imported', price: 'AED 2,000+', bio: true, local: false, certified: true, feedstock: false, design: true, numu: false },
-        { name: 'NUMU', origin: 'UAE', price: 'AED 1,000–1,800', bio: true, local: true, certified: false, feedstock: true, design: true, numu: true },
+        { name: 'NUMU', origin: 'UAE', price: 'AED 1,000–1,800', bio: true, local: true, certified: false, certifiedPartial: true, feedstock: true, design: true, numu: true },
       ],
     },
     traction: {
       label: '02 — What Exists Today',
       heading: 'Two installations. One lab. Real feedstock.',
       items: [
-        'Installations: Netherlands 2022 (completed) + Dubai 2026 Q2 (in progress, KAVE)',
-        'Production lab operational — AED 180K founder capital deployed',
-        'Process repeatability validated with local UAE agricultural feedstock',
-        'Architect and developer pipeline active — conversion expected post-certification',
-        'Certification process initiated — acoustic + fire performance testing',
-        'European licensing pathway — LOI with Biomyc for packaging partnership',
-        'Academic partnerships — De Montfort, AUS, Heriot-Watt Dubai, DIDI',
+        'Beyond Chrysant (Netherlands) — completed architectural installation',
+        'KAVE Dubai — commercial installation in production',
+        'Biomyc LOI — European packaging technology licensing pathway active',
+        'Certification programme active — acoustic + fire performance testing',
+        'Co-inventor on 2 Belgian patent families in mycelium materials (prior work)',
+        '3 paid masterclasses delivered — architect + designer community building',
+        'TSI MOU signed — NUMU designated Bio-Materials & ISRU Composites Partner',
+        'France — bio-based urban pavement R&D co-development project active',
       ],
     },
     roadmap: {
       label: '09 — Roadmap',
-      heading: 'Phased platform expansion.',
+      heading: 'Four phases. One compounding platform.',
       phases: [
         {
-          year: '2026',
+          year: 'M0–M6',
           label: 'Platform Activation',
           items: [
-            'Production facility scaled from founder-funded lab',
-            'Local feedstock streams confirmed (palm + SMS)',
-            'Pilot installations documented (Beyond Chrysant, KAVE)',
-            'FOLD product launched with NYXO collaboration',
-            'Patent filing complete; trademark active',
+            'Funding close → immediate deployment',
+            'Production facility + press line',
+            'First operator hired',
+            'Patent filing complete',
+            'Certifications initiated',
           ],
         },
         {
-          year: '2027',
-          label: 'Industrialization',
+          year: 'M6–M18',
+          label: 'First Revenue',
           items: [
-            'Fire and acoustic certifications achieved',
-            'Specification channel activated — 3–5 commercial projects',
-            'Pressed board production at 200–400 m²/month',
-            'Packaging pilot under Biomyc structure',
-            'Revenue AED 4.7–9.4M',
+            'E1 + E2 revenue streams active',
+            'KAVE + pipeline conversions',
+            'Designer specification channel set',
+            'Y1→Y2 revenue: $126K → $701K',
           ],
         },
         {
-          year: '2028+',
+          year: 'M18–M24',
+          label: 'Certification Scale',
+          items: [
+            'Fire + acoustic certifications achieved',
+            'E3 commercial market unlocked',
+            '3–5 commercial projects in spec',
+            'Y3 revenue: $1.90M — acoustic + fire certified',
+          ],
+        },
+        {
+          year: 'M24+',
           label: 'Platform Leverage',
           items: [
-            'Adjacent material categories activated (thermal)',
-            'GCC expansion (Saudi Arabia — EWC, NEOM pathway)',
-            'First regional licensing arrangement executed',
-            'Revenue AED 11.5–33M range',
-            'Series A decision or cash-flow-funded expansion',
+            'Thermal + packaging scale to volume',
+            'Saudi Arabia + NEOM pathway',
+            'First regional licensing deal',
+            '→ Series A: $2.5M · in-house spawn + Module 2',
+            'Path to 300–400K m²/yr = Series B',
           ],
         },
       ],
@@ -382,7 +410,7 @@ export function loadInvestorContent(): InvestorContent {
       heading: 'AED 2.2M to build the first certified bio-material manufacturing system in the GCC.',
       total: 'AED 2.2M',
       items: [
-        { label: 'Production Space', pct: 30, amount: 'AED 660K' },
+        { label: 'Production space + containers', pct: 30, amount: 'AED 660K' },
         { label: 'Team', pct: 25.5, amount: 'AED 561K' },
         { label: 'Machinery', pct: 24.8, amount: 'AED 545K' },
         { label: 'Certifications & IP', pct: 11.7, amount: 'AED 257K' },
@@ -391,8 +419,8 @@ export function loadInvestorContent(): InvestorContent {
     },
     cta: {
       label: '13 — Next Step',
-      heading: 'Request the full investor deck.',
-      body: 'Raising AED 2.2M to build the first certified bio-material manufacturing system in the GCC.',
+      heading: 'Schedule a 30-min founder call.',
+      body: '$600K SAFE · AED 2.2M · 18 months to certification scale · Series A target $2.5M',
       href: '#contact',
     },
   }

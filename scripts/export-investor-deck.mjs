@@ -2,7 +2,7 @@
  * NUMU Investor Deck — PDF Export
  *
  * Uses Puppeteer (already installed) to render /investor-deck at 1600×900
- * and export a 16:9 landscape PDF to exports/NUMU_Investor_Deck.pdf
+ * and export a 16:9 landscape PDF to exports/NUMU_Investor_Deck_FINAL.pdf
  *
  * Usage:
  *   npm run export:deck
@@ -14,6 +14,7 @@
  *     (falls back to NEXT_PUBLIC_INVESTOR_PASSWORD for older local setups)
  */
 
+import { createHmac } from 'crypto'
 import puppeteer from 'puppeteer'
 import { existsSync, mkdirSync } from 'fs'
 import { resolve, dirname } from 'path'
@@ -23,12 +24,32 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 
 const BASE_URL  = process.env.BASE_URL ?? 'http://localhost:3000'
-const DECK_URL  = `${BASE_URL}/investor-deck`
+const DECK_URL  = `${BASE_URL}/investor-deck?snapshot=1`
 const OUT_DIR   = resolve(ROOT, 'exports')
-const OUT_FILE  = resolve(OUT_DIR, 'NUMU_Investor_Deck.pdf')
+const OUT_FILE  = resolve(OUT_DIR, 'NUMU_Investor_Deck_FINAL.pdf')
 const SLIDE_W   = 1600
 const SLIDE_H   = 900
-const INVESTOR_PASSWORD = process.env.INVESTOR_PASSWORD ?? process.env.NEXT_PUBLIC_INVESTOR_PASSWORD ?? ''
+function normalizeEnvValue(value) {
+  if (!value) return ''
+  const trimmed = value.trim()
+  if (
+    trimmed.length >= 2 &&
+    ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'")))
+  ) {
+    return trimmed.slice(1, -1)
+  }
+  return trimmed
+}
+
+const INVESTOR_PASSWORD = normalizeEnvValue(
+  process.env.INVESTOR_PASSWORD ?? process.env.NEXT_PUBLIC_INVESTOR_PASSWORD ?? '',
+)
+
+function createInvestorAccessCookie(secret) {
+  return createHmac('sha256', secret)
+    .update('numu-investor-access:v1')
+    .digest('hex')
+}
 
 async function main() {
   console.log(`\n  NUMU — Investor Deck Export`)
@@ -53,6 +74,7 @@ async function main() {
   })
 
   const page = await browser.newPage()
+  const investorCookie = createInvestorAccessCookie(INVESTOR_PASSWORD)
 
   // Match the slide viewport exactly
   await page.setViewport({ width: SLIDE_W, height: SLIDE_H, deviceScaleFactor: 2 })
@@ -64,34 +86,27 @@ async function main() {
     )
   }
 
-  console.log('  → Unlocking investor access…')
-  await page.goto(BASE_URL, {
-    waitUntil: 'networkidle0',
-    timeout: 60_000,
+  console.log('  → Applying investor access cookie…')
+  await page.setCookie({
+    name: 'numu_investor_access',
+    value: investorCookie,
+    url: BASE_URL,
+    httpOnly: true,
+    sameSite: 'Lax',
   })
 
-  const unlocked = await page.evaluate(async (password) => {
-    const res = await fetch('/api/investor-access', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: password }),
-    })
-
-    return res.ok
-  }, INVESTOR_PASSWORD)
-
-  if (!unlocked) {
-    throw new Error(
-      'Investor access unlock failed.\n' +
-      '  Check that INVESTOR_PASSWORD matches the configured access code.'
-    )
-  }
+  await page.setExtraHTTPHeaders({
+    Cookie: `numu_investor_access=${investorCookie}`,
+  })
 
   console.log('  → Navigating to deck…')
   await page.goto(DECK_URL, {
     waitUntil: 'networkidle0',
     timeout: 60_000,
   })
+
+  // Force print CSS so each deck frame maps to one PDF page.
+  await page.emulateMediaType('print')
 
   // Wait for fonts and images to be fully painted
   await page.evaluate(() =>
@@ -115,15 +130,16 @@ async function main() {
     )
   }
 
+  if (slideCount !== 18) {
+    throw new Error(`Expected 18 slides, found ${slideCount}.`)
+  }
+
   console.log('  → Generating PDF…')
 
   await page.pdf({
     path: OUT_FILE,
-    width:  `${SLIDE_W}px`,
-    height: `${SLIDE_H}px`,
     printBackground: true,
-    pageRanges: '',
-    // Chromium maps @page CSS to the PDF dimensions when we pass these
+    preferCSSPageSize: true,
   })
 
   await browser.close()

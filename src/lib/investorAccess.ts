@@ -6,7 +6,7 @@ function getCookieSecret() {
   return (
     process.env.INVESTOR_ACCESS_SECRET ??
     process.env.INVESTOR_PASSWORD ??
-    process.env.NEXT_PUBLIC_INVESTOR_PASSWORD ??
+    process.env.NEXT_PUBLIC_INVESTOR_PASSWORD ?? // rename to INVESTOR_PASSWORD on Vercel before deploy
     ''
   )
 }

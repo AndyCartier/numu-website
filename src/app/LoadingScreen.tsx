@@ -141,9 +141,9 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
 
   return (
     <motion.div
-      initial={{ opacity: 1 }}
-      animate={exiting ? { opacity: 0, scale: 1.01 } : { opacity: 1, scale: 1 }}
-      transition={{ duration: 0.32, ease: [0.25, 0, 0.2, 1] }}
+      initial={{ opacity: 1, y: 0 }}
+      animate={exiting ? { opacity: 0, y: '-3%' } : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, ease: [0.4, 0, 0.15, 1] }}
       style={{
         position: 'fixed',
         inset: 0,

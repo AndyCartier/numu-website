@@ -25,6 +25,9 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['framer-motion'],
+    outputFileTracingIncludes: {
+      '/api/contact': ['./exports/**'],
+    },
   },
   async headers() {
     return [
