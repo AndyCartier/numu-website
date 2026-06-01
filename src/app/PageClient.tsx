@@ -112,6 +112,14 @@ const PUBLIC_TEAM_BLURBS: Record<string, string> = {
   matthew: 'Drives partnerships, pipeline development, and commercial growth for early deployments.',
 }
 
+const SEO_FOOTER_LINKS = [
+  { href: '/acoustic-panels-dubai', label: 'Acoustic Panels Dubai' },
+  { href: '/thermal-insulation-uae', label: 'Thermal Insulation UAE' },
+  { href: '/mycelium-packaging-uae', label: 'Mycelium Packaging UAE' },
+  { href: '/palmyco', label: 'Palmyco Material Platform' },
+  { href: '/case-studies', label: 'Case Studies' },
+]
+
 type ContactRequestType = 'investor_deck' | 'project' | 'samples'
 
 function SocialLinks({ dark = false }: { dark?: boolean }) {
@@ -3080,6 +3088,23 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
           <Link href="/terms" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.65rem', opacity: 0.52, textDecoration: 'none' }}>
             Terms of Use
           </Link>
+        </div>
+        <div className="mt-8 pt-8" style={{ borderTop: BORDER }}>
+          <p className="font-sans uppercase tracking-[0.18em] mb-4" style={{ fontSize: '0.62rem', opacity: 0.42 }}>
+            Explore by application
+          </p>
+          <div className="flex flex-wrap gap-4">
+            {SEO_FOOTER_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="font-sans uppercase tracking-[0.14em]"
+                style={{ fontSize: '0.65rem', opacity: 0.62, textDecoration: 'none' }}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </div>
         <PartnersStrip />
       </VSection>

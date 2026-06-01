@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
-import { buildAbsoluteUrl } from '@/lib/site'
+import { buildAbsoluteUrl, SITE_URL } from '@/lib/site'
 import './globals.css'
 
 const inter = Inter({
@@ -17,9 +17,17 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   metadataBase: buildAbsoluteUrl('/'),
-  title: 'NUMU — Bio-Engineered Materials Platform',
+  title: 'NUMU | Mycelium Acoustic Panels and Bio-Composite Materials in Dubai',
   description:
-    'NUMU is building the Middle East\u2019s first mycelium manufacturing infrastructure \u2014 replacing imported synthetic foams with locally grown, bio-engineered construction materials.',
+    'NUMU builds mycelium acoustic panels and bio-composite materials in Dubai, creating a local UAE and GCC alternative to imported synthetic construction foams.',
+  keywords: [
+    'NUMU',
+    'mycelium acoustic panels Dubai',
+    'bio composite materials UAE',
+    'mycelium materials GCC',
+    'sustainable building materials Dubai',
+    'acoustic panels UAE',
+  ],
   alternates: {
     canonical: '/',
   },
@@ -28,9 +36,9 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-    title: 'NUMU — Bio-Engineered Materials Platform',
+    title: 'NUMU | Mycelium Acoustic Panels and Bio-Composite Materials in Dubai',
     description:
-      'Replacing imported synthetic foams with locally grown, construction-grade alternatives.',
+      'A Dubai-based mycelium materials company building acoustic, thermal, and packaging pathways for the UAE and GCC.',
     siteName: 'NUMU',
     url: '/',
     type: 'website',
@@ -45,11 +53,35 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NUMU — Bio-Engineered Materials Platform',
+    title: 'NUMU | Mycelium Acoustic Panels and Bio-Composite Materials in Dubai',
     description:
-      'Replacing imported synthetic foams with locally grown, construction-grade alternatives.',
+      'A Dubai-based mycelium materials company building local acoustic and bio-composite alternatives for the GCC.',
     images: ['/images/projects/acoustic_render_07.jpg'],
   },
+}
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'NUMU',
+  url: SITE_URL,
+  description:
+    'NUMU builds mycelium acoustic panels and bio-composite materials in Dubai for the UAE and GCC.',
+}
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'NUMU',
+  url: SITE_URL,
+  logo: buildAbsoluteUrl('/branding/logo-black-numu.png').toString(),
+  description:
+    'Dubai-based bio-composite materials company focused on mycelium acoustic panels, thermal insulation pathways, and regional material production.',
+  sameAs: [
+    'https://www.instagram.com/numu.bio',
+    'https://www.linkedin.com/company/numu-bio',
+  ],
+  areaServed: ['Dubai', 'UAE', 'GCC'],
 }
 
 export default function RootLayout({
@@ -59,7 +91,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
-      <body>{children}</body>
+      <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        {children}
+      </body>
     </html>
   )
 }
