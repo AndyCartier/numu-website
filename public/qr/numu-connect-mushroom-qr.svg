@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1180" role="img" aria-labelledby="title desc">
+  <title id="title">NUMU mushroom-shaped contact QR code</title>
+  <desc id="desc">A mushroom-shaped NUMU frame containing a scannable QR code for https://www.numu.bio/connect.</desc>
+  <defs>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <path
+      fill="#EFEAD8"
+      d="M512 86c112 0 211 39 286 112 80 78 124 181 124 296 0 37-43 83-119 116-79 35-181 52-291 52s-212-17-291-52c-76-33-119-79-119-116 0-115 44-218 124-296C301 125 400 86 512 86Z"
+    />
+    <path
+      fill="#D9A878"
+      opacity="0.55"
+      d="M151 491c12-91 55-171 124-232 65-58 147-89 237-89s172 31 237 89c69 61 112 141 124 232-48-31-164-62-361-62s-313 31-361 62Z"
+    />
+    <path
+      fill="#EFEAD8"
+      d="M378 632c0 0-38 182-43 291-3 67 56 122 177 122s180-55 177-122c-5-109-43-291-43-291H378Z"
+    />
+    <path
+      fill="none"
+      stroke="#C66A3F"
+      stroke-width="14"
+      stroke-linejoin="round"
+      d="M512 86c112 0 211 39 286 112 80 78 124 181 124 296 0 37-43 83-119 116-79 35-181 52-291 52s-212-17-291-52c-76-33-119-79-119-116 0-115 44-218 124-296C301 125 400 86 512 86Z"
+    />
+    <path
+      fill="none"
+      stroke="#C66A3F"
+      stroke-width="14"
+      stroke-linejoin="round"
+      d="M378 632c0 0-38 182-43 291-3 67 56 122 177 122s180-55 177-122c-5-109-43-291-43-291"
+    />
+  </g>
+
+  <g transform="translate(220 178) scale(15.783784)" shape-rendering="crispEdges">
+    <path fill="#ffffff" d="M0 0h37v37H0z"/>
+    <path stroke="#1A1612" d="M4 4.5h7m2 0h2m2 0h3m1 0h4m1 0h7M4 5.5h1m5 0h1m6 0h5m2 0h1m1 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h2m1 0h3m1 0h1m3 0h1m2 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h2m1 0h1m4 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h1m2 0h1m3 0h6m1 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h1m1 0h1m6 0h1m2 0h1m1 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h1m1 0h1m3 0h1m1 0h1m1 0h3M4 12.5h1m1 0h5m2 0h2m5 0h2m1 0h1m2 0h5M4 13.5h1m3 0h2m1 0h2m1 0h1m1 0h4m1 0h3m1 0h4m3 0h1M5 14.5h3m1 0h2m3 0h2m1 0h5m2 0h1m1 0h1M7 15.5h3m1 0h1m5 0h1m1 0h1m2 0h6m1 0h1m1 0h1M4 16.5h1m2 0h1m2 0h1m2 0h1m2 0h1m1 0h2m1 0h1m1 0h1m5 0h2M4 17.5h1m3 0h1m3 0h3m4 0h2m1 0h3m1 0h1m1 0h1m3 0h1M6 18.5h1m2 0h4m1 0h1m1 0h1m7 0h1m2 0h1m1 0h2M6 19.5h2m3 0h2m1 0h3m1 0h1m1 0h1m6 0h2m2 0h1M4 20.5h1m2 0h2m1 0h1m1 0h1m2 0h2m3 0h2m1 0h1m3 0h1m1 0h2M4 21.5h2m2 0h1m6 0h1m1 0h3m2 0h7m1 0h1m1 0h1M4 22.5h1m1 0h1m3 0h2m1 0h2m1 0h7m3 0h2m2 0h1M4 23.5h1m3 0h1m4 0h2m1 0h2m1 0h1m3 0h1m3 0h2m2 0h1M4 24.5h1m2 0h6m2 0h2m1 0h2m1 0h1m2 0h5m1 0h3M12 25.5h2m5 0h2m3 0h1m3 0h5M4 26.5h7m2 0h1m1 0h1m7 0h2m1 0h1m1 0h3M4 27.5h1m5 0h1m1 0h1m3 0h1m1 0h1m1 0h1m1 0h3m3 0h1m2 0h1M4 28.5h1m1 0h3m1 0h1m1 0h1m2 0h2m3 0h1m1 0h1m1 0h5m1 0h1m1 0h1M4 29.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h2m1 0h2m1 0h1m2 0h1m1 0h2M4 30.5h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m1 0h3m1 0h2m1 0h6M4 31.5h1m5 0h1m2 0h1m2 0h4m1 0h2m1 0h1m2 0h1m1 0h1m1 0h1M4 32.5h7m1 0h2m2 0h1m2 0h1m7 0h4"/>
+  </g>
+
+  <text x="512" y="858" text-anchor="middle" fill="#1A1612" font-family="Georgia, serif" font-size="72" letter-spacing="0">NUMU</text>
+  <text x="512" y="914" text-anchor="middle" fill="#807B70" font-family="Arial, sans-serif" font-size="30" letter-spacing="8">SCAN TO CONNECT</text>
+  <text x="512" y="1086" text-anchor="middle" fill="#807B70" font-family="Arial, sans-serif" font-size="26" letter-spacing="1">numu.bio/connect</text>
+</svg>

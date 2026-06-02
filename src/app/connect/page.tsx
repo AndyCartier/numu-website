@@ -57,7 +57,7 @@ export default function ConnectPage() {
             'radial-gradient(circle at 50% 15%, rgba(198,106,63,0.16), transparent 34%), linear-gradient(180deg, #1A1612 0%, #110f0d 100%)',
         }}
       >
-        <div style={{ width: '100%', maxWidth: 560 }}>
+        <div style={{ width: '100%', maxWidth: 680 }}>
           <Link
             href="/"
             style={{
@@ -85,6 +85,27 @@ export default function ConnectPage() {
                 filter: 'brightness(0) invert(1) sepia(1) saturate(0) brightness(0.86)',
                 opacity: 0.72,
               }}
+              priority
+            />
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              placeItems: 'center',
+              marginBottom: '2rem',
+              padding: '1.25rem',
+              border: '1px solid rgba(239,234,216,0.12)',
+              backgroundColor: 'rgba(239,234,216,0.035)',
+            }}
+          >
+            <Image
+              src="/qr/numu-connect-mushroom-qr.svg"
+              alt="Mushroom-shaped NUMU QR code linking to contact page"
+              width={360}
+              height={415}
+              unoptimized
+              style={{ width: 'min(100%, 360px)', height: 'auto' }}
               priority
             />
           </div>
