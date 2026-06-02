@@ -2542,8 +2542,9 @@ function ExploreCTA() {
 // ─── Partners Strip ───────────────────────────────────────────────────────────
 
 const PARTNERS = [
-  { name: 'NYXO Design Studio', note: 'Design partner' },
-  { name: 'Biomyc', note: 'Packaging — LOI' },
+  { name: 'NYXO Design Studio', note: 'Design partner', href: 'https://www.nyxostudio.com/' },
+  { name: 'Biomyc', note: 'Packaging — LOI', href: 'https://new.biomyc.eu/' },
+  { name: 'Base39', note: 'Creative accelerator — accepted 2026', href: 'https://base39.com/' },
   { name: 'De Montfort University', note: 'Academic' },
   { name: 'American University of Sharjah', note: 'Academic' },
   { name: 'Heriot-Watt University Dubai', note: 'Academic' },
@@ -2559,7 +2560,19 @@ function PartnersStrip() {
       <div className="flex flex-wrap gap-x-10 gap-y-5">
         {PARTNERS.map(p => (
           <div key={p.name}>
-            <p className="font-sans" style={{ fontSize: '0.8125rem', opacity: 0.55 }}>{p.name}</p>
+            {p.href ? (
+              <a
+                href={p.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-sans"
+                style={{ fontSize: '0.8125rem', opacity: 0.62, color: 'inherit', textDecoration: 'none' }}
+              >
+                {p.name}
+              </a>
+            ) : (
+              <p className="font-sans" style={{ fontSize: '0.8125rem', opacity: 0.55 }}>{p.name}</p>
+            )}
             <p className="font-sans uppercase tracking-[0.14em] mt-0.5" style={{ fontSize: '0.5625rem', opacity: 0.25 }}>{p.note}</p>
           </div>
         ))}
