@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Connect with NUMU',
-  description: 'Quick links to the NUMU website, email, and WhatsApp.',
+  description: 'Quick links to the NUMU website, email, WhatsApp, and Studio Cartier Instagram.',
   alternates: {
     canonical: '/connect',
   },
@@ -20,28 +20,41 @@ const CONTACTS = [
     value: 'numu.bio',
     href: 'https://www.numu.bio',
     note: 'Explore the material platform',
+    action: 'Open site',
   },
   {
     label: 'Email',
     value: 'andy@numu.bio',
     href: 'mailto:andy@numu.bio?subject=NUMU%20inquiry',
     note: 'Project, sample, or investor inquiry',
+    action: 'Email Andy',
   },
   {
     label: 'WhatsApp',
     value: '+971 50 538 4166',
     href: 'https://wa.me/971505384166',
     note: 'Fast direct contact',
+    action: 'Message on WhatsApp',
+  },
+  {
+    label: 'Instagram',
+    value: '@studiocartier',
+    href: 'https://www.instagram.com/studiocartier/',
+    note: 'See Studio Cartier works',
+    action: 'View works',
   },
 ]
 
 const linkStyle = {
-  display: 'block',
+  display: 'grid',
+  gridTemplateColumns: '1fr auto',
+  gap: '1rem',
+  alignItems: 'center',
   padding: '1.1rem 1rem',
-  border: '1px solid rgba(239,234,216,0.14)',
+  border: '1px solid rgba(198,106,63,0.42)',
   color: 'inherit',
   textDecoration: 'none',
-  backgroundColor: 'rgba(239,234,216,0.045)',
+  backgroundColor: 'rgba(198,106,63,0.11)',
 }
 
 export default function ConnectPage() {
@@ -100,10 +113,10 @@ export default function ConnectPage() {
             }}
           >
             <Image
-              src="/qr/numu-connect-mushroom-qr.svg"
-              alt="Mushroom-shaped NUMU QR code linking to contact page"
+              src="/qr/numu-connect-texture-qr.svg"
+              alt="NUMU QR code over a mycelium texture background"
               width={360}
-              height={415}
+              height={360}
               unoptimized
               style={{ width: 'min(100%, 360px)', height: 'auto' }}
               priority
@@ -134,29 +147,50 @@ export default function ConnectPage() {
           </h1>
           <p style={{ color: '#D9D3BF', fontSize: '1rem', lineHeight: 1.8, marginBottom: '2rem' }}>
             Bio-composite materials grown in Dubai. Use the links below for the website,
-            email, or direct WhatsApp contact.
+            email, direct WhatsApp contact, or Studio Cartier works.
           </p>
 
           <div style={{ display: 'grid', gap: '0.75rem' }}>
             {CONTACTS.map((contact) => (
               <a key={contact.label} href={contact.href} style={linkStyle}>
+                <span style={{ minWidth: 0 }}>
+                  <span
+                    style={{
+                      display: 'block',
+                      color: '#C66A3F',
+                      fontSize: '0.65rem',
+                      letterSpacing: '0.16em',
+                      textTransform: 'uppercase',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
+                    {contact.label}
+                  </span>
+                  <span
+                    className="font-display"
+                    style={{ display: 'block', fontSize: '1.48rem', lineHeight: 1.12, wordBreak: 'break-word' }}
+                  >
+                    {contact.value}
+                  </span>
+                  <span style={{ display: 'block', color: '#D9D3BF', fontSize: '0.86rem', marginTop: '0.35rem' }}>
+                    {contact.note}
+                  </span>
+                </span>
                 <span
                   style={{
-                    display: 'block',
-                    color: '#807B70',
-                    fontSize: '0.65rem',
-                    letterSpacing: '0.16em',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: '#EFEAD8',
+                    border: '1px solid rgba(239,234,216,0.24)',
+                    padding: '0.65rem 0.75rem',
+                    fontSize: '0.68rem',
+                    letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    marginBottom: '0.25rem',
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  {contact.label}
-                </span>
-                <span className="font-display" style={{ display: 'block', fontSize: '1.65rem', lineHeight: 1.12 }}>
-                  {contact.value}
-                </span>
-                <span style={{ display: 'block', color: '#D9D3BF', fontSize: '0.86rem', marginTop: '0.35rem' }}>
-                  {contact.note}
+                  {contact.action} <span aria-hidden="true">-&gt;</span>
                 </span>
               </a>
             ))}
