@@ -6,6 +6,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const pages = [
     { path: '/', priority: 1, changeFrequency: 'weekly' as const },
+    { path: '/connect', priority: 0.7, changeFrequency: 'monthly' as const },
     { path: '/acoustic-panels-dubai', priority: 0.9, changeFrequency: 'weekly' as const },
     { path: '/thermal-insulation-uae', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/mycelium-packaging-uae', priority: 0.8, changeFrequency: 'weekly' as const },
