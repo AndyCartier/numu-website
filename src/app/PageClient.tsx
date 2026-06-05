@@ -762,7 +762,7 @@ function VBody({ text }: { text: string }) {
 
 function ISection({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="px-6 md:px-12 py-20 md:py-28" style={{ borderTop: INV_BORDER }}>
+    <section id={id} className="px-6 md:px-12 py-16 md:py-28 scroll-mt-24 md:scroll-mt-28" style={{ borderTop: INV_BORDER }}>
       <div className="max-w-[1440px] mx-auto">{children}</div>
     </section>
   )
@@ -1303,7 +1303,7 @@ function RevenueEngines({ data }: { data: InvestorContent['revenue_engines'] }) 
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 0, 0.2, 1] }}
-            className="p-10"
+            className="p-6 md:p-10"
             style={{ backgroundColor: '#0e0e0e' }}
           >
             <div className="flex items-start justify-between mb-6">
@@ -1325,7 +1325,7 @@ function RevenueEngines({ data }: { data: InvestorContent['revenue_engines'] }) 
             </div>
             <p className="font-display text-2xl md:text-3xl mb-3" style={{ letterSpacing: '-0.02em', fontWeight: 700 }}>{engine.name}</p>
             <p className="font-sans text-base leading-[1.75] mb-8" style={{ opacity: 0.5 }}>{engine.desc}</p>
-            <div className="grid grid-cols-3 gap-4 pt-6" style={{ borderTop: INV_BORDER_SUBTLE }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6" style={{ borderTop: INV_BORDER_SUBTLE }}>
               <div>
                 <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.3 }}>Price</p>
                 <p className="font-display text-base md:text-lg" style={{ letterSpacing: '-0.015em' }}>{engine.price}</p>
@@ -1382,6 +1382,14 @@ const ENGINE_LABELS: Record<string, string> = {
 }
 const CAP_MAX_SQRT = Math.sqrt(144000)
 
+const formatCapacityTotal = (total: number) => (
+  total >= 10000
+    ? `${(total / 1000).toFixed(0)}K`
+    : total >= 1000
+    ? `${(total / 1000).toFixed(1)}K`
+    : String(total)
+)
+
 function FinancialProjection5yr() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '0px' })
@@ -1391,12 +1399,63 @@ function FinancialProjection5yr() {
       <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.35 }}>
         Financial Model — 5-Year View
       </p>
-      <h3 className="font-display mb-10" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+      <h3 className="font-display mb-10" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)', letterSpacing: '-0.03em', lineHeight: 1.1, textWrap: 'balance' }}>
         Profitable from Year 1. Platform scale by Year 5.
       </h3>
 
-      {/* P&L Table */}
-      <div className="overflow-x-auto mb-14">
+      {/* Mobile P&L cards */}
+      <div className="md:hidden mb-12 space-y-3">
+        {PROJECTION_YEARS.map((year, i) => {
+          const isRaise = i === 1 || i === 3
+          const revenue = PROJECTION_ROWS[0].values[i]
+          const grossMargin = PROJECTION_ROWS[1].values[i]
+          const ebitda = PROJECTION_ROWS[2].values[i]
+          const ebitdaMargin = PROJECTION_ROWS[3].values[i]
+
+          return (
+            <motion.div
+              key={year.year}
+              initial={{ opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.42, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
+              className="px-5 py-5"
+              style={{
+                border: isRaise ? `1px solid ${ACCENT}55` : INV_BORDER_SUBTLE,
+                backgroundColor: isRaise ? `${ACCENT}0b` : 'rgba(245,241,232,0.025)',
+                boxShadow: isRaise ? `inset 3px 0 0 ${ACCENT}` : 'none',
+              }}
+            >
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <div>
+                  <p className="font-display" style={{ fontSize: '1.75rem', lineHeight: 1, color: isRaise ? ACCENT : undefined }}>{year.year}</p>
+                  <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.5625rem', opacity: 0.38 }}>{year.sub}</p>
+                </div>
+                {isRaise && (
+                  <p className="font-sans uppercase tracking-[0.13em] px-3 py-1.5" style={{ fontSize: '0.5rem', color: ACCENT, border: `1px solid ${ACCENT}44`, backgroundColor: `${ACCENT}0f` }}>
+                    raise year
+                  </p>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.09)' }}>
+                {[
+                  ['Revenue', revenue, false],
+                  ['Gross margin', grossMargin, false],
+                  ['EBITDA', ebitda, true],
+                  ['EBITDA margin', ebitdaMargin, false],
+                ].map(([label, value, hot]) => (
+                  <div key={label as string} className="px-4 py-3.5" style={{ backgroundColor: '#0e0e0e' }}>
+                    <p className="font-sans uppercase tracking-[0.12em] mb-1.5" style={{ fontSize: '0.5rem', opacity: 0.32 }}>{label as string}</p>
+                    <p className="font-display" style={{ fontSize: hot ? '1.2rem' : '1.05rem', lineHeight: 1.1, color: hot ? ACCENT : undefined, opacity: hot ? 1 : 0.78 }}>{value as string}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      {/* Desktop P&L Table */}
+      <div className="hidden md:block overflow-x-auto mb-14">
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
           <thead>
             <tr style={{ borderBottom: INV_BORDER }}>
@@ -1448,17 +1507,74 @@ function FinancialProjection5yr() {
           </p>
         </div>
 
-        {/* Stacked bar chart */}
-        <div className="flex items-end gap-2 md:gap-4" style={{ height: 220 }}>
+        {/* Mobile vertical capacity story */}
+        <div className="md:hidden space-y-3">
+          {CAPACITY_YEARS.map((yr, i) => {
+            const isLast = i === CAPACITY_YEARS.length - 1
+            const widthPct = Math.max((yr.total / 144000) * 100, 4)
+
+            return (
+              <motion.div
+                key={yr.label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.4, delay: 0.18 + i * 0.07, ease: [0.25, 0, 0.2, 1] }}
+                className="px-4 py-4"
+                style={{
+                  border: yr.raiseYear ? `1px solid ${ACCENT}44` : INV_BORDER_SUBTLE,
+                  backgroundColor: isLast ? `${ACCENT}0c` : 'rgba(245,241,232,0.025)',
+                }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-display" style={{ fontSize: '1.3rem', color: isLast ? ACCENT : undefined }}>{yr.label}</p>
+                      {yr.raiseYear && (
+                        <span className="font-sans uppercase tracking-[0.12em] px-2 py-1" style={{ fontSize: '0.47rem', color: ACCENT, border: `1px solid ${ACCENT}3d` }}>
+                          raise
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-sans mt-1" style={{ fontSize: '0.75rem', opacity: 0.46 }}>{yr.note}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-display" style={{ fontSize: '1.2rem', color: isLast ? ACCENT : undefined }}>{formatCapacityTotal(yr.total)}</p>
+                    <p className="font-sans uppercase tracking-[0.1em] mt-1" style={{ fontSize: '0.48rem', opacity: 0.32 }}>sq.m / yr</p>
+                    <p className="font-sans mt-1" style={{ fontSize: '0.68rem', opacity: 0.42 }}>{yr.perMonth.toLocaleString()} / mo</p>
+                  </div>
+                </div>
+
+                <div className="mt-4" style={{ height: 14, backgroundColor: 'rgba(245,241,232,0.08)', overflow: 'hidden' }}>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={inView ? { width: `${widthPct}%` } : {}}
+                    transition={{ duration: 0.65, delay: 0.25 + i * 0.08, ease: [0.25, 0, 0.2, 1] }}
+                    style={{ height: '100%', display: 'flex', minWidth: 8 }}
+                  >
+                    {yr.segments.map((seg) => (
+                      <div
+                        key={seg.key}
+                        style={{
+                          width: `${(seg.val / yr.total) * 100}%`,
+                          backgroundColor: ENGINE_COLORS[seg.key],
+                        }}
+                      />
+                    ))}
+                  </motion.div>
+                </div>
+                <p className="font-sans uppercase tracking-[0.12em] mt-3" style={{ fontSize: '0.5rem', opacity: 0.28 }}>{yr.phase}</p>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {/* Desktop stacked bar chart */}
+        <div className="hidden md:flex items-end gap-4" style={{ height: 220 }}>
           {CAPACITY_YEARS.map((yr, i) => {
             const sqrtH = Math.sqrt(yr.total)
             const heightPct = Math.max((sqrtH / CAP_MAX_SQRT) * 100, 8)
             const isLast = i === CAPACITY_YEARS.length - 1
-            const totalLabel = yr.total >= 10000
-              ? `${(yr.total / 1000).toFixed(0)}K`
-              : yr.total >= 1000
-              ? `${(yr.total / 1000).toFixed(1)}K`
-              : String(yr.total)
+            const totalLabel = formatCapacityTotal(yr.total)
 
             return (
               <div key={yr.label} className="flex-1 flex flex-col" style={{ height: '100%' }}>
@@ -1566,8 +1682,59 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
       <h3 className="font-display mb-14" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
         {data.heading}
       </h3>
-      <div className="rounded-sm px-4 py-8 md:px-8 md:py-10" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
-        <div className="flex items-stretch gap-3 md:gap-8" style={{ height: 'clamp(380px, 42vw, 480px)' }}>
+
+      {/* Mobile revenue path — vertical scan instead of clipped chart labels */}
+      <div className="md:hidden rounded-sm px-4 py-5 space-y-4" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
+        {data.years.map((yr, i) => {
+          const highPct = Math.max((yr.high / MAX_VAL) * 100, yr.high > 0 ? 4 : 0)
+          const lowPct = yr.low > 0 ? Math.max((yr.low / MAX_VAL) * 100, 3) : 0
+          const isLast = i === data.years.length - 1
+          const isRaise = yr.year === 'Y1' || yr.year === 'Y5'
+
+          return (
+            <motion.div
+              key={yr.year}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '0px' }}
+              transition={{ duration: 0.42, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
+              className="py-4"
+              style={{ borderBottom: i < data.years.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
+            >
+              <div className="flex items-baseline justify-between gap-3 mb-3">
+                <div>
+                  <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.55rem', opacity: 0.36 }}>{yr.year}</p>
+                  <p className="font-display mt-1" style={{ fontSize: '1.3rem', color: isLast ? ACCENT : undefined }}>{yr.label}</p>
+                </div>
+                {isRaise && (
+                  <span className="font-sans uppercase tracking-[0.12em] px-2.5 py-1.5" style={{ fontSize: '0.5rem', color: isLast ? ACCENT : 'rgba(245,241,232,0.72)', border: `1px solid ${isLast ? ACCENT : 'rgba(245,241,232,0.28)'}` }}>
+                    {yr.year === 'Y1' ? 'Seed AED 2.2M' : 'Series A $2.5M'}
+                  </span>
+                )}
+              </div>
+              <div style={{ height: 16, backgroundColor: 'rgba(245,241,232,0.08)', position: 'relative', overflow: 'hidden' }}>
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${highPct}%` }}
+                  viewport={{ once: true, margin: '0px' }}
+                  transition={{ duration: 0.6, delay: 0.12 + i * 0.07, ease: [0.25, 0, 0.2, 1] }}
+                  style={{ position: 'absolute', inset: 0, right: 'auto', backgroundColor: isLast ? `${ACCENT}55` : 'rgba(245,241,232,0.24)' }}
+                />
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${lowPct}%` }}
+                  viewport={{ once: true, margin: '0px' }}
+                  transition={{ duration: 0.6, delay: 0.2 + i * 0.07, ease: [0.25, 0, 0.2, 1] }}
+                  style={{ position: 'absolute', inset: 0, right: 'auto', backgroundColor: isLast ? ACCENT : 'rgba(245,241,232,0.72)' }}
+                />
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      <div className="hidden md:block rounded-sm px-8 py-10" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
+        <div className="flex items-stretch gap-8" style={{ height: 'clamp(380px, 42vw, 480px)' }}>
           {data.years.map((yr, i) => {
             const lowPct = (yr.low / MAX_VAL) * 100
             const highPct = (yr.high / MAX_VAL) * 100
@@ -1672,7 +1839,7 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
           })}
         </div>
       </div>
-      <div className="mt-8 flex items-center gap-6" style={{ opacity: 0.46 }}>
+      <div className="mt-8 flex flex-wrap items-center gap-6" style={{ opacity: 0.46 }}>
         <div className="flex items-center gap-2">
           <div style={{ width: 12, height: 12, backgroundColor: 'rgba(245,241,232,0.7)' }} />
           <p className="font-sans text-label uppercase tracking-[0.12em]">Base case</p>
@@ -1717,6 +1884,12 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
   )
 
   const COL_W = 80
+  const mobileCapability = (label: string, active: boolean, partial?: boolean) => ({
+    label,
+    state: partial ? 'In progress' : active ? 'Yes' : 'No',
+    active,
+    partial,
+  })
 
   return (
     <div ref={ref} className="mt-20" style={{ borderTop: INV_BORDER }}>
@@ -1726,7 +1899,56 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
       <h3 className="font-display mb-12" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
         {data.heading}
       </h3>
-      <div className="overflow-x-auto">
+
+      <div className="md:hidden space-y-3">
+        {data.players.map((player, i) => {
+          const capabilities = [
+            mobileCapability('Bio', player.bio),
+            mobileCapability('GCC', player.local),
+            mobileCapability('Certified', player.certified, player.certifiedPartial),
+            mobileCapability('Feedstock', player.feedstock),
+            mobileCapability('Design', player.design),
+          ]
+
+          return (
+            <motion.div
+              key={player.name}
+              initial={{ opacity: 0, y: 10 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.4, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
+              className="px-5 py-5"
+              style={{
+                border: player.numu ? `1px solid ${ACCENT}55` : INV_BORDER_SUBTLE,
+                backgroundColor: player.numu ? `${ACCENT}0d` : 'rgba(245,241,232,0.025)',
+                boxShadow: player.numu ? `inset 3px 0 0 ${ACCENT}` : 'none',
+              }}
+            >
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <p className="font-display" style={{ fontSize: '1.25rem', lineHeight: 1.1, color: player.numu ? ACCENT : undefined, opacity: player.numu ? 1 : 0.72 }}>{player.name}</p>
+                  <p className="font-sans mt-1" style={{ fontSize: '0.72rem', opacity: 0.32 }}>{player.origin}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.48rem', opacity: 0.3 }}>Price / m²</p>
+                  <p className="font-sans mt-1" style={{ fontSize: '0.82rem', color: player.numu ? ACCENT : undefined, opacity: player.numu ? 1 : 0.5 }}>{player.price}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {capabilities.map((cap) => (
+                  <div key={cap.label} className="px-3 py-2.5" style={{ backgroundColor: 'rgba(245,241,232,0.035)', border: '1px solid rgba(245,241,232,0.055)' }}>
+                    <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.48rem', opacity: 0.28 }}>{cap.label}</p>
+                    <p className="font-sans mt-1" style={{ fontSize: '0.72rem', color: player.numu && (cap.active || cap.partial) ? ACCENT : undefined, opacity: cap.partial ? 0.62 : cap.active ? 0.72 : 0.24 }}>
+                      {cap.state}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      <div className="hidden md:block overflow-x-auto">
         <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 620 }}>
           <colgroup>
             <col style={{ width: 'auto' }} />
@@ -1781,7 +2003,7 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
           </tbody>
         </table>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-1 mb-6">
+      <div className="hidden md:flex mt-4 flex-wrap items-center gap-x-6 gap-y-1 mb-6">
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 16 16" fill="none" width={12} height={12}>
             <circle cx="8" cy="8" r="6" stroke="rgba(245,241,232,0.35)" strokeWidth={1.4} />
@@ -1855,7 +2077,53 @@ function MarketTAMDiagram() {
       <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-10" style={{ opacity: 0.35 }}>
         Market phases — addressable opportunity expands as platform activates
       </p>
-      <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+
+      <div className="md:hidden space-y-3">
+        {MARKET_TAM_DATA.map((p, i) => {
+          const rowCol = PHASE_COLORS[i]
+          const isEdge = i === 0 || i === MARKET_TAM_DATA.length - 1
+
+          return (
+            <motion.div
+              key={p.phase}
+              initial={{ opacity: 0, y: 10 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.42, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
+              className="px-5 py-5"
+              style={{
+                border: isEdge ? `1px solid ${ACCENT}44` : INV_BORDER_SUBTLE,
+                backgroundColor: isEdge ? `${ACCENT}08` : 'rgba(245,241,232,0.025)',
+              }}
+            >
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.52rem', color: rowCol.text, opacity: 0.82 }}>{p.phase} · {p.period}</p>
+                  <p className="font-display mt-2" style={{ fontSize: '1.35rem', lineHeight: 1.1, color: rowCol.text }}>{p.label}</p>
+                </div>
+                {isEdge && (
+                  <p className="font-sans uppercase tracking-[0.12em] px-2 py-1.5" style={{ fontSize: '0.47rem', color: ACCENT, border: `1px solid ${ACCENT}38` }}>
+                    {i === 0 ? 'start' : 'scale'}
+                  </p>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
+                {[
+                  ['TAM', p.tam],
+                  ['SAM', p.sam],
+                  ['SOM', p.som],
+                ].map(([label, value], vi) => (
+                  <div key={label} className="px-3 py-3" style={{ backgroundColor: vi === 2 ? `${ACCENT}0d` : '#0e0e0e' }}>
+                    <p className="font-sans uppercase tracking-[0.12em] mb-1.5" style={{ fontSize: '0.46rem', opacity: 0.28 }}>{label}</p>
+                    <p className="font-display" style={{ fontSize: '0.95rem', lineHeight: 1, color: vi === 2 ? ACCENT : rowCol.text, opacity: vi === 2 ? 1 : 0.78 }}>{value}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      <div className="hidden md:block" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
         <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: '100%', maxWidth: SVG_W, display: 'block', minWidth: 420, margin: '0 auto' }}>
           {MARKET_TAM_DATA.map((p, i) => {
             const cx = centers[i]
@@ -1973,7 +2241,7 @@ function MarketTAMDiagram() {
         </svg>
       </div>
       {/* Legend */}
-      <div className="mt-8 flex items-center gap-8" style={{ opacity: 0.38 }}>
+      <div className="hidden md:flex mt-8 items-center gap-8" style={{ opacity: 0.38 }}>
         {[
           { label: 'TAM', w: 14, h: 14, bg: 'transparent', border: '1px solid rgba(245,241,232,0.45)', radius: '50%' },
           { label: 'SAM', w: 11, h: 11, bg: 'transparent', border: '1px solid rgba(245,241,232,0.45)', radius: '50%' },
@@ -1986,7 +2254,7 @@ function MarketTAMDiagram() {
         ))}
       </div>
       {/* Phase detail rows */}
-      <div className="mt-12">
+      <div className="hidden md:block mt-12">
         {MARKET_TAM_DATA.map((p, i) => {
           const rowCol = PHASE_COLORS[i]
           return (
@@ -2051,8 +2319,51 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
         ))}
       </div>
 
+      {/* Mobile timeline */}
+      <div className="md:hidden space-y-3">
+        {phases.map((phase, i) => (
+          <motion.div
+            key={phase.year}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '0px' }}
+            transition={{ duration: 0.45, delay: i * 0.08, ease: [0.25, 0, 0.2, 1] }}
+            className="px-5 py-5"
+            style={{
+              border: i === 0 ? `1px solid ${ACCENT}44` : INV_BORDER_SUBTLE,
+              backgroundColor: i === 0 ? `${ACCENT}0a` : 'rgba(245,241,232,0.03)',
+              boxShadow: i === 0 ? `inset 3px 0 0 ${ACCENT}` : 'none',
+            }}
+          >
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.56rem', opacity: 0.48, color: i === 0 ? ACCENT : undefined }}>{phase.year}</p>
+                <p className="font-display mt-2" style={{ fontSize: '1.65rem', lineHeight: 1.08, color: i === 0 ? ACCENT : undefined }}>{phase.label}</p>
+              </div>
+              {i === 0 && (
+                <p className="font-sans uppercase tracking-[0.12em] px-2.5 py-1.5" style={{ fontSize: '0.48rem', color: ACCENT, border: `1px solid ${ACCENT}3d` }}>
+                  active
+                </p>
+              )}
+            </div>
+            <div>
+              {phase.items.map((item, j) => (
+                <div
+                  key={item}
+                  className="flex items-start gap-3 py-3"
+                  style={{ borderBottom: j < phase.items.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
+                >
+                  <span style={{ opacity: i === 0 ? 0.68 : 0.4, flexShrink: 0, marginTop: 2, color: i === 0 ? ACCENT : undefined }}>—</span>
+                  <p className="font-sans text-base leading-snug" style={{ opacity: i === 0 ? 0.82 : 0.68 }}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
       {/* Phase columns */}
-      <div className="grid grid-cols-1 md:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.12)' }}>
+      <div className="hidden md:grid md:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.12)' }}>
         {phases.map((phase, i) => (
           <motion.div
             key={phase.year}
@@ -2060,7 +2371,7 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '0px' }}
             transition={{ duration: 0.6, delay: i * 0.2, ease: [0.25, 0, 0.2, 1] }}
-            className="p-10"
+            className="p-6 md:p-10"
             style={{ backgroundColor: '#0e0e0e' }}
           >
             <p className="font-sans text-label uppercase tracking-[0.16em] mb-2" style={{ opacity: 0.35, color: i === 0 ? ACCENT : undefined }}>{phase.year}</p>
