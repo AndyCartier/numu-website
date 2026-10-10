@@ -71,7 +71,7 @@ export const seoPages: SeoPageData[] = [
       {
         question: 'Are NUMU acoustic panels available in Dubai?',
         answer:
-          'NUMU is based in Dubai and is already advancing acoustic installations and project discussions in the UAE. Availability depends on project scope, timing, and specification needs.',
+          'NUMU is based in Dubai, grows FOLD panels in its own lab, and takes project inquiries across the UAE. Availability depends on project scope, timing, and specification needs; samples and lead times are confirmed per project.',
       },
       {
         question: 'What are mycelium acoustic panels?',
@@ -407,7 +407,7 @@ export const seoPages: SeoPageData[] = [
     kicker: 'Projects and traction',
     heading: 'Proof matters. This is what exists today.',
     intro:
-      'NUMU is early, but not imaginary. The company already has installations, active development projects, a live production base in Dubai, and technical work that grounds the larger platform story in execution.',
+      'NUMU is early, but not imaginary. The company has a completed installation in the Netherlands, full-scale prototypes grown in Dubai, a live production base, and technical work that grounds the larger platform story in execution.',
     image: {
       src: '/images/projects/Beyond01.jpg',
       alt: 'NUMU mycelium installation case study image from Beyond Chrysant',
@@ -420,7 +420,7 @@ export const seoPages: SeoPageData[] = [
       'mycelium architecture projects',
     ],
     highlights: [
-      { label: 'Installations', value: '2 international projects' },
+      { label: 'Built installation', value: 'Netherlands, 2022' },
       { label: 'Founder capital', value: 'AED 184K deployed' },
       { label: 'Packaging path', value: '1 LOI active' },
       { label: 'Base', value: 'Operational lab in Dubai' },
@@ -432,9 +432,9 @@ export const seoPages: SeoPageData[] = [
           'Completed architectural installation in the Netherlands showing real-world material deployment beyond lab samples.',
       },
       {
-        title: 'KAVE Dubai',
+        title: 'FOLD prototypes, Dubai',
         description:
-          'Commercial installation in production, signaling local market pull for the acoustic application.',
+          'Full-scale FOLD acoustic panels grown and finished in the Dubai lab. Acoustic and fire testing is in progress; published performance figures remain design targets.',
       },
       {
         title: 'Platform validation',
@@ -446,7 +446,7 @@ export const seoPages: SeoPageData[] = [
       {
         title: 'What investors should see here',
         paragraphs: [
-          'The point of these projects is not that they are already giant revenue lines. The point is that the company has moved material, built installations, activated partners, and advanced a real operational line in Dubai.',
+          'The point of these projects is not that they are already giant revenue lines. The point is that the company has moved material, built an installation, grown full-scale prototypes, activated partners, and advanced a real operational line in Dubai.',
           'That matters because early-stage materials businesses often die in the gap between narrative and fabrication. NUMU is already on the fabrication side of that line.',
         ],
       },
@@ -468,12 +468,12 @@ export const seoPages: SeoPageData[] = [
       {
         question: 'Has NUMU completed real installations?',
         answer:
-          'Yes. NUMU references completed installation work in the Netherlands and an active commercial installation pathway in Dubai as part of its traction story.',
+          'Yes. Beyond Chrysant, a grown acoustic installation in the Netherlands, was completed in 2022. In Dubai, NUMU grows full-scale FOLD panel prototypes and other material work in its own lab; these are presented as prototypes, not client installations.',
       },
       {
         question: 'Is NUMU only a concept-stage company?',
         answer:
-          'No. The company presents itself as an operational Dubai lab with founder capital deployed, installations completed, partner activity underway, and active certification work.',
+          'No. NUMU operates a Dubai lab with founder capital deployed, a completed installation in the Netherlands, partner activity underway, and active certification work.',
       },
       {
         question: 'How do case studies help with specification?',

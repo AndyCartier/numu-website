@@ -42,7 +42,7 @@ export const metadata: Metadata = {
         url: '/images/projects/acoustic_render_07.jpg',
         width: 1600,
         height: 900,
-        alt: 'NUMU bio-engineered acoustic panel installation',
+        alt: 'FOLD grown acoustic panel surface (visualisation)',
       },
     ],
   },

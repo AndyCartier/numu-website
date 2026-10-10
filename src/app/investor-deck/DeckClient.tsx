@@ -88,7 +88,7 @@ function PalmycoMark() {
 function SlideCover() {
   const coverProof = [
     ['Operational', 'Dubai lab active'],
-    ['Installed', '2 installations · NL + UAE'],
+    ['Installed', '1 installation · Netherlands 2022'],
     ['Margins', '49–66% · GROSS'],
   ]
   return (
@@ -338,7 +338,7 @@ function SlideTraction() {
   const [ref, inView] = useInView()
   const proof = [
     'Beyond Chrysant (Netherlands) — completed architectural installation',
-    'KAVE Dubai — commercial installation in production',
+    'FOLD acoustic panel prototypes — grown full-scale in the Dubai lab',
     'Biomyc LOI — European packaging technology licensing pathway',
     'Certification programme active — acoustic + fire performance testing',
     'Co-inventor on 2 Belgian patent families in mycelium materials (prior work)',
@@ -346,7 +346,7 @@ function SlideTraction() {
   ]
   const stats = [
     ['AED 184K', 'founder capital deployed'],
-    ['2', 'International installs'],
+    ['1', 'Completed install (NL)'],
     ['1 LOI', 'packaging pathway active'],
     ['3', 'Paid masterclasses'],
   ]
@@ -1093,7 +1093,6 @@ function SlidePartnershipsEcosystem() {
         {/* Col 1 — Commercial & Product */}
         <div className="anim-fade" style={{ ...fade(inView, 0.1), paddingRight: '1.4rem' }}>
           <div style={{ fontSize: '0.5rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(239,234,216,0.38)', fontFamily: 'var(--font-sans, sans-serif)', marginBottom: '0.85rem' }}>Commercial & Product</div>
-          <PartnerItem name="KAVE" location="Alserkal, Dubai" desc="Grown acoustic pilot installation." pills={[{ label: 'Installing Aug 2026', solid: true }]} />
           <PartnerItem name="Beyond Chrysant" location="Netherlands" desc="First completed grown acoustic install." pills={[{ label: 'Completed 2022', solid: true }]} />
           <PartnerItem name="Desert Board" location="UAE" desc="Board supply and waste-stream feedstock." pills={[{ label: 'Active Supply', solid: true }]} />
           <PartnerItem name="BASE39" location="UAE" desc="Accelerator, graduated. Mushroomiya lamp developed; exhibiting Sept." pills={[{ label: 'Graduated', solid: true }]} />
@@ -1150,7 +1149,7 @@ function SlideRoadmap() {
   const [ref, inView] = useInView()
   const phases = [
     { period: 'M0 – M6',   label: 'Platform Activation', units: 6,  funded: true,  bg: 'rgba(198,106,63,0.10)',    items: ['Funding close → immediate deployment', 'Production facility + press line', 'First operator hired', 'Patent filing complete', 'Certifications initiated'] },
-    { period: 'M6 – M18',  label: 'First Revenue',       units: 12, funded: false, bg: 'rgba(239,234,216,0.04)',   items: ['E1 + E2 revenue streams active', 'KAVE + pipeline conversions', 'Designer specification channel set', 'Y1→Y2 revenue: $126K → $701K'] },
+    { period: 'M6 – M18',  label: 'First Revenue',       units: 12, funded: false, bg: 'rgba(239,234,216,0.04)',   items: ['E1 + E2 revenue streams active', 'Pipeline conversions', 'Designer specification channel set', 'Y1→Y2 revenue: $126K → $701K'] },
     { period: 'M18 – M24', label: 'Certification Scale', units: 6,  funded: false, bg: 'rgba(217,168,120,0.06)',   items: ['Fire + acoustic certifications achieved', 'E3 commercial market unlocked', '3–5 commercial projects in spec', 'Y3 revenue: $1.90M · acoustic + fire certified'] },
     { period: 'M24+',      label: 'Platform Leverage',   units: 10, funded: false, bg: 'rgba(239,234,216,0.03)',   items: ['Thermal + packaging scale to volume', 'Saudi Arabia + NEOM pathway', 'First regional licensing deal', '→ Series A: $2.5M · in-house spawn + Module 2 + thermal/packaging at construction scale', 'Path to 300–400K m²/yr = Series B'] },
   ]
@@ -1203,7 +1202,7 @@ function SlideRoadmap() {
 function SlideTeam() {
   const [ref, inView] = useInView()
   const members = [
-    { name: 'Andy Cartier',   role: 'Founder & CEO',          focus: 'Mycelium Industrialization', bio: '7 years lab-to-production. Two installations. Co-founder: UFO (33%) + Hyphen (7.5%) in the US. Co-inventor on 2 Belgian patent families. Paid mycelium masterclass instructor (3 sold-out sessions).', credential: 'Routledge author (2024) · TSI adviser · Neal Lachman MOU (May 28, 2026)', img: '/images/founder/processed/andy_public_v2.png' },
+    { name: 'Andy Cartier',   role: 'Founder & CEO',          focus: 'Mycelium Industrialization', bio: '7 years lab-to-production. Built installation (NL, 2022). Co-founder: UFO (33%) + Hyphen (7.5%) in the US. Co-inventor on 2 Belgian patent families. Paid mycelium masterclass instructor (3 sold-out sessions).', credential: 'Routledge author (2024) · TSI adviser · Neal Lachman MOU (May 28, 2026)', img: '/images/founder/processed/andy_public_v2.png' },
     { name: 'Benjamin Rieux', role: 'Cofounder & CFO',         focus: 'Construction Finance',       bio: '15+ years construction + real estate finance across GCC + Europe. Leads financial strategy and investor reporting.', credential: undefined, img: '/images/founder/benjamin_2026.png' },
     { name: 'Othman Ihrai',   role: 'Cofounder & Head of IP',  focus: 'IP + Legal Strategy',        bio: 'PhD IP Law. 15+ years CEO of French Tech-certified startups. Patent strategy, technology governance, venture structuring.', credential: undefined, img: '/images/founder/othman_2026.png' },
     { name: 'Matthew Zelitt', role: 'Chief Growth Officer',    focus: 'Partnerships & Go-to-Market',bio: '10+ years healthcare + early-stage startups. Commercial pipeline, strategic partnerships, investor relations.', credential: undefined, img: '/images/founder/matthew_2026.png' },

@@ -990,51 +990,7 @@ function ProcessCarousel() {
   )
 }
 
-// ─── KAVE countdown + feature section ────────────────────────────────────────
-const KAVE_TARGET_DATE = new Date('2026-10-05T00:00:00+04:00')
-
-function KaveCountdown() {
-  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-
-  useEffect(() => {
-    const tick = () => {
-      const diff = Math.max(0, KAVE_TARGET_DATE.getTime() - Date.now())
-      setTime({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      })
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  return (
-    <div className="flex items-center gap-8 mt-8">
-      {([
-        { value: time.days, unit: 'Days' },
-        { value: time.hours, unit: 'Hours' },
-        { value: time.minutes, unit: 'Min' },
-        { value: time.seconds, unit: 'Sec' },
-      ] as { value: number; unit: string }[]).map(({ value, unit }, i) => (
-        <div key={unit} className="flex items-start gap-8">
-          <div className="text-center">
-            <p className="font-display" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', letterSpacing: '-0.045em', lineHeight: 1, color: '#f5f1e8', opacity: 0.9 }}>
-              {String(value).padStart(2, '0')}
-            </p>
-            <p className="font-sans uppercase tracking-[0.2em] mt-1" style={{ fontSize: '0.6875rem', opacity: 0.76, color: '#f5f1e8' }}>
-              {unit}
-            </p>
-          </div>
-          {i < 3 && <p className="font-display" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 1, color: '#f5f1e8', opacity: 0.3, marginTop: 0 }}>:</p>}
-        </div>
-      ))}
-    </div>
-  )
-}
-
+// ─── Built work ───────────────────────────────────────────────────────────────
 const BEYOND_SLIDES = [
   '/images/projects/Beyond01.jpg',
   '/images/projects/Beyond02.jpg',
@@ -1061,42 +1017,42 @@ function BeyondSlideshow() {
   )
 }
 
-function KaveSection() {
+// Full-bleed entry into the inquiry catalogue. Real artwork photograph, no claims.
+function CollectionBand() {
   return (
     <section
+      id="collection"
       className="relative overflow-hidden"
-      style={{ height: '85vh', minHeight: 560, borderTop: BORDER }}
+      style={{ height: '78vh', minHeight: 520, borderTop: BORDER }}
     >
-      <div
-        style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(/images/projects/acoustic_render_07.jpg)',
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          filter: 'blur(2px)',
-          transform: 'scale(1.05)',
-          opacity: 0.85,
-        }}
+      <Image
+        src="/images/catalogue/aurum/aurum-gold-detail.jpg"
+        alt="Gold traced into the grown relief of an Aurum work, Fungal Art Series"
+        data-lightbox="off"
+        fill
+        className="object-cover object-center"
+        sizes="100vw"
       />
-      <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(10,8,6,0.42)' }} />
-
-      {/* Content */}
-      <div
-        className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
-        style={{ zIndex: 2 }}
-      >
-        <p className="font-sans uppercase tracking-[0.24em] mb-6" style={{ fontSize: '0.6875rem', opacity: 0.68, color: '#f5f1e8' }}>
-          Installation — Dubai, UAE · 5 October 2026
-        </p>
-        <h2 className="font-display" style={{ fontSize: 'clamp(4rem, 12vw, 9rem)', lineHeight: 0.9, letterSpacing: '-0.045em', color: '#f5f1e8', opacity: 0.95 }}>
-          KAVE
-        </h2>
-        <div className="mt-5 flex items-center gap-3">
-          <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#f5f1e8', opacity: 0.55, animation: 'process-pulse 2s ease-out infinite' }} />
-          <p className="font-sans uppercase tracking-[0.22em]" style={{ fontSize: '0.6875rem', opacity: 0.68, color: '#f5f1e8' }}>
-            Currently being built
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,8,6,0.72) 0%, rgba(10,8,6,0.28) 55%, rgba(10,8,6,0.18) 100%)' }} />
+      <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-12 pb-12 md:pb-16" style={{ zIndex: 2 }}>
+        <div className="max-w-[1440px] w-full mx-auto">
+          <p className="font-sans uppercase tracking-[0.24em] mb-5" style={{ fontSize: '0.6875rem', opacity: 0.78, color: '#f5f1e8' }}>
+            The collection — Objects &amp; Surfaces
           </p>
+          <h2 className="font-display max-w-4xl" style={{ fontSize: 'clamp(2.6rem, 7vw, 6.5rem)', lineHeight: 0.92, letterSpacing: '-0.045em', color: '#f5f1e8' }}>
+            Surfaces, light and works, grown to order.
+          </h2>
+          <p className="font-sans mt-6 max-w-xl leading-[1.7]" style={{ fontSize: '0.9375rem', color: '#f5f1e8', opacity: 0.78 }}>
+            Acoustic surfaces, Mushroomiya lighting, Fungal Art Series® works and bespoke commissions. Every piece is offered by inquiry, with price on request.
+          </p>
+          <Link
+            href="/shop"
+            className="font-sans uppercase tracking-[0.16em] inline-block mt-8 px-7 py-4"
+            style={{ fontSize: '0.6875rem', color: '#f5f1e8', border: '1px solid rgba(245,241,232,0.55)', textDecoration: 'none' }}
+          >
+            View the collection →
+          </Link>
         </div>
-        <KaveCountdown />
       </div>
     </section>
   )
@@ -2998,7 +2954,7 @@ function ExploreCTA() {
 const PARTNERS = [
   { name: 'NYXO Design Studio', note: 'Design partner', href: 'https://www.nyxostudio.com/' },
   { name: 'Biomyc', note: 'Packaging — LOI', href: 'https://new.biomyc.eu/' },
-  { name: 'Base39', note: 'Creative accelerator — accepted 2026', href: 'https://base39.com/' },
+  { name: 'Base39', note: 'Creative accelerator — 2nd place 2026', href: 'https://base39.com/' },
   { name: 'De Montfort University', note: 'Academic' },
   { name: 'American University of Sharjah', note: 'Academic' },
   { name: 'Heriot-Watt University Dubai', note: 'Academic' },
@@ -3414,14 +3370,17 @@ function VisitorView({
       <CollectionFeatures />
       <Moodboards />
 
-      {/* Installations — moved up: proof of execution, right after FOLD */}
+      {/* Built work — proof of execution, right after FOLD. Only completed or physically existing work. */}
       <VSection id="installations">
-        <VLabel text="03 — Installations" />
-        <VHeading text="Two installations. Real conditions." />
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-start">
+        <VLabel text="03 — Built work" />
+        <VHeading text="Built, grown, documented." />
+        <p className="font-sans leading-[1.75] max-w-2xl" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>
+          A completed installation in the Netherlands, and full-scale material work grown in NUMU&apos;s Dubai lab. Prototypes are shown as prototypes; visualisations elsewhere on this site are labelled as such.
+        </p>
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-start">
           <div className="h-full p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.02)' }}>
             <BeyondSlideshow />
-            <VLabel text="Netherlands — 2022" />
+            <VLabel text="Netherlands — 2022 · Completed" />
             <p className="font-display text-xl md:text-2xl mt-1">Beyond Chrysant</p>
             <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.875rem', opacity: 0.56 }}>
               Prototype installation demonstrating the folded acoustic language in a built exhibition context.
@@ -3429,19 +3388,29 @@ function VisitorView({
           </div>
           <div className="h-full p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.02)' }}>
             <div className="relative mb-4 overflow-hidden" style={{ aspectRatio: '4/3', backgroundColor: 'rgba(128,128,128,0.06)' }}>
-              <Image src="/images/projects/acoustic_render_07.jpg" alt="KAVE — FOLD acoustic panel installation, Dubai 2026" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+              <Image src="/images/user/fold-panel-studio.jpg" alt="A real FOLD acoustic panel prototype in the NUMU studio, Dubai" fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
             </div>
-            <VLabel text="Dubai, UAE — 2026 Q2 · in progress" />
-            <p className="font-display text-xl md:text-2xl mt-1">KAVE</p>
+            <VLabel text="Dubai, UAE — 2026 · Prototype" />
+            <p className="font-display text-xl md:text-2xl mt-1">FOLD panels</p>
             <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.875rem', opacity: 0.56 }}>
-              Current Dubai client installation translating FOLD into a live interior environment.
+              Full-scale FOLD panels grown and finished in the Dubai lab. Acoustic and fire testing is in progress; performance figures remain design targets until reports are issued.
+            </p>
+          </div>
+          <div className="h-full p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.02)' }}>
+            <div className="relative mb-4 overflow-hidden" style={{ aspectRatio: '4/3', backgroundColor: 'rgba(128,128,128,0.06)' }}>
+              <Image src="/images/catalogue/material/palmyco-panels-stacked.jpg" alt="Stacked PALMYCO™ grown material panels from NUMU production runs" fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+            </div>
+            <VLabel text="Dubai, UAE — Ongoing · Production" />
+            <p className="font-display text-xl md:text-2xl mt-1">PALMYCO™ batches</p>
+            <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.875rem', opacity: 0.56 }}>
+              Repeat growth cycles on regional palm fibre: the material base behind every panel, lamp and commission.
             </p>
           </div>
         </div>
       </VSection>
 
-      {/* KAVE — dedicated section with countdown */}
-      <KaveSection />
+      {/* Collection entry — full-bleed band into the inquiry catalogue */}
+      <CollectionBand />
 
       {/* Specify NUMU CTA */}
       <ExploreCTA />
@@ -3811,11 +3780,11 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
                 tint: 'grayscale(40%) brightness(0.92)',
               },
               {
-                project: 'KAVE',
-                location: 'Dubai, UAE — 2026 Q2 · in progress',
-                caption: 'KAVE — Dubai, UAE 2026 Q2',
-                brief: 'KAVE — FOLD acoustic panel installation, Dubai 2026 Q2 (in progress).',
-                image: '/images/projects/acoustic_render_07.jpg',
+                project: 'FOLD prototypes',
+                location: 'Dubai, UAE — 2026 · Prototype',
+                caption: 'FOLD prototypes — Dubai, UAE 2026',
+                brief: 'Full-scale FOLD acoustic panel prototype grown in the NUMU Dubai lab, 2026.',
+                image: '/images/user/fold-panel-studio.jpg',
                 tint: 'grayscale(40%) brightness(0.92)',
               },
             ].map(inst => (
@@ -4241,7 +4210,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             { num: '7', unit: 'YEARS', label: 'Operational mycelium industrialization, Europe and Middle East' },
             { num: '2', unit: 'PATENTS', label: 'Process-level IP (Belgium)' },
             { num: '1', unit: 'BOOK', label: 'Designing Mycelium, Routledge 2024' },
-            { num: '2', unit: 'INSTALLATIONS', label: 'Real conditions, documented (Netherlands 2022 — built; Dubai 2026 Q2 — in progress)' },
+            { num: '1', unit: 'INSTALLATION', label: 'Built and documented in real conditions (Beyond Chrysant, Netherlands 2022)' },
           ].map((stat, i) => (
             <motion.div
               key={stat.unit}
@@ -4276,7 +4245,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
               Andy dropped out of university to open his own design studio. He built a practice around material experimentation, product development, and applied design — working with manufacturers and clients across Europe and the Middle East. That path led to mycelium, not through academia, but through the practical problem of industrializing a biological process at production scale.
             </p>
             <p className="font-sans text-base leading-[1.85] mb-6" style={{ opacity: 0.55 }}>
-              He has set up labs, run growth cycles, failed batches, fixed processes, and shipped real installations — Netherlands 2022 (built); Dubai 2026 Q2 (KAVE, in progress). He holds process-level patents in Belgium and published in the Routledge reference volume for bio-based material design. He is not a researcher who started a company. He is a builder who learned through real-world evidence what works in production and what does not.
+              He has set up labs, run growth cycles, failed batches, fixed processes, and built a documented installation in real conditions (Beyond Chrysant, Netherlands 2022). He holds process-level patents in Belgium and published in the Routledge reference volume for bio-based material design. He is not a researcher who started a company. He is a builder who learned through real-world evidence what works in production and what does not.
             </p>
             <p className="font-sans text-base leading-[1.85]" style={{ opacity: 0.48 }}>
               Andy also holds co-founder positions in UFO (US, pressed mycelium composites) and Hyphen (US, bio-materials ecosystem) — relationships that extend NUMU&apos;s long-term technology and IP pipeline without diverting operational focus. Approximately 90% of his time is dedicated to NUMU. The point is not the credentials. The point is that he has already paid the tuition, on two continents, in real production conditions. NUMU is built on that foundation.
@@ -4291,7 +4260,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             {[
               { year: '2024', text: 'Chapter author — Designing with Mycelium, Routledge (global reference volume for bio-based material design)' },
               { year: '2022–23', text: '2 process-level patents filed — Belgium (mycelium composite formation and no-mold growth technique)' },
-              { year: '2026 Q2', text: 'KAVE acoustic installation — in progress, Dubai (first mycelium acoustic installation in the GCC)' },
+              { year: '2026', text: 'BASE39 Creative Accelerator — second place, Mushroomiya grown lighting concept' },
               { year: '2022', text: 'Beyond Chrysant installation — Netherlands (multi-panel grown acoustic system, public documentation)' },
               { year: 'Ongoing', text: 'Academic partnerships — De Montfort University, American University of Sharjah, Heriot-Watt Dubai, DIDI' },
               { year: 'Ongoing', text: '7+ years applied industrialization — mycelium composites, EU and GCC production environments' },

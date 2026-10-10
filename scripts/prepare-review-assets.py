@@ -51,11 +51,16 @@ def add(source,category,title,caption,key=None):
 def title(source):
     return re.sub(r'[_-]+',' ',source.stem).strip()
 # Newest commission concept leads the collection.
-objects=Path('/Users/Andy/Desktop/NUMU Event Collateral Renders')
+# Source folders moved under '01 NUMU & Materials' in 2026; fail loudly rather than
+# silently dropping collection entries when a folder is missing.
+SOURCE_ROOT=Path('/Users/Andy/Desktop/01 NUMU & Materials')
+for required in ['NUMU Event Collateral Renders','Mushroomiya Lamp Renders']:
+    if not (SOURCE_ROOT/required).is_dir(): raise SystemExit(f'Missing source folder: {SOURCE_ROOT/required}')
+objects=SOURCE_ROOT/'NUMU Event Collateral Renders'
 for source in sorted(objects.glob('*.png'),key=lambda p:(not p.name.startswith('13'),p.name)):
     label=re.sub(r'^\d+ - ','',source.stem)
     add(source,'Objects',label,'Palmyco desk objects and event collateral. Visualisation. Indicative only.','/collections/objects/'+source.name)
-lamps=Path('/Users/Andy/Desktop/Mushroomiya Lamp Renders')
+lamps=SOURCE_ROOT/'Mushroomiya Lamp Renders'
 for source in sorted(lamps.rglob('*')):
     if source.suffix.lower() not in ['.png','.jpg','.jpeg','.webp']:continue
     is_study=any(x in str(source) for x in ['Design studies','Other lamps'])

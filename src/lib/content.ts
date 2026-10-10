@@ -146,7 +146,7 @@ export function loadVisitorContent(): VisitorContent {
     founder: {
       label: '06 — Founder',
       heading: 'Built by 7 years of hands-on industrialization.',
-      body: "NUMU was founded by Andy Cartier — a mycelium industrialization specialist who has spent 7 years compressing the learning curve from lab to production across Europe and the Middle East. Two real-world installations. An operational production lab in Dubai. This isn't research — it's execution.",
+      body: "NUMU was founded by Andy Cartier — a mycelium industrialization specialist who has spent 7 years compressing the learning curve from lab to production across Europe and the Middle East. A completed installation in the Netherlands. An operational production lab in Dubai. This isn't research — it's execution.",
       role: 'Founder & CEO — Mycelium Industrialization',
     },
     contact: {
@@ -305,10 +305,10 @@ export function loadInvestorContent(): InvestorContent {
     },
     traction: {
       label: '02 — What Exists Today',
-      heading: 'Two installations. One lab. Real feedstock.',
+      heading: 'One built installation. One lab. Real feedstock.',
       items: [
         'Beyond Chrysant (Netherlands) — completed architectural installation',
-        'KAVE Dubai — commercial installation in production',
+        'FOLD acoustic panel prototypes — grown full-scale in the Dubai lab',
         'Biomyc LOI — European packaging technology licensing pathway active',
         'Certification programme active — acoustic + fire performance testing',
         'Co-inventor on 2 Belgian patent families in mycelium materials (prior work)',
@@ -337,7 +337,7 @@ export function loadInvestorContent(): InvestorContent {
           label: 'First Revenue',
           items: [
             'E1 + E2 revenue streams active',
-            'KAVE + pipeline conversions',
+            'Pipeline conversions',
             'Designer specification channel set',
             'Y1→Y2 revenue: $126K → $701K',
           ],
@@ -379,7 +379,7 @@ export function loadInvestorContent(): InvestorContent {
           name: 'Andy Cartier',
           role: 'Founder & CEO — Mycelium Industrialization',
           equity: '',
-          bio: '7 years compressing the lab-to-production gap across Europe and the Middle East. Two real installations. Operational lab funded with founder capital. Published in the Routledge mycelium reference volume, 2024.',
+          bio: '7 years compressing the lab-to-production gap across Europe and the Middle East. A built installation in the Netherlands. Operational lab funded with founder capital. Published in the Routledge mycelium reference volume, 2024.',
           imageKey: 'founder',
         },
         {
