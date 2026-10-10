@@ -2995,26 +2995,23 @@ function PartnersStrip() {
 
 function PlatformWithoutBorders() {
   const platformImages = [
-    // TODO Andy: replace /public/images/platform/placeholder-earth-feedstock.jpg with final earth feedstock image.
     {
-      src: '/images/platform/placeholder-earth-feedstock.jpg',
-      alt: 'Regional agricultural feedstock used in NUMU mycelium composites',
+      src: '/images/talk/woodshow/waste-pile-palm-agricultural.jpg',
+      alt: 'A pile of date-palm agricultural waste, the regional feedstock behind PALMYCO™',
       label: 'Regional feedstock',
-      note: 'Local biomass becomes manufacturing input.',
+      note: 'Local biomass becomes manufacturing input. Photograph.',
     },
-    // TODO Andy: replace /public/images/platform/placeholder-grown-panel.jpg with final grown panel image.
     {
-      src: '/images/platform/placeholder-grown-panel.jpg',
-      alt: 'NUMU grown mycelium composite panel',
+      src: '/images/catalogue/material/palmyco-sample-block.jpg',
+      alt: 'A solid PALMYCO™ sample block grown by NUMU, labelled C-02',
       label: 'Grown composite',
-      note: 'A material system grown into function.',
+      note: 'A material system grown into function. Photograph.',
     },
-    // TODO Andy: replace /public/images/platform/placeholder-extreme-environment.jpg with final extreme environment visual.
     {
-      src: '/images/platform/placeholder-extreme-environment.jpg',
-      alt: 'Concept render of mycelium biomanufacturing in an extreme environment',
+      src: '/images/catalogue/space/nasa-artemis2-lunar-terminator.jpg',
+      alt: 'The lunar terminator photographed by the Artemis II crew. Image: NASA',
       label: 'Extreme environments',
-      note: 'The same ISRU composites logic extends further.',
+      note: 'The same ISRU logic, as research. Image: NASA, Artemis II.',
     },
   ]
 
@@ -3045,7 +3042,7 @@ function PlatformWithoutBorders() {
               Titans Space Industries
             </h3>
             <p className="font-sans leading-[1.75] mb-7" style={{ fontSize: '0.9375rem', opacity: 0.62 }}>
-              NUMU has signed a Memorandum of Understanding with Titans Space Industries (TSI), the Orlando-based developer of reusable spaceplanes and orbital infrastructure. NUMU joins the consortium as its Bio-Materials and ISRU Composites Partner, exploring how mycelium biomanufacturing can produce composites and structures in extreme environments.
+              NUMU has signed a Memorandum of Understanding with Titans Space Industries (TSI), the Orlando-based developer of reusable spaceplanes and orbital infrastructure. NUMU joins the consortium as its Bio-Materials and ISRU Composites Partner, exploring, as research, how mycelium biomanufacturing could produce composites and structures in extreme environments.
             </p>
             <Link
               href="/partnerships/titans-space"
@@ -3061,7 +3058,7 @@ function PlatformWithoutBorders() {
       <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-3">
         {platformImages.map((item) => (
           <div key={item.src}>
-            <div className="relative overflow-hidden" style={{ aspectRatio: item.src.includes('grown-panel') ? '4/5' : '1/1', backgroundColor: 'rgba(128,128,128,0.05)' }}>
+            <div className="relative overflow-hidden" style={{ aspectRatio: '1/1', backgroundColor: 'rgba(128,128,128,0.05)' }}>
               <Image
                 src={item.src}
                 alt={item.alt}
@@ -3069,7 +3066,6 @@ function PlatformWithoutBorders() {
                 unoptimized
                 className="object-cover object-center"
                 sizes="(max-width: 768px) 100vw, 33vw"
-                style={{ mixBlendMode: item.src.includes('earth-feedstock') ? 'multiply' : 'normal' }}
               />
             </div>
             <div className="px-6 md:px-8 pt-4">
@@ -3347,13 +3343,13 @@ function VisitorView({
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
             {[
-              { field: 'Panel dimensions', value: '400 mm × 400 mm × 60 mm' },
-              { field: 'Weight', value: 'Approx. 1.8–2.2 kg/m²' },
-              { field: 'Acoustic performance', value: 'NRC ~0.7 target — certification pending' },
-              { field: 'Fire performance', value: 'ASTM E84 Class B — target (certification pending)' },
+              { field: 'Panel dimensions', value: '400 × 400 mm module, 60 mm nominal (provisional)' },
+              { field: 'Weight', value: 'Confirmed with samples' },
+              { field: 'Acoustic performance', value: 'NRC 0.72–0.80 — design target, testing in progress' },
+              { field: 'Fire performance', value: 'ASTM E84 Class B — design target, testing in progress' },
               { field: 'Installation', value: 'Concealed adhesive mount or mechanical fixing' },
               { field: 'Finish', value: 'Natural PALMYCO™ surface, raw or sealed' },
-              { field: 'Lead time', value: '6–8 weeks from order' },
+              { field: 'Lead time', value: 'Quoted per project' },
               { field: 'Origin', value: 'Manufactured in Dubai, UAE' },
               { field: 'End of life', value: '100% bio-based, biodegradable under natural composting conditions' },
             ].map(spec => (

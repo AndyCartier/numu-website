@@ -4,7 +4,7 @@ import { buildAbsoluteUrl } from '@/lib/site'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // Update only when site content changes, not on each rebuild.
-  const lastModified = new Date('2026-09-12T00:00:00+04:00')
+  const lastModified = new Date('2026-10-10T00:00:00+04:00')
 
   const pages = [
     { path: '/', priority: 1, changeFrequency: 'weekly' as const },
@@ -17,8 +17,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/mycelium-packaging-uae', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/mushroomiya', priority: 0.75, changeFrequency: 'monthly' as const },
     { path: '/collections', priority: 0.8, changeFrequency: 'weekly' as const },
-    { path: '/shop', priority: 0.7, changeFrequency: 'weekly' as const },
-    ...publicProducts.filter(product => ['available', 'made_to_order'].includes(product.status) && product.slug !== 'shop-review-object').map(product => ({ path: `/shop/${product.slug}`, priority: 0.65, changeFrequency: 'monthly' as const })),
+    { path: '/shop', priority: 0.85, changeFrequency: 'weekly' as const },
+    ...publicProducts.filter(product => ['available', 'made_to_order'].includes(product.status) && product.slug !== 'shop-review-object').map(product => ({ path: `/shop/${product.slug}`, priority: product.category === 'Experiences' ? 0.5 : 0.72, changeFrequency: 'monthly' as const })),
     { path: '/palmyco', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/case-studies', priority: 0.75, changeFrequency: 'weekly' as const },
     { path: '/partnerships', priority: 0.65, changeFrequency: 'monthly' as const },

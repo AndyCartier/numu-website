@@ -144,8 +144,8 @@ export default function MushroomiyaPage() {
           <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 3', backgroundColor: 'rgba(26,23,20,0.04)' }}>
             <Image
               src={heroImage}
-              alt="Mushroomiya lamp installed in an architectural interior"
-              data-lightbox-caption="Mushroomiya installed as a suspended statement piece, showing how the grown lattice holds both light and shadow."
+              alt="Mushroomiya pendant dome in an architectural interior (visualisation)"
+              data-lightbox-caption="Mushroomiya as a suspended statement piece, showing how the grown lattice holds both light and shadow. Visualisation. Indicative only."
               fill
               priority
               unoptimized
@@ -163,8 +163,8 @@ export default function MushroomiyaPage() {
           <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', backgroundColor: 'rgba(26,23,20,0.04)' }}>
             <Image
               src={makingImage}
-              alt="Andy Cartier installing the Mushroomiya lamp"
-              data-lightbox-caption="Andy Cartier installing Mushroomiya, where the research becomes a working architectural light object."
+              alt="Visualisation of the Mushroomiya shell being fitted by hand"
+              data-lightbox-caption="Installation study for Mushroomiya. Visualisation; the production mould is being fabricated in Dubai."
               fill
               unoptimized
               className="object-cover object-center"
@@ -221,8 +221,8 @@ export default function MushroomiyaPage() {
               <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', backgroundColor: 'rgba(26,23,20,0.04)' }}>
                 <Image
                   src={makingImage}
-                  alt="Mushroomiya being installed and assembled"
-                  data-lightbox-caption="Assembly view of Mushroomiya, showing the object handled at full architectural scale."
+                  alt="Visualisation of Mushroomiya being assembled"
+                  data-lightbox-caption="Assembly study of Mushroomiya at full architectural scale. Visualisation. Indicative only."
                   fill
                   unoptimized
                   className="object-cover object-center"
@@ -230,14 +230,14 @@ export default function MushroomiyaPage() {
                 />
               </div>
               <p className="font-sans uppercase tracking-[0.14em] mt-4 mb-1" style={{ fontSize: '0.5625rem', opacity: 0.36 }}>Assembly</p>
-              <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: 0.54 }}>The shell is handled as a precise object, not a speculative prototype.</p>
+              <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: 0.54 }}>A full-scale study of how the grown shell is handled. Visualisation.</p>
             </div>
             <div>
               <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', backgroundColor: 'rgba(26,23,20,0.04)' }}>
                 <Image
                   src={rawMaterialImage}
-                  alt="Mushroomiya shell shown with feedstock and inoculated material"
-                  data-lightbox-caption="The raw shell beside inoculated substrate and loose palm-derived fibre, making the material lineage fully visible."
+                  alt="Mushroomiya shell shown with feedstock and inoculated material (visualisation)"
+                  data-lightbox-caption="The shell beside inoculated substrate and loose palm-derived fibre, making the material lineage visible. Visualisation."
                   fill
                   unoptimized
                   className="object-cover object-center"
@@ -251,7 +251,7 @@ export default function MushroomiyaPage() {
               <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', backgroundColor: 'rgba(26,23,20,0.04)' }}>
                 <Image
                   src={closeUpImage}
-                  alt="Close-up of Mushroomiya surface and touch"
+                  alt="Close-up of the Mushroomiya surface and touch (visualisation)"
                   data-lightbox-caption="Close-up of the grown finish, where fibrous texture and touch remain legible in the final object."
                   fill
                   unoptimized
@@ -278,8 +278,8 @@ export default function MushroomiyaPage() {
             <div className="relative overflow-hidden" style={{ aspectRatio: '16 / 10', backgroundColor: 'rgba(26,23,20,0.04)' }}>
               <Image
                 src="/images/mushroomiya/base39-lamp-05.jpg"
-                alt="Mushroomiya lamp illuminated in a Dubai interior at night"
-                data-lightbox-caption="Mushroomiya illuminated at night, where the grown lattice turns into a large-scale atmospheric light source."
+                alt="Mushroomiya illuminated in an interior at night (visualisation)"
+                data-lightbox-caption="Mushroomiya illuminated at night, where the grown lattice turns into a large-scale atmospheric light source. Visualisation."
                 fill
                 unoptimized
                 className="object-cover object-center"
@@ -291,8 +291,8 @@ export default function MushroomiyaPage() {
             <div className="relative overflow-hidden" style={{ aspectRatio: '16 / 9', backgroundColor: 'rgba(26,23,20,0.04)' }}>
               <Image
                 src={installedInteriorImage}
-                alt="Mushroomiya lamp casting a patterned glow across a reception interior"
-                data-lightbox-caption="Daylight interior view of Mushroomiya, showing the object as both lighting piece and spatial landmark."
+                alt="Mushroomiya casting a patterned glow across a reception interior (visualisation)"
+                data-lightbox-caption="Daylight interior view of Mushroomiya, as both lighting piece and spatial landmark. Visualisation."
                 fill
                 unoptimized
                 className="object-cover object-center"
@@ -304,9 +304,9 @@ export default function MushroomiyaPage() {
               {[
                 ['Category', 'Lighting'],
                 ['Type', 'Monumental ceiling lamp'],
-                ['Dimensions', '1060 × 387 × 30 mm'],
+                ['Dimensions', 'Approx. Ø 1060 mm reference design; final size per commission'],
                 ['Structure', 'Half-sphere open-cell dome'],
-                ['Light source', 'Integrated LED, 2700K, dimmable'],
+                ['Light source', 'Warm white 2700K, dimmable; electrical specification per project'],
                 ['Material system', 'Mycelium on palm-tree fibre waste'],
               ].map(([label, value]) => (
                 <div key={label} className="px-5 py-6" style={{ backgroundColor: 'rgba(26,23,20,0.025)' }}>
@@ -322,7 +322,15 @@ export default function MushroomiyaPage() {
       <section className="px-6 md:px-12 py-16 md:py-24" style={{ borderTop: BORDER }}>
         <div className="max-w-[1120px] mx-auto">
           <Label>Related paths</Label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            <Link
+              href="/shop/mushroomiya"
+              className="block p-6"
+              style={{ border: '1px solid rgba(26,23,20,0.4)', color: 'inherit', textDecoration: 'none', backgroundColor: 'rgba(26,23,20,0.05)' }}
+            >
+              <p className="font-display mb-3" style={{ fontSize: '1.7rem', lineHeight: 1.04, letterSpacing: '-0.03em' }}>Enquire about Mushroomiya</p>
+              <p className="font-sans leading-[1.8]" style={{ fontSize: '0.95rem', opacity: 0.62 }}>Made to order by commission. Price on request; size and light confirmed per project.</p>
+            </Link>
             <Link
               href="/palmyco"
               className="block p-6"

@@ -2,7 +2,6 @@ import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
 import { PRIMARY_NAV_LINKS } from '@/lib/navigation'
 import MobileNav from '@/components/MobileNav'
-import CartLink from '@/components/shop/CartLink'
 
 const BORDER = '1px solid rgba(128,128,128,0.15)'
 
@@ -46,7 +45,6 @@ export function SubpageNav({ currentPath }: { currentPath: string }) {
             )
           })}
         </div>
-        <CartLink />
         <Link
           href="/#contact"
           className="font-sans uppercase tracking-[0.14em]"

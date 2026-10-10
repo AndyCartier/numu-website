@@ -4,28 +4,130 @@ import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import type { Product, ProductCategory } from '@/lib/commerce/catalogue'
+import { STAGE_LABEL } from '@/lib/commerce/labels'
 import { productPriceLabel } from '@/lib/commerce/money'
 
-const categories: Array<'All' | ProductCategory> = ['All', 'Objects', 'Lighting', 'Art', 'Materials', 'Experiences']
-const statusLabel = (product: Product) => product.status === 'made_to_order' ? 'Made to order' : product.status === 'coming_soon' ? 'Coming soon' : product.status === 'sold' ? 'Sold' : product.transactionMode === 'inquiry' ? 'On request' : 'Available'
+type Filter = 'All' | Exclude<ProductCategory, 'Experiences'>
+const filters: Filter[] = ['All', 'Acoustic & Architectural Surfaces', 'Lighting', 'Furniture & Objects', 'Fungal Art', 'Bespoke Commissions']
+const BORDER = '1px solid rgba(128,128,128,.15)'
+
+function stageLabel(product: Product) {
+  if (product.status === 'coming_soon') return 'Coming soon'
+  return product.stage ? STAGE_LABEL[product.stage] : 'On request'
+}
+
+function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
+  const image = product.images[0]
+  return (
+    <Link href={`/shop/${product.slug}`} className="group catalogue-card" style={{ color: 'inherit', textDecoration: 'none' }}>
+      <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', background: 'rgba(26,23,20,.05)' }}>
+        {image
+          ? <Image src={image.src} alt={image.alt} fill priority={priority} className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
+          : <div className="h-full flex items-end p-6 font-sans uppercase tracking-[.16em]" style={{ fontSize: '.625rem', opacity: .45 }}>Image forthcoming</div>}
+        {image?.kind === 'visualisation' && (
+          <span className="catalogue-badge">Visualisation</span>
+        )}
+      </div>
+      <div className="pt-5">
+        <p className="font-sans uppercase tracking-[.14em]" style={{ fontSize: '.625rem', opacity: .55 }}>{product.category} · {stageLabel(product)}</p>
+        <h2 className="font-display mt-2" style={{ fontSize: '1.85rem', lineHeight: 1.02, letterSpacing: '-.02em' }}>{product.name}</h2>
+        <p className="font-sans mt-2" style={{ fontSize: '.8rem', opacity: .6 }}>{product.subtitle}</p>
+        <p className="font-sans mt-4 leading-[1.7]" style={{ fontSize: '.84rem', opacity: .66, maxWidth: 420 }}>{product.description}</p>
+        <div className="mt-5 pt-4 flex items-center justify-between gap-4" style={{ borderTop: BORDER }}>
+          <p className="font-sans" style={{ fontSize: '.75rem', opacity: .72 }}>{productPriceLabel(product)}</p>
+          <span className="font-sans uppercase tracking-[.14em] catalogue-card-cta" style={{ fontSize: '.625rem' }}>
+            {product.category === 'Experiences' ? 'View session' : 'View & enquire'} →
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
+}
 
 export default function ShopClient({ products }: { products: Product[] }) {
-  const [category, setCategory] = useState<'All' | ProductCategory>('All')
-  const [currency, setCurrency] = useState<'AED' | 'USD'>('AED')
-  useEffect(() => { try { const stored = localStorage.getItem('numu-shop-currency'); if (stored === 'AED' || stored === 'USD') setCurrency(stored) } catch {} }, [])
-  function chooseCurrency(next: 'AED' | 'USD') { setCurrency(next); try { localStorage.setItem('numu-shop-currency', next) } catch {} }
-  const visible = useMemo(() => products.filter(p => category === 'All' || p.category === category), [products, category])
+  const [filter, setFilter] = useState<Filter>('All')
+  // Deep links such as /shop?family=Lighting from the homepage and product pages.
+  useEffect(() => {
+    const value = new URLSearchParams(window.location.search).get('family')
+    if (value && filters.includes(value as Filter)) setFilter(value as Filter)
+  }, [])
+  function choose(next: Filter) {
+    setFilter(next)
+    window.history.replaceState(null, '', next === 'All' ? '/shop' : `/shop?family=${encodeURIComponent(next)}`)
+  }
+  const objects = useMemo(() => products.filter(p => p.category !== 'Experiences'), [products])
+  const experiences = useMemo(() => products.filter(p => p.category === 'Experiences'), [products])
+  const visible = useMemo(() => objects.filter(p => filter === 'All' || p.category === filter), [objects, filter])
+  const count = (value: Filter) => value === 'All' ? objects.length : objects.filter(p => p.category === value).length
+
   return <>
-    <section className="px-6 md:px-12 pt-16 md:pt-24 pb-12" style={{ borderBottom: '1px solid rgba(128,128,128,.15)' }}>
+    <section className="px-6 md:px-12 pt-16 md:pt-24 pb-12" style={{ borderBottom: BORDER }}>
       <div className="max-w-[1440px] mx-auto grid lg:grid-cols-[1.1fr_.9fr] gap-10 items-end">
-        <div><p className="font-sans uppercase tracking-[.18em]" style={{ fontSize: '.6875rem', opacity: .52 }}>NUMU / Shop</p><h1 className="font-display mt-5" style={{ fontSize: 'clamp(3.5rem,9vw,9rem)', lineHeight: '.92', letterSpacing: '-.03em' }}>Objects grown<br />from matter.</h1></div>
-        <p className="font-sans max-w-md leading-[1.85]" style={{ fontSize: '1rem', opacity: .62 }}>A collection of lighting, objects, art, materials, and conversations from the NUMU material system.</p>
+        <div>
+          <p className="font-sans uppercase tracking-[.18em]" style={{ fontSize: '.6875rem', opacity: .6 }}>NUMU / Products</p>
+          <h1 className="font-display mt-5" style={{ fontSize: 'clamp(3.2rem,8.5vw,8.5rem)', lineHeight: '.94', letterSpacing: '-.03em' }}>Objects &amp;<br />Surfaces</h1>
+        </div>
+        <div className="max-w-md">
+          <p className="font-sans leading-[1.85]" style={{ fontSize: '1rem', opacity: .66 }}>
+            Acoustic surfaces, lighting, furniture and original works grown from PALMYCO™, NUMU&apos;s mycelium composite on regional date-palm fibre. Made in Dubai.
+          </p>
+          <p className="font-sans leading-[1.75] mt-4" style={{ fontSize: '.84rem', opacity: .58 }}>
+            Every piece is offered by inquiry, with price on request. Each card states its stage, from unique work to prototype, so you know exactly what exists today.
+          </p>
+        </div>
       </div>
     </section>
-    <section className="px-6 md:px-12 py-7" style={{ borderBottom: '1px solid rgba(128,128,128,.15)' }}>
-      <div className="max-w-[1440px] mx-auto flex flex-wrap gap-x-5 gap-y-3 items-center justify-between"><div className="flex flex-wrap gap-x-5 gap-y-2" aria-label="Catalogue filters">{categories.map(item => <button type="button" key={item} aria-pressed={category === item} onClick={() => setCategory(item)} className="font-sans uppercase tracking-[.14em]" style={{ fontSize: '.6875rem', opacity: category === item ? .92 : .48, borderBottom: category === item ? '1px solid currentColor' : '1px solid transparent', paddingBottom: 4 }}>{item}</button>)}</div><div className="font-sans uppercase tracking-[.14em] flex gap-3" style={{ fontSize: '.6875rem' }}><button aria-pressed={currency === 'AED'} onClick={() => chooseCurrency('AED')} style={{ opacity: currency === 'AED' ? .92 : .45 }}>AED</button><span style={{ opacity: .35 }}>|</span><button aria-pressed={currency === 'USD'} onClick={() => chooseCurrency('USD')} style={{ opacity: currency === 'USD' ? .92 : .45 }}>USD</button>{currency === 'USD' && <span style={{ opacity: .42 }}>Indicative</span>}</div></div>
+
+    <section className="px-6 md:px-12 py-6 catalogue-filters" style={{ borderBottom: BORDER }}>
+      <div className="max-w-[1440px] mx-auto flex flex-wrap gap-x-6 gap-y-3" role="group" aria-label="Filter products by family">
+        {filters.map(item => (
+          <button type="button" key={item} aria-pressed={filter === item} onClick={() => choose(item)} className="font-sans uppercase tracking-[.14em]"
+            style={{ fontSize: '.6875rem', minHeight: 36, opacity: filter === item ? .95 : .55, borderBottom: filter === item ? '1px solid currentColor' : '1px solid transparent' }}>
+            {item} <span style={{ opacity: .6 }}>{count(item)}</span>
+          </button>
+        ))}
+      </div>
     </section>
-    {visible.length === 0 && <div role="status" className="px-6 md:px-12 py-16 max-w-[1440px] mx-auto"><p className="font-display text-2xl">New objects are in development.</p><p className="font-sans mt-3">Explore the current collection while the next objects take shape.</p><button className="review-link mt-5" onClick={() => setCategory('All')}>View all products →</button></div>}
-    <section className="px-6 md:px-12 py-8 md:py-12"><div className="max-w-[1440px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-7 gap-y-12">{visible.map(product => <Link key={product.id} href={`/shop/${product.slug}`} className="group" style={{ color: 'inherit', textDecoration: 'none' }}><div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', background: 'rgba(26,23,20,.05)' }}>{product.images[0] ? <Image src={product.images[0].src} alt={product.images[0].alt} fill className="object-cover transition-transform duration-500 group-hover:scale-[1.015]" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" /> : <div className="h-full flex items-end p-6 font-sans uppercase tracking-[.16em]" style={{ fontSize: '.625rem', opacity: .45 }}>Image forthcoming</div>}</div><div className="pt-5 flex justify-between gap-4"><div><p className="font-sans uppercase tracking-[.14em]" style={{ fontSize: '.625rem', opacity: .48 }}>{product.category} · {statusLabel(product)}</p><h2 className="font-display mt-2" style={{ fontSize: '1.7rem', lineHeight: 1 }}>{product.name}</h2><p className="font-sans mt-2" style={{ fontSize: '.78rem', opacity: .55 }}>{product.subtitle}</p></div><p className="font-sans text-right shrink-0" style={{ fontSize: '.75rem', opacity: .65 }}>{productPriceLabel(product, currency)}</p></div></Link>)}</div></section>
+
+    <section className="px-6 md:px-12 py-10 md:py-14" aria-live="polite">
+      <div className="max-w-[1440px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+        {visible.map((product, index) => <ProductCard key={product.id} product={product} priority={index < 3} />)}
+      </div>
+    </section>
+
+    <section className="px-6 md:px-12 py-16 md:py-20" style={{ borderTop: BORDER }}>
+      <div className="max-w-[1440px] mx-auto grid lg:grid-cols-[.9fr_1.1fr] gap-10 lg:gap-20">
+        <div>
+          <p className="font-sans uppercase tracking-[.18em]" style={{ fontSize: '.6875rem', opacity: .6 }}>How ordering works</p>
+          <h2 className="font-display mt-5" style={{ fontSize: 'clamp(2.2rem,4.4vw,4.2rem)', lineHeight: 1.02, letterSpacing: '-.025em' }}>A sample, a defined scope, a clear specification.</h2>
+        </div>
+        <ol className="grid grid-cols-1 sm:grid-cols-2 gap-px" style={{ background: 'rgba(128,128,128,.15)' }}>
+          {[
+            ['Enquire', 'Tell us about the piece, the space and the timeline. Every product page has its own inquiry form.'],
+            ['Sample', 'For surfaces and commissions we send material samples showing finish and natural variation.'],
+            ['Quote', 'Price, lead time and delivery are confirmed in writing, with tested results kept separate from targets.'],
+            ['Grow and deliver', 'Pieces are grown, finished and checked in Dubai, then delivered or installed with your team.'],
+          ].map(([title, text], index) => (
+            <li key={title} className="p-6" style={{ background: '#f5f1e8', listStyle: 'none' }}>
+              <p className="font-sans uppercase tracking-[.14em]" style={{ fontSize: '.625rem', opacity: .55 }}>0{index + 1}</p>
+              <p className="font-display mt-3" style={{ fontSize: '1.35rem' }}>{title}</p>
+              <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '.84rem', opacity: .66 }}>{text}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    {experiences.length > 0 && (
+      <section className="px-6 md:px-12 py-16 md:py-20" style={{ borderTop: BORDER }}>
+        <div className="max-w-[1440px] mx-auto">
+          <p className="font-sans uppercase tracking-[.18em]" style={{ fontSize: '.6875rem', opacity: .6 }}>Conversations &amp; learning</p>
+          <h2 className="font-display mt-5 mb-12" style={{ fontSize: 'clamp(2rem,3.6vw,3.4rem)', lineHeight: 1.05, letterSpacing: '-.025em' }}>Time with the material team.</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-14">
+            {experiences.map(product => <ProductCard key={product.id} product={product} />)}
+          </div>
+        </div>
+      </section>
+    )}
   </>
 }

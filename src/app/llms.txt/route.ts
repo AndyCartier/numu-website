@@ -19,6 +19,9 @@ export function GET() {
 - https://www.numu.bio/faq — approved FAQ answers
 - https://www.numu.bio/acoustic-panels-dubai — acoustic-panel information
 - https://www.numu.bio/case-studies — projects and installations
+- https://www.numu.bio/shop — Objects & Surfaces: inquiry-only catalogue (FOLD, PALMYCO Surfaces, Mushroomiya, Fungal Art Series, commissions); all physical products are price on request
+- https://www.numu.bio/mushroomiya — Mushroomiya grown pendant (made to order; images are visualisations)
+- https://www.numu.bio/partnerships/titans-space — exploratory research partnership with Titans Space Industries (non-binding MoU, 28 May 2026)
 
 ## Approved FAQ
 ${FAQ_ITEMS.map(({ question, answer }) => `- ${question}\n  ${answer}`).join('\n')}

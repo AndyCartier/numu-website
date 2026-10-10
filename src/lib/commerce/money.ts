@@ -6,8 +6,12 @@ export function formatMoney(aedFils: number, currency: 'AED' | 'USD' = 'AED') {
   return `USD ${(aed / AED_PER_USD).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
-export function productPriceLabel(product: { priceAed?: number; priceType: 'fixed' | 'from' | 'on_request'; priceUnit?: string }, currency: 'AED' | 'USD') {
-  if (product.priceAed === undefined) return 'Price on request'
-  const prefix = product.priceType === 'from' ? 'From ' : ''
-  return `${prefix}${formatMoney(product.priceAed, currency)}${product.priceUnit ? ` / ${product.priceUnit}` : ''}`
+// The catalogue is inquiry-only: every physical product reads "Price on request", whatever data it holds.
+// Experiences (Mycelium Hotline, masterclasses) keep their own booking and payment flow.
+export function productPriceLabel(product: { category?: string; bookingUrl?: string; status?: string }) {
+  if (product.category === 'Experiences') {
+    if (product.status === 'coming_soon') return 'Dates to be announced'
+    return product.bookingUrl ? 'Book online' : 'By arrangement'
+  }
+  return 'Price on request'
 }

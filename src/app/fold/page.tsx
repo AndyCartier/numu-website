@@ -51,11 +51,9 @@ const foldProductJsonLd = {
   brand: { '@type': 'Brand', name: 'NUMU' },
   manufacturer: { '@type': 'Organization', name: 'NUMU', url: SITE_URL },
   additionalProperty: [
-    { '@type': 'PropertyValue', name: 'Dimensions', value: '400mm x 400mm x 60mm' },
-    { '@type': 'PropertyValue', name: 'Weight', value: '1.8-2.2kg/m²' },
+    { '@type': 'PropertyValue', name: 'Module', value: '400mm x 400mm, 60mm nominal thickness (provisional)' },
     { '@type': 'PropertyValue', name: 'Acoustic performance', value: 'NRC 0.72-0.80 (target, certification in progress)' },
     { '@type': 'PropertyValue', name: 'Fire performance', value: 'ASTM E84 Class B (target, certification in progress)' },
-    { '@type': 'PropertyValue', name: 'Lead time', value: '6-8 weeks' },
     { '@type': 'PropertyValue', name: 'Origin', value: 'Dubai, UAE' },
     { '@type': 'PropertyValue', name: 'End of life', value: 'home-compostable' },
   ],
@@ -177,6 +175,13 @@ export default function FoldPage() {
 
           <div className="pt-10">
             <div className="flex flex-wrap gap-x-8 gap-y-4">
+              <Link
+                href="/shop/fold"
+                className="font-sans uppercase tracking-[0.14em] inline-block"
+                style={{ fontSize: '0.6875rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.8)', paddingBottom: 6 }}
+              >
+                Request a quote for FOLD →
+              </Link>
               <Link
                 href="/#moodboards"
                 className="font-sans uppercase tracking-[0.14em] inline-block"

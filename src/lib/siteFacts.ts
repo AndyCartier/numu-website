@@ -23,7 +23,7 @@ export const FAQ_ITEMS = [
   },
   {
     question: "What's the lead time?",
-    answer: '6-8 weeks from order, manufactured in Dubai.',
+    answer: 'Lead time is quoted for each project once quantity, layout and finish are agreed. FOLD is grown and finished in Dubai.',
   },
   {
     question: 'How does PALMYCO perform in humidity?',
@@ -31,6 +31,6 @@ export const FAQ_ITEMS = [
   },
   {
     question: 'How is pricing determined?',
-    answer: "Pricing varies by project scope and complexity. Contact us and we'll put together an offer suited to your project. FOLD, our first commercial product, is finalizing for release, with pricing to follow shortly.",
+    answer: "Pricing varies by project scope and complexity. Contact us and we'll put together an offer suited to your project. Every NUMU product is offered on request: use the inquiry form on any product page under Objects & Surfaces.",
   },
 ] as const

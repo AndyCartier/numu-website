@@ -4,8 +4,8 @@ export const PRIMARY_NAV_LINKS = [
   { href: '/fold', label: 'FOLD' },
   { href: '/#moodboards', label: 'Spaces' },
   { href: '/mushroomiya', label: 'Mushroomiya' },
-  { href: '/collections', label: 'Collection' },
-  { href: '/shop', label: 'Shop' },
+  { href: '/shop', label: 'Products' },
+  { href: '/collections', label: 'Gallery' },
   { href: '/#platform-engines', label: 'Platform' },
   { href: '/partnerships', label: 'Partnerships' },
 ] as const

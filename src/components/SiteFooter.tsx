@@ -15,8 +15,8 @@ export default function SiteFooter() {
         <nav aria-label="Footer navigation" className="flex flex-wrap content-start gap-x-5 gap-y-3 md:justify-end">
           {[
             ['/', 'Home'],
-            ['/shop', 'Shop'],
-            ['/collections', 'Collection'],
+            ['/shop', 'Products'],
+            ['/collections', 'Gallery'],
             ['/mushroomiya', 'Mushroomiya'],
             ['/case-studies', 'Projects'],
             ['/partnerships', 'Partnerships'],
