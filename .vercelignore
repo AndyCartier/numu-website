@@ -12,3 +12,8 @@ scripts/__pycache__
 exports/**
 !exports/NUMU_Investor_Deck_FINAL.pdf
 .quarantine
+numu-website
+mushroomiya_parametric
+output
+pipeline
+workspace
