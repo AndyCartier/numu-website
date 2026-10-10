@@ -388,7 +388,7 @@ The sharp-corner discipline is a positioning decision, not an aesthetic whim: ro
 ### Photography Geometry
 - **Hero and split-panel imagery:** full-bleed, rectangular, sharp corners. Often a vertical half-panel paired with copy.
 - **Material macro:** tight close-ups of grown texture, raking warm light, shallow depth of field. The most important image type in the system.
-- **Installation and lab:** documentary, real conditions, never staged-perfect. Beyond Chrysant, KAVE, the Dubai lab.
+- **Installation and lab:** documentary, real conditions, never staged-perfect. Beyond Chrysant, the Dubai lab, real prototypes.
 - **Product (FOLD):** clean studio shots and in-context renders, rectangular, no rounding.
 - **No rounded image corners anywhere.** Rounding is for tags and inputs only.
 
@@ -532,5 +532,5 @@ The test before shipping any screen: scan it and count the gold. One gold moment
 - **Hex values are deck-derived.** Colours should be reconciled once against the live numu.bio production CSS tokens to guarantee pixel parity between deck, site, and any new surface.
 - **Explore (light) mode is extended, not observed.** The June deck is entirely dark, so the Canvas-mode token usage here is authored to match the site's light surfaces. Validate against the live Explore mode and adjust Ink/Hairline values if needed.
 - **Spaced-dash convention vs. running prose.** The spaced en dash is documented as a label device because the deck and site use it consistently. Confirm whether it should remain the brand separator or be replaced (e.g. with a middot or colon) given the broader preference against dash-heavy copy.
-- **Motion and video framing** (timelapse, process documentation, the KAVE countdown) are present on the site but not yet tokenised. Transitions, easing, and video-frame treatment are a future module.
+- **Motion and video framing** (timelapse, process documentation) are present on the site but not yet tokenised. Transitions, easing, and video-frame treatment are a future module.
 - **Form validation and error states** are not specified; only the neutral input is documented.

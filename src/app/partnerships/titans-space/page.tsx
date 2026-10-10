@@ -220,6 +220,8 @@ export default function TitansSpacePartnershipPage() {
       </header>
 
       {/* 02 — Why biological materials */}
+      <span id="why-this-partnership" aria-hidden />
+      <span id="why-mycelium" aria-hidden />
       <PageSection id="why-biological-materials" label="02 — Why biological materials matter in space" title="Every kilogram has to be carried.">
         <Body strong>
           Building beyond Earth runs into one constraint before any other: everything that is not found on site must be launched. NASA describes in-situ resource utilization (ISRU) as harnessing local resources at the destination instead of taking every supply from Earth, from propellant and life-support consumables to feedstock for manufacturing and construction.
@@ -283,6 +285,8 @@ export default function TitansSpacePartnershipPage() {
       </section>
 
       {/* 05 — Framework */}
+      <span id="scope-of-collaboration" aria-hidden />
+      <span id="agreement-frame" aria-hidden />
       <PageSection id="partnership-framework" label="05 — Partnership framework" title="A real MoU, exploratory by design.">
         <Body strong>
           The MoU took effect on 28 May 2026. It establishes a non-binding framework of strategic alignment between NUMU Biotech FZCO and Lachman Capital Partners LLC on behalf of Titans Space Industries, and positions NUMU as the bio-materials and ISRU composites partner within TSI’s Space &amp; Lunar Economy Consortium.
