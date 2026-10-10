@@ -1,0 +1,14 @@
+.git
+.next
+.DS_Store
+tmp
+catalogue
+assets
+docs
+.vendor
+.venv-portraits
+NUMU_WoodShow_2026.pptx
+scripts/__pycache__
+exports/**
+!exports/NUMU_Investor_Deck_FINAL.pdf
+.quarantine

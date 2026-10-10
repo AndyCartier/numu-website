@@ -1,5 +1,7 @@
 'use client'
 
+import { useReducedMotion } from 'framer-motion'
+
 import { useState, useEffect, useRef } from 'react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
@@ -172,14 +174,29 @@ const TA = (d: number): 'start' | 'middle' | 'end' => {
 const ARC_S = XY(RR, -70)
 const ARC_E = XY(RR, -52)
 
-export default function ProcessDiagram() {
-  const [activeStep, setActiveStep] = useState(-1)
+type ProcessDiagramProps = {
+  animate?: boolean
+  activeIndex?: number
+}
+
+export default function ProcessDiagram({
+  animate: animateRequested = true,
+  activeIndex = 2,
+}: ProcessDiagramProps) {
+  const reducedMotion = useReducedMotion()
+  const animate = animateRequested && !reducedMotion
+  const [activeStep, setActiveStep] = useState(animate ? -1 : activeIndex)
   const dotRef = useRef<SVGGElement>(null)
   const rafRef = useRef<number>(0)
   const startRef = useRef<number | null>(null)
   const lastStepRef = useRef(-1)
 
   useEffect(() => {
+    if (!animate) {
+      setActiveStep(activeIndex)
+      return
+    }
+
     const tick = (ts: number) => {
       if (!startRef.current) startRef.current = ts
       const elapsed = ts - startRef.current
@@ -214,10 +231,10 @@ export default function ProcessDiagram() {
     }
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [])
+  }, [activeIndex, animate])
 
   return (
-    <div className="w-full select-none">
+    <div className="w-full select-none process-diagram">
       <svg
         viewBox="0 0 1000 810"
         fill="none"
@@ -391,11 +408,12 @@ export default function ProcessDiagram() {
         <text x={CX} y={CY - 12} textAnchor="middle" fontFamily="'Playfair Display', Georgia, serif" fontSize={30} fontWeight={700} fill="#1a1714" fillOpacity={0.09} letterSpacing={5}>NUMU</text>
         <text x={CX} y={CY + 13} textAnchor="middle" fontFamily="'Inter', sans-serif" fontSize={11} fill="#1a1714" fillOpacity={0.22} letterSpacing={3.5}>MATERIAL CYCLE</text>
 
-        {/* Orbiting dot — GPU-composited via CSS transform */}
-        <g ref={dotRef} style={{ willChange: 'transform' }}>
-          <circle cx={CX} cy={CY - RR} r={4.5} fill="#1a1714" fillOpacity={0.6} />
-          <circle cx={CX} cy={CY - RR} r={8} fill="#1a1714" fillOpacity={0.06} />
-        </g>
+        {animate && (
+          <g ref={dotRef} style={{ willChange: 'transform' }}>
+            <circle cx={CX} cy={CY - RR} r={4.5} fill="#1a1714" fillOpacity={0.6} />
+            <circle cx={CX} cy={CY - RR} r={8} fill="#1a1714" fillOpacity={0.06} />
+          </g>
+        )}
 
         <style>{`
           @keyframes numuPulse {
@@ -404,6 +422,9 @@ export default function ProcessDiagram() {
           }
         `}</style>
       </svg>
+      <ol className="process-mobile-legend" aria-label="Material cycle stages">
+        {STEPS.map((step, index) => <li key={step.label}><span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><div><strong>{step.label}</strong><p>{step.sub}</p></div></li>)}
+      </ol>
     </div>
   )
 }

@@ -33,7 +33,14 @@ export function buildAbsoluteUrl(path = '/') {
 }
 
 export function isLocalDevelopmentHost(host: string) {
-  return /^localhost:\d+$/.test(host) || /^127\.0\.0\.1:\d+$/.test(host)
+  return /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(host)
+}
+
+// Local production previews use HTTP too. Never relax cookies for a hosted
+// origin merely because its reverse proxy communicates with Next over HTTP.
+export function shouldSecureCookies(req: Request) {
+  const url = new URL(req.url)
+  return !(url.protocol === 'http:' && isLocalDevelopmentHost(url.host))
 }
 
 export function getAllowedOriginHosts() {

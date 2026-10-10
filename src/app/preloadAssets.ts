@@ -3,6 +3,7 @@
 export type VideoWarmupAsset = {
   src: string
   poster?: string
+  preload?: 'metadata' | 'auto'
 }
 
 export const CRITICAL_IMAGE_ASSETS = [
@@ -25,6 +26,8 @@ export const NEXT_SWEEP_IMAGE_ASSETS = [
   '/images/products/biofoam_detail.png',
   '/images/founder/founder_in_action.jpg',
   '/images/textures/texture_closeup_02.jpg',
+  '/images/partnerships/tsi-official-orbitalport.jpg',
+  '/images/partnerships/tsi-official-spaceplane-frontal.jpg',
 ] as const
 
 export const DEFERRED_IMAGE_ASSETS = [
@@ -44,16 +47,16 @@ export const DEFERRED_IMAGE_ASSETS = [
   '/images/projects/Spora_panels.jpg',
   '/images/projects/pressed_booth.jpg',
   '/images/applications/event_board.jpg',
+  '/images/talk/woodshow/waste-pile-palm-agricultural.jpg',
 ] as const
 
 export const NEXT_SWEEP_VIDEO_ASSETS: readonly VideoWarmupAsset[] = [
   { src: '/videos/numu_timelapse.mp4', poster: '/images/products/biofoam_detail.png' },
-  { src: '/videos/numu_story_enhanced.mp4', poster: '/images/products/biofoam_detail.png' },
+  { src: '/videos/numu_story_enhanced.mp4', poster: '/images/products/biofoam_detail.png', preload: 'auto' },
+  { src: '/videos/numu_story.mp4', poster: '/images/products/fold_hero_interior.png', preload: 'auto' },
 ]
 
-export const DEFERRED_VIDEO_ASSETS: readonly VideoWarmupAsset[] = [
-  { src: '/videos/numu_story.mp4', poster: '/images/products/fold_hero_interior.png' },
-]
+export const DEFERRED_VIDEO_ASSETS: readonly VideoWarmupAsset[] = []
 
 type IdleCallbackHandle = number | ReturnType<typeof globalThis.setTimeout>
 type IdleCallback = (deadline: IdleDeadline) => void
@@ -133,7 +136,7 @@ export function preloadVideoMetadata(asset: VideoWarmupAsset) {
       resolve()
     }
 
-    video.preload = 'metadata'
+    video.preload = asset.preload ?? 'metadata'
     video.muted = true
     video.playsInline = true
     video.onloadedmetadata = finish

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
+import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -47,7 +47,6 @@ const CONTACTS = [
 
 const linkStyle = {
   display: 'grid',
-  gridTemplateColumns: '1fr auto',
   gap: '1rem',
   alignItems: 'center',
   padding: '1.1rem 1rem',
@@ -152,7 +151,7 @@ export default function ConnectPage() {
 
           <div style={{ display: 'grid', gap: '0.75rem' }}>
             {CONTACTS.map((contact) => (
-              <a key={contact.label} href={contact.href} style={linkStyle}>
+              <a key={contact.label} href={contact.href} className="connect-contact" style={linkStyle}>
                 <span style={{ minWidth: 0 }}>
                   <span
                     style={{

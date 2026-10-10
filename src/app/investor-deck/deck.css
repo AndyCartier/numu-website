@@ -59,6 +59,22 @@
     overflow: hidden;
   }
 
+  /* Team slide: ensure photo fills available height in print */
+  .team-grid {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .team-card {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .team-photo-wrap {
+    height: 100%;
+    min-height: 0;
+  }
+
   * {
     animation: none !important;
     transition: none !important;
@@ -745,3 +761,13 @@
     background: rgba(239, 234, 216, 0.04);
   }
 }
+
+.deck-reader-controls { display:none; }
+@media screen and (max-width:1023px) {
+ .deck-reader-controls { display:flex; gap:16px; align-items:center; width:calc(100vw - 24px); min-height:52px; font:12px/1.5 system-ui,sans-serif; color:#f4efe8; }
+ .deck-reader-controls button { min-height:44px; padding:8px 12px; border:1px solid #a89a80; white-space:nowrap; }
+ html.deck-reading,html.deck-reading body { font-size:16px; }
+ .deck-reading .deck-screen-frame { width:calc(100vw - 24px); height:min(80svh,864px); overflow:auto; border-radius:0; }
+ .deck-reading .slide { width:1536px; height:864px; }
+}
+@media print { .deck-reader-controls,footer { display:none !important; } }

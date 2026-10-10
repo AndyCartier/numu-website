@@ -50,6 +50,7 @@ export type SeoPageData = {
   schemaType: 'Product' | 'Service' | 'CollectionPage'
   schemaName: string
   schemaCategory?: string
+  schemaDescription?: string
 }
 
 function buildImageMetadata(image: SeoImage) {
@@ -132,7 +133,7 @@ export function buildSeoJsonLd(page: SeoPageData) {
           '@context': 'https://schema.org',
           '@type': 'Product',
           name: page.schemaName,
-          description: page.description,
+          description: page.schemaDescription ?? page.description,
           image: imageUrl,
           category: page.schemaCategory,
           brand: {

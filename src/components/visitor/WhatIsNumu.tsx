@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import Image from 'next/image'
+import Image from '@/components/SafariSafeImage'
 
 const fade = {
   hidden: { opacity: 0, y: 32 },

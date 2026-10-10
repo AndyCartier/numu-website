@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
+import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
-import { motion, AnimatePresence, useInView, useMotionValue, animate } from 'framer-motion'
+import { motion, AnimatePresence, useInView, useMotionValue, animate, MotionConfig, useReducedMotion } from 'framer-motion'
 import type { VisitorContent, InvestorContent, PublicTeamMember } from '@/lib/content'
+import { PRIMARY_NAV_LINKS } from '@/lib/navigation'
 import {
   cancelIdleTask,
   DEFERRED_IMAGE_ASSETS,
@@ -13,9 +14,13 @@ import {
   requestIdleTask,
   warmMediaAssets,
 } from './preloadAssets'
+import ProcessDiagram from '@/components/ProcessDiagram'
+import CollectionFeatures, { HomeIntroduction } from '@/components/CollectionFeatures'
+import MobileNav from '@/components/MobileNav'
+import ImageDialog from '@/components/ImageDialog'
+import { useModalFocus } from '@/components/useModalFocus'
 
 const LoadingScreen = dynamic(() => import('./LoadingScreen'), { ssr: false })
-import ProcessDiagram from '@/components/ProcessDiagram'
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
 const VISITOR = { bg: '#f5f1e8', fg: '#1a1714' }
@@ -116,8 +121,10 @@ const SEO_FOOTER_LINKS = [
   { href: '/acoustic-panels-dubai', label: 'Acoustic Panels Dubai' },
   { href: '/thermal-insulation-uae', label: 'Thermal Insulation UAE' },
   { href: '/mycelium-packaging-uae', label: 'Mycelium Packaging UAE' },
+  { href: '/mushroomiya', label: 'Mushroomiya Lamp' },
   { href: '/palmyco', label: 'Palmyco Material Platform' },
   { href: '/case-studies', label: 'Case Studies' },
+  { href: '/partnerships', label: 'Partnerships' },
 ]
 
 type ContactRequestType = 'investor_deck' | 'project' | 'samples'
@@ -184,7 +191,7 @@ function DirectContactForm({
   const buttonBg = dark ? 'rgba(245,241,232,0.1)' : 'rgba(26,23,20,0.07)'
   const inputColor = dark ? 'rgba(245,241,232,0.85)' : 'rgba(26,23,20,0.88)'
   const primaryTextOpacity = dark ? 0.76 : 0.68
-  const secondaryTextOpacity = dark ? 0.34 : 0.48
+  const secondaryTextOpacity = dark ? 0.68 : 0.7
   const errorTextOpacity = dark ? 0.55 : 0.58
 
   async function handleSubmit(e: React.FormEvent) {
@@ -225,7 +232,7 @@ function DirectContactForm({
 
   if (status === 'sent') {
     return (
-      <div className="max-w-lg">
+      <div role="status" className="max-w-lg">
         <p className="font-sans text-base" style={{ opacity: primaryTextOpacity, lineHeight: 1.6 }}>
           Request sent.
         </p>
@@ -257,6 +264,8 @@ function DirectContactForm({
         />
         <input
           type="email"
+          aria-label="Email address"
+          autoComplete="email"
           required
           value={email}
           onChange={e => setEmail(e.target.value)}
@@ -298,47 +307,10 @@ function DirectContactForm({
         .
       </p>
       {status === 'error' && (
-        <p className="font-sans text-xs mt-3" style={{ opacity: errorTextOpacity }}>
+        <p role="alert" className="font-sans text-xs mt-3" style={{ opacity: errorTextOpacity }}>
           {errorMessage}
         </p>
       )}
-    </div>
-  )
-}
-
-// ─── Image Placeholder ────────────────────────────────────────────────────────
-
-type AspectRatio = '16:9' | '4:3' | '1:1' | '3:4'
-const ASPECT_MAP: Record<AspectRatio, string> = { '16:9': '16/9', '4:3': '4/3', '1:1': '1/1', '3:4': '3/4' }
-
-function ImagePlaceholder({ aspect, brief, label }: { aspect: AspectRatio; brief: string; label?: string }) {
-  const [hover, setHover] = useState(false)
-  return (
-    <div
-      className="relative w-full"
-      style={{ aspectRatio: ASPECT_MAP[aspect], backgroundColor: 'rgba(128,128,128,0.06)', border: '1px solid rgba(128,128,128,0.12)' }}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" width={22} height={22} style={{ opacity: 0.2 }}>
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <circle cx="8.5" cy="8.5" r="1.5" />
-          <polyline points="21 15 16 10 5 21" />
-        </svg>
-        {label && <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.5625rem', opacity: 0.28 }}>{label}</p>}
-      </div>
-      {/* Brief visible on hover */}
-      <div
-        style={{
-          position: 'absolute', inset: 0, backgroundColor: 'rgba(10,8,6,0.82)', padding: '1.5rem',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          opacity: hover ? 1 : 0, transition: 'opacity 0.25s',
-          pointerEvents: 'none',
-        }}
-      >
-        <p className="font-sans text-center" style={{ fontSize: '0.75rem', opacity: 0.75, lineHeight: 1.65, color: 'rgba(245,241,232,1)', maxWidth: 280 }}>{brief}</p>
-      </div>
     </div>
   )
 }
@@ -386,6 +358,17 @@ function AutoplayVideoBlock({
   style?: React.CSSProperties
   overlay?: React.ReactNode
 }) {
+  const reducedMotion = useReducedMotion()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  useEffect(() => { if (reducedMotion) videoRef.current?.pause() }, [reducedMotion])
+  const [videoFailed, setVideoFailed] = useState(false)
+  const [playing, setPlaying] = useState(false)
+  const togglePlayback = () => {
+    const video = videoRef.current
+    if (!video) return
+    if (video.paused) void video.play().catch(() => setPlaying(false))
+    else video.pause()
+  }
   return (
     <div style={{ position: 'absolute', inset: 0, backgroundColor: '#1a1714', overflow: 'hidden' }}>
       {poster && (
@@ -400,18 +383,37 @@ function AutoplayVideoBlock({
       )}
 
       <video
+        ref={videoRef}
+        aria-label={altLabel || "NUMU material film"}
+        controls={Boolean(reducedMotion)}
         src={src}
-        poster={poster}
         preload={preload}
-        autoPlay
+        autoPlay={!reducedMotion}
         muted
         loop
         playsInline
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', ...style }}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onError={() => setVideoFailed(true)}
+        onCanPlay={(event) => {
+          setVideoFailed(false)
+          if (!reducedMotion) void event.currentTarget.play().catch(() => undefined)
+        }}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: videoFailed ? 'none' : undefined, ...style }}
         suppressHydrationWarning
       />
 
       {overlay}
+      {!videoFailed && !playing && (
+        <button
+          type="button"
+          aria-label="Play NUMU material film"
+          onClick={togglePlayback}
+          className="video-play-button"
+        >
+          <svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><path d="M1 1l12 7-12 7z" fill="currentColor" /></svg>
+        </button>
+      )}
     </div>
   )
 }
@@ -438,6 +440,7 @@ function BackgroundAssetWarmup() {
 
 function SporeField() {
   const ref = useRef<HTMLCanvasElement>(null)
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
     const canvas = ref.current
@@ -445,9 +448,25 @@ function SporeField() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    let visible = true
+    let viewportWidth = 0
+    let viewportHeight = 0
+
     const resize = () => {
-      canvas.width = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
+      const host = canvas.parentElement
+      const rect = host?.getBoundingClientRect() ?? canvas.getBoundingClientRect()
+      const nextWidth = Math.max(1, Math.round(rect.width))
+      const nextHeight = Math.max(1, Math.round(rect.height))
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+
+      viewportWidth = nextWidth
+      viewportHeight = nextHeight
+
+      canvas.style.width = `${nextWidth}px`
+      canvas.style.height = `${nextHeight}px`
+      canvas.width = Math.round(nextWidth * dpr)
+      canvas.height = Math.round(nextHeight * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     resize()
 
@@ -471,7 +490,8 @@ function SporeField() {
     const roots: Root[] = []
 
     const makeRoot = (x?: number, y?: number, angle?: number, width?: number): Root => {
-      const W = canvas.width, H = canvas.height
+      const W = viewportWidth
+      const H = viewportHeight
       const sx = x ?? Math.random() * W
       const sy = y ?? H * 0.5 + (Math.random() - 0.5) * H * 0.7
       const a = angle ?? Math.random() * Math.PI * 2
@@ -500,8 +520,8 @@ function SporeField() {
 
     type Spore = { x: number; y: number; vx: number; vy: number; r: number; alpha: number; targetAlpha: number; phase: number; freq: number }
     const makeSpore = (): Spore => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: Math.random() * viewportWidth,
+      y: Math.random() * viewportHeight,
       vx: (Math.random() - 0.5) * 0.14,
       vy: -0.04 - Math.random() * 0.1,
       r: Math.random() * 1.4 + 0.35,
@@ -516,7 +536,8 @@ function SporeField() {
     let raf: number
 
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      if (!visible || document.hidden) return
+      ctx.clearRect(0, 0, viewportWidth, viewportHeight)
       tick++
 
       // Density breathing: sine wave from BASE_COUNT→PEAK_COUNT→BASE_COUNT per cycle
@@ -585,9 +606,9 @@ function SporeField() {
         if (Math.abs(s.alpha - s.targetAlpha) < 0.004) s.targetAlpha = Math.random() * 0.14 + 0.03
         s.x += s.vx + Math.sin(tick * s.freq + s.phase) * 0.14
         s.y += s.vy
-        if (s.y < -12) { s.y = canvas.height + 6; s.x = Math.random() * canvas.width }
-        if (s.x < -12) s.x = canvas.width + 8
-        if (s.x > canvas.width + 12) s.x = -8
+        if (s.y < -12) { s.y = viewportHeight + 6; s.x = Math.random() * viewportWidth }
+        if (s.x < -12) s.x = viewportWidth + 8
+        if (s.x > viewportWidth + 12) s.x = -8
         ctx.save()
         ctx.globalAlpha = s.alpha
         ctx.beginPath()
@@ -597,18 +618,23 @@ function SporeField() {
         ctx.restore()
       }
 
-      raf = requestAnimationFrame(draw)
+      if (!reducedMotion) raf = requestAnimationFrame(draw)
     }
 
     draw()
-    const ro = new ResizeObserver(resize)
-    ro.observe(canvas)
-    return () => { cancelAnimationFrame(raf); ro.disconnect() }
-  }, [])
+    const redraw = () => { cancelAnimationFrame(raf); resize(); draw() }
+    const ro = new ResizeObserver(redraw)
+    ro.observe(canvas.parentElement || canvas)
+    const visibility = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; cancelAnimationFrame(raf); if (visible) draw() })
+    visibility.observe(canvas.parentElement || canvas)
+    document.addEventListener('visibilitychange', redraw)
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); visibility.disconnect(); document.removeEventListener('visibilitychange', redraw) }
+  }, [reducedMotion])
 
   return (
     <canvas
       ref={ref}
+      aria-hidden="true"
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
     />
   )
@@ -618,6 +644,7 @@ function SporeField() {
 
 function HyphaeField() {
   const ref = useRef<HTMLCanvasElement>(null)
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
     const canvas = ref.current
@@ -625,9 +652,25 @@ function HyphaeField() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    let visible = true
+    let viewportWidth = 0
+    let viewportHeight = 0
+
     const resize = () => {
-      canvas.width = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
+      const host = canvas.parentElement
+      const rect = host?.getBoundingClientRect() ?? canvas.getBoundingClientRect()
+      const nextWidth = Math.max(1, Math.round(rect.width))
+      const nextHeight = Math.max(1, Math.round(rect.height))
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+
+      viewportWidth = nextWidth
+      viewportHeight = nextHeight
+
+      canvas.style.width = `${nextWidth}px`
+      canvas.style.height = `${nextHeight}px`
+      canvas.width = Math.round(nextWidth * dpr)
+      canvas.height = Math.round(nextHeight * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     resize()
 
@@ -645,8 +688,8 @@ function HyphaeField() {
     }
 
     const make = (): Hypha => {
-      const cw = canvas.width
-      const ch = canvas.height
+      const cw = viewportWidth
+      const ch = viewportHeight
       const spread = Math.min(cw, ch) * 0.22
       const ox = cw * 0.5 + (Math.random() - 0.5) * spread
       const oy = ch * 0.5 + (Math.random() - 0.5) * spread * 0.55
@@ -667,7 +710,8 @@ function HyphaeField() {
     let raf: number
 
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      if (!visible || document.hidden) return
+      ctx.clearRect(0, 0, viewportWidth, viewportHeight)
 
       for (const h of hyphae) {
         h.alpha += (h.targetAlpha - h.alpha) * 0.016
@@ -705,20 +749,25 @@ function HyphaeField() {
         ctx.restore()
       }
 
-      raf = requestAnimationFrame(draw)
+      if (!reducedMotion) raf = requestAnimationFrame(draw)
     }
 
     draw()
 
-    const ro = new ResizeObserver(resize)
-    ro.observe(canvas)
+    const redraw = () => { cancelAnimationFrame(raf); resize(); draw() }
+    const ro = new ResizeObserver(redraw)
+    ro.observe(canvas.parentElement || canvas)
 
-    return () => { cancelAnimationFrame(raf); ro.disconnect() }
-  }, [])
+    const visibility = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; cancelAnimationFrame(raf); if (visible) draw() })
+    visibility.observe(canvas.parentElement || canvas)
+    document.addEventListener('visibilitychange', redraw)
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); visibility.disconnect(); document.removeEventListener('visibilitychange', redraw) }
+  }, [reducedMotion])
 
   return (
     <canvas
       ref={ref}
+      aria-hidden="true"
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
     />
   )
@@ -728,8 +777,16 @@ function HyphaeField() {
 
 function VSection({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
+    <section id={id} className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER, scrollMarginTop: 'calc(var(--nav-h) + 16px)' }}>
       <div className="max-w-[1440px] mx-auto">{children}</div>
+    </section>
+  )
+}
+
+function VSectionFullBleed({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <section id={id} className="py-24 md:py-32" style={{ borderTop: BORDER }}>
+      {children}
     </section>
   )
 }
@@ -770,7 +827,7 @@ function ISection({ id, children }: { id: string; children: React.ReactNode }) {
 
 function ILabel({ text }: { text: string }) {
   return (
-    <p className="font-sans text-label uppercase tracking-[0.2em] mb-6" style={{ opacity: 0.35 }}>
+    <p className="font-sans text-label uppercase tracking-[0.2em] mb-6" style={{ opacity: 0.72 }}>
       {text}
     </p>
   )
@@ -800,7 +857,7 @@ function ProductionFeature() {
     <section className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
       <div className="max-w-[1440px] mx-auto">
         <div className="mb-10">
-          <p className="font-sans text-label uppercase tracking-[0.18em] mb-3" style={{ opacity: 0.38 }}>Production</p>
+          <p className="font-sans text-label uppercase tracking-[0.18em] mb-3" style={{ opacity: 0.68 }}>Production</p>
           <p className="font-sans text-base max-w-lg" style={{ opacity: 0.48, lineHeight: 1.75 }}>
             NUMU operates an active production lab in Dubai since 2025. Material is grown and pressed from regional agricultural waste — no imports, no synthetic resins.
           </p>
@@ -853,6 +910,7 @@ const CAROUSEL_W = 400
 const CAROUSEL_H = 300
 
 function ProcessCarousel() {
+  const carouselRef = useRef<HTMLDivElement>(null)
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
 
   useEffect(() => {
@@ -864,36 +922,19 @@ function ProcessCarousel() {
 
   return (
     <section className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
-      {/* Lightbox */}
-      {lightbox && (
-        <div
-          onClick={() => setLightbox(null)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9000,
-            backgroundColor: 'rgba(10,8,6,0.92)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'zoom-out',
-          }}
-        >
-          <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={lightbox.src} alt={lightbox.alt} style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', display: 'block' }} />
-            <button
-              aria-label="Close"
-              onClick={() => setLightbox(null)}
-              style={{ position: 'absolute', top: -36, right: 0, background: 'none', border: 'none', color: '#f5f1e8', opacity: 0.6, fontSize: 22, cursor: 'pointer', fontFamily: 'sans-serif' }}
-            >✕</button>
-          </div>
-        </div>
-      )}
+      {lightbox && <ImageDialog item={lightbox} onClose={() => setLightbox(null)} />}
 
       <div className="max-w-[1440px] mx-auto mb-8">
-        <p className="font-sans text-label uppercase tracking-[0.18em] mb-2" style={{ opacity: 0.35 }}>
+        <p className="font-sans text-label uppercase tracking-[0.18em] mb-2" style={{ opacity: 0.68 }}>
           Material Experiments &amp; Applied Research
         </p>
-        <p className="font-sans text-xs" style={{ opacity: 0.28 }}>← scroll · click to enlarge →</p>
+        <p className="font-sans text-xs" style={{ opacity: 0.7 }}>← scroll · click to enlarge →</p>
+        <div className="carousel-actions"><button type="button" aria-label="Previous material images" onClick={() => carouselRef.current?.scrollBy({ left: -408, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })}>← Previous</button><button type="button" aria-label="Next material images" onClick={() => carouselRef.current?.scrollBy({ left: 408, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })}>Next →</button></div>
       </div>
       <div
+        ref={carouselRef}
+        role="region" aria-label="Material experiments gallery" tabIndex={0}
+        data-lightbox="off"
         style={{
           display: 'flex',
           gap: 8,
@@ -909,7 +950,7 @@ function ProcessCarousel() {
         className="md:px-12 carousel-scroll"
       >
         {CAROUSEL_ITEMS.map((item, i) => (
-          <div
+          <button type="button" aria-label={`Enlarge: ${item.alt}`}
             key={i}
             onClick={() => setLightbox({ src: item.src, alt: item.alt })}
             style={{
@@ -940,9 +981,9 @@ function ProcessCarousel() {
                 background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)',
               }}
             >
-              <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: 8, opacity: 0.55, color: '#f5f1e8' }}>{item.label}</p>
+              <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: 11, opacity: 0.94, color: '#f5f1e8' }}>{item.label}</p>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </section>
@@ -950,7 +991,7 @@ function ProcessCarousel() {
 }
 
 // ─── KAVE countdown + feature section ────────────────────────────────────────
-const KAVE_TARGET_DATE = new Date('2026-06-30T00:00:00')
+const KAVE_TARGET_DATE = new Date('2026-10-05T00:00:00+04:00')
 
 function KaveCountdown() {
   const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
@@ -983,7 +1024,7 @@ function KaveCountdown() {
             <p className="font-display" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', letterSpacing: '-0.045em', lineHeight: 1, color: '#f5f1e8', opacity: 0.9 }}>
               {String(value).padStart(2, '0')}
             </p>
-            <p className="font-sans uppercase tracking-[0.2em] mt-1" style={{ fontSize: '0.5625rem', opacity: 0.38, color: '#f5f1e8' }}>
+            <p className="font-sans uppercase tracking-[0.2em] mt-1" style={{ fontSize: '0.6875rem', opacity: 0.76, color: '#f5f1e8' }}>
               {unit}
             </p>
           </div>
@@ -1043,15 +1084,15 @@ function KaveSection() {
         className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
         style={{ zIndex: 2 }}
       >
-        <p className="font-sans uppercase tracking-[0.24em] mb-6" style={{ fontSize: '0.5rem', opacity: 0.42, color: '#f5f1e8' }}>
-          Installation — Dubai, UAE · 2026 Q2
+        <p className="font-sans uppercase tracking-[0.24em] mb-6" style={{ fontSize: '0.6875rem', opacity: 0.68, color: '#f5f1e8' }}>
+          Installation — Dubai, UAE · 5 October 2026
         </p>
         <h2 className="font-display" style={{ fontSize: 'clamp(4rem, 12vw, 9rem)', lineHeight: 0.9, letterSpacing: '-0.045em', color: '#f5f1e8', opacity: 0.95 }}>
           KAVE
         </h2>
         <div className="mt-5 flex items-center gap-3">
           <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#f5f1e8', opacity: 0.55, animation: 'process-pulse 2s ease-out infinite' }} />
-          <p className="font-sans uppercase tracking-[0.22em]" style={{ fontSize: '0.6875rem', opacity: 0.55, color: '#f5f1e8' }}>
+          <p className="font-sans uppercase tracking-[0.22em]" style={{ fontSize: '0.6875rem', opacity: 0.68, color: '#f5f1e8' }}>
             Currently being built
           </p>
         </div>
@@ -1078,7 +1119,7 @@ function InvestorContact({ iv }: { iv: InvestorContent }) {
         />
       </div>
       <div className="mt-10 pt-8 flex flex-col sm:flex-row sm:items-center gap-6" style={{ borderTop: '1px solid rgba(245,241,232,0.1)' }}>
-        <p className="font-sans text-label uppercase tracking-[0.16em]" style={{ opacity: 0.28 }}>Connect</p>
+        <p className="font-sans text-label uppercase tracking-[0.16em]" style={{ opacity: 0.68 }}>Connect</p>
         <SocialLinks dark />
       </div>
       <div className="mt-5 flex flex-wrap gap-4">
@@ -1101,7 +1142,7 @@ function ThreeForces({ forces }: { forces: InvestorContent['forces'] }) {
 
   return (
     <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.35 }}>
+      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.68 }}>
         Why now — three converging forces
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)' }}>
@@ -1127,7 +1168,7 @@ function ThreeForces({ forces }: { forces: InvestorContent['forces'] }) {
             )}
             <div className="mb-6 flex items-center gap-3">
               <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: ACCENT, opacity: 0.9 }} />
-              <p className="font-sans text-label uppercase tracking-[0.2em]" style={{ opacity: 0.35 }}>Force {String(i + 1).padStart(2, '0')}</p>
+              <p className="font-sans text-label uppercase tracking-[0.2em]" style={{ opacity: 0.68 }}>Force {String(i + 1).padStart(2, '0')}</p>
             </div>
             <p className="font-display mb-5" style={{ fontSize: 'clamp(1.5rem, 2vw, 2rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>{force.title}</p>
             <div style={{ width: 32, height: 1.5, backgroundColor: ACCENT, opacity: 0.6, marginBottom: 20 }} />
@@ -1173,7 +1214,7 @@ function InvestorMetricsStrip() {
               : <>{m.prefix}0{m.suffix}</>
             }
           </p>
-          <p className="font-sans text-label uppercase tracking-[0.16em] mt-2" style={{ opacity: 0.35, fontSize: '0.625rem' }}>{m.unit}</p>
+          <p className="font-sans text-label uppercase tracking-[0.16em] mt-2" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>{m.unit}</p>
         </motion.div>
       ))}
     </div>
@@ -1236,7 +1277,7 @@ function PlatformExpansion() {
 
   return (
     <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.35 }}>
+      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.68 }}>
         Platform expansion — 2026 to long-term
       </p>
       <div>
@@ -1293,7 +1334,7 @@ function RevenueEngines({ data }: { data: InvestorContent['revenue_engines'] }) 
 
   return (
     <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.35 }}>
+      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.68 }}>
         Four revenue engines — one platform
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)' }}>
@@ -1309,7 +1350,7 @@ function RevenueEngines({ data }: { data: InvestorContent['revenue_engines'] }) 
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: statusColor[engine.status], flexShrink: 0, marginTop: 2 }} />
-                <p className="font-sans text-label uppercase tracking-[0.18em]" style={{ opacity: 0.35 }}>{engine.id}</p>
+                <p className="font-sans text-label uppercase tracking-[0.18em]" style={{ opacity: 0.68 }}>{engine.id}</p>
               </div>
               <span
                 className="font-sans text-label uppercase tracking-[0.12em] px-2 py-0.5"
@@ -1327,15 +1368,15 @@ function RevenueEngines({ data }: { data: InvestorContent['revenue_engines'] }) 
             <p className="font-sans text-base leading-[1.75] mb-8" style={{ opacity: 0.5 }}>{engine.desc}</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6" style={{ borderTop: INV_BORDER_SUBTLE }}>
               <div>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.3 }}>Price</p>
+                <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.68 }}>Price</p>
                 <p className="font-display text-base md:text-lg" style={{ letterSpacing: '-0.015em' }}>{engine.price}</p>
               </div>
               <div>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.3 }}>Margin</p>
+                <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.68 }}>Margin</p>
                 <p className="font-display text-xl md:text-2xl" style={{ letterSpacing: '-0.025em', color: engine.status === 'active' ? ACCENT : undefined, opacity: engine.status === 'active' ? 1 : 0.85 }}>{engine.margin}</p>
               </div>
               <div>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.3 }}>Activation</p>
+                <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.68 }}>Activation</p>
                 <p className="font-display text-base" style={{ opacity: 0.75, color: engine.status === 'active' ? ACCENT : undefined }}>{engine.activation}</p>
               </div>
             </div>
@@ -1396,7 +1437,7 @@ function FinancialProjection5yr() {
 
   return (
     <div ref={ref} className="mt-20" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.35 }}>
+      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.68 }}>
         Financial Model — 5-Year View
       </p>
       <h3 className="font-display mb-10" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)', letterSpacing: '-0.03em', lineHeight: 1.1, textWrap: 'balance' }}>
@@ -1428,10 +1469,10 @@ function FinancialProjection5yr() {
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div>
                   <p className="font-display" style={{ fontSize: '1.75rem', lineHeight: 1, color: isRaise ? ACCENT : undefined }}>{year.year}</p>
-                  <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.5625rem', opacity: 0.38 }}>{year.sub}</p>
+                  <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{year.sub}</p>
                 </div>
                 {isRaise && (
-                  <p className="font-sans uppercase tracking-[0.13em] px-3 py-1.5" style={{ fontSize: '0.5rem', color: ACCENT, border: `1px solid ${ACCENT}44`, backgroundColor: `${ACCENT}0f` }}>
+                  <p className="font-sans uppercase tracking-[0.13em] px-3 py-1.5" style={{ fontSize: '0.6875rem', color: ACCENT, border: `1px solid ${ACCENT}44`, backgroundColor: `${ACCENT}0f` }}>
                     raise year
                   </p>
                 )}
@@ -1444,7 +1485,7 @@ function FinancialProjection5yr() {
                   ['EBITDA margin', ebitdaMargin, false],
                 ].map(([label, value, hot]) => (
                   <div key={label as string} className="px-4 py-3.5" style={{ backgroundColor: '#0e0e0e' }}>
-                    <p className="font-sans uppercase tracking-[0.12em] mb-1.5" style={{ fontSize: '0.5rem', opacity: 0.32 }}>{label as string}</p>
+                    <p className="font-sans uppercase tracking-[0.12em] mb-1.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{label as string}</p>
                     <p className="font-display" style={{ fontSize: hot ? '1.2rem' : '1.05rem', lineHeight: 1.1, color: hot ? ACCENT : undefined, opacity: hot ? 1 : 0.78 }}>{value as string}</p>
                   </div>
                 ))}
@@ -1463,7 +1504,7 @@ function FinancialProjection5yr() {
               {PROJECTION_YEARS.map((y, i) => (
                 <th key={y.year} className="font-sans text-right py-4 px-4" style={{ backgroundColor: i === 3 ? `${ACCENT}0a` : 'transparent' }}>
                   <p className="font-display" style={{ fontSize: '1.125rem', letterSpacing: '-0.02em', color: i === 3 ? ACCENT : undefined, opacity: i === 3 ? 1 : 0.82 }}>{y.year}</p>
-                  <p className="font-sans uppercase tracking-[0.1em] mt-0.5" style={{ fontSize: '0.5rem', opacity: 0.32, color: i === 3 ? ACCENT : undefined }}>{y.sub}</p>
+                  <p className="font-sans uppercase tracking-[0.1em] mt-0.5" style={{ fontSize: '0.6875rem', opacity: 0.68, color: i === 3 ? ACCENT : undefined }}>{y.sub}</p>
                 </th>
               ))}
             </tr>
@@ -1478,7 +1519,7 @@ function FinancialProjection5yr() {
                 style={{ borderBottom: ri < PROJECTION_ROWS.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
               >
                 <td className="py-4 pl-2 pr-6">
-                  <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.625rem', opacity: row.highlight ? 0.9 : 0.35, color: row.highlight ? ACCENT : undefined }}>{row.metric}</p>
+                  <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.6875rem', opacity: row.highlight ? 0.9 : 0.35, color: row.highlight ? ACCENT : undefined }}>{row.metric}</p>
                 </td>
                 {row.values.map((val, vi) => (
                   <td key={vi} className="py-4 px-4 text-right" style={{ backgroundColor: vi === 3 ? `${ACCENT}0a` : 'transparent' }}>
@@ -1499,10 +1540,10 @@ function FinancialProjection5yr() {
       {/* Production capacity ramp */}
       <div style={{ borderTop: INV_BORDER_SUBTLE, paddingTop: 32 }}>
         <div className="flex items-baseline justify-between mb-8">
-          <p className="font-sans text-label uppercase tracking-[0.18em]" style={{ opacity: 0.35 }}>
+          <p className="font-sans text-label uppercase tracking-[0.18em]" style={{ opacity: 0.68 }}>
             Capacity ramp · m² / year · by engine
           </p>
-          <p className="font-sans text-label hidden md:block" style={{ opacity: 0.28, fontStyle: 'italic', fontSize: '0.6875rem' }}>
+          <p className="font-sans text-label hidden md:block" style={{ opacity: 0.68, fontStyle: 'italic', fontSize: '0.6875rem' }}>
             Not pre-revenue. Pre-leverage.
           </p>
         </div>
@@ -1539,7 +1580,7 @@ function FinancialProjection5yr() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-display" style={{ fontSize: '1.2rem', color: isLast ? ACCENT : undefined }}>{formatCapacityTotal(yr.total)}</p>
-                    <p className="font-sans uppercase tracking-[0.1em] mt-1" style={{ fontSize: '0.48rem', opacity: 0.32 }}>sq.m / yr</p>
+                    <p className="font-sans uppercase tracking-[0.1em] mt-1" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>sq.m / yr</p>
                     <p className="font-sans mt-1" style={{ fontSize: '0.68rem', opacity: 0.42 }}>{yr.perMonth.toLocaleString()} / mo</p>
                   </div>
                 </div>
@@ -1562,7 +1603,7 @@ function FinancialProjection5yr() {
                     ))}
                   </motion.div>
                 </div>
-                <p className="font-sans uppercase tracking-[0.12em] mt-3" style={{ fontSize: '0.5rem', opacity: 0.28 }}>{yr.phase}</p>
+                <p className="font-sans uppercase tracking-[0.12em] mt-3" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{yr.phase}</p>
               </motion.div>
             )
           })}
@@ -1625,7 +1666,7 @@ function FinancialProjection5yr() {
                     className="flex-shrink-0 text-center px-2 py-1 mb-1"
                     style={{ border: `1px solid ${ACCENT}55`, backgroundColor: `${ACCENT}0a` }}
                   >
-                    <p className="font-sans uppercase tracking-[0.1em]" style={{ fontSize: '0.4375rem', color: ACCENT, opacity: 0.8 }}>raise year</p>
+                    <p className="font-sans uppercase tracking-[0.1em]" style={{ fontSize: '0.6875rem', color: ACCENT, opacity: 0.8 }}>raise year</p>
                   </motion.div>
                 )}
 
@@ -1645,7 +1686,7 @@ function FinancialProjection5yr() {
           {(['E1', 'E2', 'E3', 'E4', 'T'] as const).map(key => (
             <div key={key} className="flex items-center gap-2">
               <div style={{ width: 10, height: 10, backgroundColor: ENGINE_COLORS[key], flexShrink: 0 }} />
-              <p className="font-sans text-label uppercase tracking-[0.1em]" style={{ opacity: 0.38, fontSize: '0.5625rem' }}>{ENGINE_LABELS[key]}</p>
+              <p className="font-sans text-label uppercase tracking-[0.1em]" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>{ENGINE_LABELS[key]}</p>
             </div>
           ))}
         </div>
@@ -1658,7 +1699,7 @@ function FinancialProjection5yr() {
           className="mt-8 px-6 py-5"
           style={{ border: `1px solid ${ACCENT}30`, backgroundColor: `${ACCENT}06`, borderLeft: `3px solid ${ACCENT}` }}
         >
-          <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.5625rem', color: ACCENT, opacity: 0.7 }}>Y4 → Y5 — 9.5× volume jump</p>
+          <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', color: ACCENT, opacity: 0.7 }}>Y4 → Y5 — 9.5× volume jump</p>
           <p className="font-sans text-sm leading-relaxed" style={{ opacity: 0.62 }}>
             94% of Y5 volume is thermal and packaging at construction scale — a different operational reality from Y1–Y3. If this phase slides 12–18 months, the revenue trajectory is unaffected. It just arrives later.
           </p>
@@ -1676,7 +1717,7 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
 
   return (
     <div ref={ref} className="mt-20" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.35 }}>
+      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.68 }}>
         {data.label}
       </p>
       <h3 className="font-display mb-14" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
@@ -1703,7 +1744,7 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
             >
               <div className="flex items-baseline justify-between gap-3 mb-3">
                 <div>
-                  <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.55rem', opacity: 0.36 }}>{yr.year}</p>
+                  <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{yr.year}</p>
                   <p className="font-display mt-1" style={{ fontSize: '1.3rem', color: isLast ? ACCENT : undefined }}>{yr.label}</p>
                 </div>
                 {isRaise && (
@@ -1803,7 +1844,7 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
                 {/* Label zone */}
                 <div className="text-center flex-shrink-0" style={{ paddingTop: 14 }}>
                   <p className="font-display text-base md:text-lg" style={{ letterSpacing: '-0.01em', opacity: isLast ? 1 : 0.8, color: isLast ? ACCENT : undefined }}>{yr.label}</p>
-                  <p className="font-sans text-label uppercase tracking-[0.16em] mt-1.5" style={{ opacity: 0.42 }}>{yr.year}</p>
+                  <p className="font-sans text-label uppercase tracking-[0.16em] mt-1.5" style={{ opacity: 0.68 }}>{yr.year}</p>
 
                   <div style={{ height: 80, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 14 }}>
                     {yr.year === 'Y1' && (
@@ -1849,7 +1890,7 @@ function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
           <p className="font-sans text-label uppercase tracking-[0.12em]">Upside range</p>
         </div>
       </div>
-      <p className="font-sans text-label mt-5" style={{ opacity: 0.32 }}>
+      <p className="font-sans text-label mt-5" style={{ opacity: 0.68 }}>
         * Projections assume successful certification by month 18 and activation of E3 specification channel. USD denominated. Base case excludes licensing revenue.
       </p>
     </div>
@@ -1893,7 +1934,7 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
 
   return (
     <div ref={ref} className="mt-20" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.35 }}>
+      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.68 }}>
         {data.label}
       </p>
       <h3 className="font-display mb-12" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
@@ -1929,14 +1970,14 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
                   <p className="font-sans mt-1" style={{ fontSize: '0.72rem', opacity: 0.32 }}>{player.origin}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.48rem', opacity: 0.3 }}>Price / m²</p>
+                  <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Price / m²</p>
                   <p className="font-sans mt-1" style={{ fontSize: '0.82rem', color: player.numu ? ACCENT : undefined, opacity: player.numu ? 1 : 0.5 }}>{player.price}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {capabilities.map((cap) => (
                   <div key={cap.label} className="px-3 py-2.5" style={{ backgroundColor: 'rgba(245,241,232,0.035)', border: '1px solid rgba(245,241,232,0.055)' }}>
-                    <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.48rem', opacity: 0.28 }}>{cap.label}</p>
+                    <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{cap.label}</p>
                     <p className="font-sans mt-1" style={{ fontSize: '0.72rem', color: player.numu && (cap.active || cap.partial) ? ACCENT : undefined, opacity: cap.partial ? 0.62 : cap.active ? 0.72 : 0.24 }}>
                       {cap.state}
                     </p>
@@ -2009,9 +2050,9 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
             <circle cx="8" cy="8" r="6" stroke="rgba(245,241,232,0.35)" strokeWidth={1.4} />
             <path d="M8 2 A6 6 0 0 1 14 8 L8 8 Z" fill="rgba(245,241,232,0.35)" />
           </svg>
-          <p className="font-sans text-label uppercase tracking-[0.1em]" style={{ opacity: 0.3, fontSize: '0.5rem' }}>In progress</p>
+          <p className="font-sans text-label uppercase tracking-[0.1em]" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>In progress</p>
         </div>
-        <p className="font-sans text-label" style={{ opacity: 0.22, fontSize: '0.5625rem' }}>● Present &nbsp; ○ Absent &nbsp; ◐ In progress &nbsp; — NUMU: only player with bio-based + GCC local + local feedstock + design freedom. Certification initiated 2026.</p>
+        <p className="font-sans text-label" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>● Present &nbsp; ○ Absent &nbsp; ◐ In progress &nbsp; — NUMU: only player with bio-based + GCC local + local feedstock + design freedom. Certification initiated 2026.</p>
       </div>
 
       {/* Mykor market signal */}
@@ -2022,7 +2063,7 @@ function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
         className="px-6 py-5"
         style={{ border: `1px solid ${ACCENT}30`, backgroundColor: `${ACCENT}06`, borderLeft: `3px solid ${ACCENT}` }}
       >
-        <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.5625rem', color: ACCENT, opacity: 0.7 }}>Market signal — Europe · May 2026</p>
+        <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', color: ACCENT, opacity: 0.7 }}>Market signal — Europe · May 2026</p>
         <p className="font-sans text-sm leading-relaxed" style={{ opacity: 0.72 }}>
           Mykor (UK) announced a £4M funding round with over <strong style={{ color: ACCENT, fontWeight: 500 }}>£338M in commercial agreements</strong> across the UK and Europe. The category is taking off in Europe. NUMU is the regional execution play.
         </p>
@@ -2074,7 +2115,7 @@ function MarketTAMDiagram() {
 
   return (
     <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-10" style={{ opacity: 0.35 }}>
+      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-10" style={{ opacity: 0.68 }}>
         Market phases — addressable opportunity expands as platform activates
       </p>
 
@@ -2097,11 +2138,11 @@ function MarketTAMDiagram() {
             >
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
-                  <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.52rem', color: rowCol.text, opacity: 0.82 }}>{p.phase} · {p.period}</p>
+                  <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.6875rem', color: rowCol.text, opacity: 0.82 }}>{p.phase} · {p.period}</p>
                   <p className="font-display mt-2" style={{ fontSize: '1.35rem', lineHeight: 1.1, color: rowCol.text }}>{p.label}</p>
                 </div>
                 {isEdge && (
-                  <p className="font-sans uppercase tracking-[0.12em] px-2 py-1.5" style={{ fontSize: '0.47rem', color: ACCENT, border: `1px solid ${ACCENT}38` }}>
+                  <p className="font-sans uppercase tracking-[0.12em] px-2 py-1.5" style={{ fontSize: '0.6875rem', color: ACCENT, border: `1px solid ${ACCENT}38` }}>
                     {i === 0 ? 'start' : 'scale'}
                   </p>
                 )}
@@ -2113,7 +2154,7 @@ function MarketTAMDiagram() {
                   ['SOM', p.som],
                 ].map(([label, value], vi) => (
                   <div key={label} className="px-3 py-3" style={{ backgroundColor: vi === 2 ? `${ACCENT}0d` : '#0e0e0e' }}>
-                    <p className="font-sans uppercase tracking-[0.12em] mb-1.5" style={{ fontSize: '0.46rem', opacity: 0.28 }}>{label}</p>
+                    <p className="font-sans uppercase tracking-[0.12em] mb-1.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{label}</p>
                     <p className="font-display" style={{ fontSize: '0.95rem', lineHeight: 1, color: vi === 2 ? ACCENT : rowCol.text, opacity: vi === 2 ? 1 : 0.78 }}>{value}</p>
                   </div>
                 ))}
@@ -2270,7 +2311,7 @@ function MarketTAMDiagram() {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-1">
                   <p className="font-display" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.75rem)', letterSpacing: '-0.025em', lineHeight: 1, color: rowCol.text }}>{p.tam}</p>
-                  <p className="font-sans text-label uppercase tracking-[0.12em]" style={{ color: rowCol.text, opacity: 0.65 }}>{p.period}</p>
+                  <p className="font-sans text-label uppercase tracking-[0.12em]" style={{ color: rowCol.text, opacity: 0.68 }}>{p.period}</p>
                 </div>
                 <p className="font-sans text-sm" style={{ opacity: 0.38 }}>{p.label}</p>
               </div>
@@ -2288,7 +2329,7 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
   return (
     <div className="mt-16">
       {/* Horizontal timeline */}
-      <div className="hidden md:flex items-center mb-0 px-0 relative" style={{ height: 48 }}>
+      <div className="hidden xl:flex items-center mb-0 px-0 relative" style={{ height: 48 }}>
         {/* Background track */}
         <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, backgroundColor: 'rgba(245,241,232,0.1)' }} />
         {/* Animated fill line */}
@@ -2320,7 +2361,7 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
       </div>
 
       {/* Mobile timeline */}
-      <div className="md:hidden space-y-3">
+      <div className="xl:hidden space-y-3">
         {phases.map((phase, i) => (
           <motion.div
             key={phase.year}
@@ -2337,11 +2378,11 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
           >
             <div className="flex items-start justify-between gap-4 mb-5">
               <div>
-                <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.56rem', opacity: 0.48, color: i === 0 ? ACCENT : undefined }}>{phase.year}</p>
+                <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.6875rem', opacity: 0.68, color: i === 0 ? ACCENT : undefined }}>{phase.year}</p>
                 <p className="font-display mt-2" style={{ fontSize: '1.65rem', lineHeight: 1.08, color: i === 0 ? ACCENT : undefined }}>{phase.label}</p>
               </div>
               {i === 0 && (
-                <p className="font-sans uppercase tracking-[0.12em] px-2.5 py-1.5" style={{ fontSize: '0.48rem', color: ACCENT, border: `1px solid ${ACCENT}3d` }}>
+                <p className="font-sans uppercase tracking-[0.12em] px-2.5 py-1.5" style={{ fontSize: '0.6875rem', color: ACCENT, border: `1px solid ${ACCENT}3d` }}>
                   active
                 </p>
               )}
@@ -2363,7 +2404,7 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
       </div>
 
       {/* Phase columns */}
-      <div className="hidden md:grid md:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.12)' }}>
+      <div className="hidden xl:grid xl:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.12)' }}>
         {phases.map((phase, i) => (
           <motion.div
             key={phase.year}
@@ -2374,7 +2415,7 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
             className="p-6 md:p-10"
             style={{ backgroundColor: '#0e0e0e' }}
           >
-            <p className="font-sans text-label uppercase tracking-[0.16em] mb-2" style={{ opacity: 0.35, color: i === 0 ? ACCENT : undefined }}>{phase.year}</p>
+            <p className="font-sans text-label uppercase tracking-[0.16em] mb-2" style={{ opacity: 0.68, color: i === 0 ? ACCENT : undefined }}>{phase.year}</p>
             <p className="font-display text-2xl md:text-3xl mb-8" style={{ letterSpacing: '-0.025em', fontWeight: 700, opacity: i === 0 ? 1 : 0.65 }}>{phase.label}</p>
             <div>
               {phase.items.map((item, j) => (
@@ -2396,7 +2437,7 @@ function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
               <div className="mt-8 pt-5" style={{ borderTop: INV_BORDER_SUBTLE }}>
                 <div className="flex items-center gap-2">
                   <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: ACCENT, animation: 'process-pulse 2s ease-out infinite' }} />
-                  <p className="font-sans text-label uppercase tracking-[0.14em]" style={{ opacity: 0.55, color: ACCENT }}>Active phase</p>
+                  <p className="font-sans text-label uppercase tracking-[0.14em]" style={{ opacity: 0.68, color: ACCENT }}>Active phase</p>
                 </div>
               </div>
             )}
@@ -2414,7 +2455,7 @@ function BusinessModelStreams() {
     <div className="mt-16" style={{ borderTop: INV_BORDER }}>
       <div className="mt-10 mb-12 flex justify-center">
         <div className="w-full max-w-[920px] rounded-sm px-6 py-8 md:px-10 md:py-10" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
-          <p className="font-sans text-label uppercase tracking-[0.18em] mb-6 text-center" style={{ opacity: 0.38 }}>
+          <p className="font-sans text-label uppercase tracking-[0.18em] mb-6 text-center" style={{ opacity: 0.68 }}>
             Platform monetization structure
           </p>
           <div className="md:hidden">
@@ -2427,7 +2468,7 @@ function BusinessModelStreams() {
                   className="px-4 py-3"
                   style={{ border: `1px solid ${ACCENT}`, backgroundColor: `${ACCENT}14`, borderRadius: 4 }}
                 >
-                  <p className="font-sans uppercase tracking-[0.16em] text-center" style={{ fontSize: '0.625rem', color: ACCENT }}>
+                  <p className="font-sans uppercase tracking-[0.16em] text-center" style={{ fontSize: '0.6875rem', color: ACCENT }}>
                     Mycelium Platform
                   </p>
                 </div>
@@ -2438,7 +2479,7 @@ function BusinessModelStreams() {
                   className="px-4 py-4"
                   style={{ border: `1px solid ${ACCENT}88`, backgroundColor: `${ACCENT}12`, borderRadius: 4 }}
                 >
-                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.625rem', color: ACCENT, opacity: 0.82 }}>
+                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', color: ACCENT, opacity: 0.82 }}>
                     Design Products
                   </p>
                   <p className="font-sans" style={{ fontSize: '0.875rem', lineHeight: 1.6, opacity: 0.72 }}>
@@ -2449,7 +2490,7 @@ function BusinessModelStreams() {
                   className="px-4 py-4"
                   style={{ border: '1px solid rgba(245,241,232,0.16)', backgroundColor: 'rgba(245,241,232,0.03)', borderRadius: 4 }}
                 >
-                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.625rem', opacity: 0.62 }}>
+                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
                     Material Licensing
                   </p>
                   <p className="font-sans" style={{ fontSize: '0.875rem', lineHeight: 1.6, opacity: 0.58 }}>
@@ -2511,7 +2552,7 @@ function BusinessModelStreams() {
           { stream: 'Stream 02', title: 'Material Licensing', desc: 'Licensing the material platform to regional manufacturers. Scalable without proportional capex. Compounds proprietary IP.', bullets: ['Platform fee', 'Scalable', 'Long-term compounding'], accent: false },
         ].map(s => (
           <div key={s.stream} className="p-10 md:p-16" style={{ backgroundColor: '#0f0f0d' }}>
-            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.4, color: s.accent ? ACCENT : undefined }}>{s.stream}</p>
+            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.68, color: s.accent ? ACCENT : undefined }}>{s.stream}</p>
             <p className="font-display text-[2rem] md:text-[2.6rem] mb-6" style={{ letterSpacing: '-0.03em', opacity: s.accent ? 1 : 0.8 }}>{s.title}</p>
             <p className="font-sans text-base md:text-[1.0625rem] leading-[1.85] mb-10" style={{ opacity: 0.68 }}>{s.desc}</p>
             <div style={{ borderTop: INV_BORDER_SUBTLE, paddingTop: 24 }}>
@@ -2581,7 +2622,7 @@ function TeamMemberCard({ member, i, large }: { member: InvestorContent['team'][
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
-          <p className="font-sans text-label" style={{ fontSize: 9, opacity: 0.42, letterSpacing: '0.16em' }}>Portrait — archival</p>
+          <p className="font-sans text-label" style={{ fontSize: 9, opacity: 0.68, letterSpacing: '0.16em' }}>Portrait — archival</p>
         </div>
       )}
     </div>
@@ -2598,7 +2639,7 @@ function TeamMemberCard({ member, i, large }: { member: InvestorContent['team'][
     >
       <PhotoSlot />
       <p className="font-display mb-1" style={{ fontSize: large ? 'clamp(1.5rem, 2.5vw, 2rem)' : '1.25rem', fontWeight: 700 }}>{member.name}</p>
-      <p className="font-sans text-label uppercase tracking-[0.14em] mb-5" style={{ opacity: 0.42 }}>{member.role}</p>
+      <p className="font-sans text-label uppercase tracking-[0.14em] mb-5" style={{ opacity: 0.68 }}>{member.role}</p>
       <p className="font-sans leading-[1.75]" style={{ fontSize: large ? '0.9375rem' : '0.875rem', opacity: 0.58 }}>{member.bio}</p>
     </motion.div>
   )
@@ -2606,7 +2647,7 @@ function TeamMemberCard({ member, i, large }: { member: InvestorContent['team'][
 
 function TeamGrid({ members }: { members: InvestorContent['team']['members'] }) {
   return (
-    <div className="mt-16 grid grid-cols-2 md:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)', borderTop: INV_BORDER }}>
+    <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)', borderTop: INV_BORDER }}>
       {members.map((m, i) => (
         <TeamMemberCard key={m.name} member={m} i={i} />
       ))}
@@ -2645,7 +2686,7 @@ function PublicTeamCard({ member }: { member: PublicTeamMember }) {
         <p className="font-display mb-1" style={{ fontSize: '1.35rem', lineHeight: 1.05, letterSpacing: '-0.02em' }}>
           {member.name}
         </p>
-        <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.7rem', opacity: 0.58 }}>
+        <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.7rem', opacity: 0.68 }}>
           {member.role}
         </p>
         <p className="font-sans leading-[1.7]" style={{ fontSize: '0.9rem', opacity: 0.62 }}>
@@ -2661,7 +2702,7 @@ function PublicTeamCard({ member }: { member: PublicTeamMember }) {
 function FounderEcosystem() {
   return (
     <div className="mt-14 pt-12" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.28 }}>
+      <p className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.68 }}>
         Founder ecosystem
       </p>
       <p className="font-sans text-base leading-[1.8]" style={{ maxWidth: 680, opacity: 0.5 }}>
@@ -2675,6 +2716,7 @@ function FounderEcosystem() {
 const MAX_VIDEO_TIME = 90  // seconds — trim point
 
 function LabVideo() {
+  const reducedMotion = useReducedMotion()
   const containerRef = useRef<HTMLDivElement>(null)
   const ref = useRef<HTMLVideoElement>(null)
   const userPausedRef = useRef(false)
@@ -2682,6 +2724,7 @@ function LabVideo() {
   const [ready, setReady] = useState(false)
   const [progress, setProgress] = useState(0)
   const [hovering, setHovering] = useState(false)
+  const [videoFailed, setVideoFailed] = useState(false)
   const inView = useInView(containerRef, { once: false, amount: 0.35 })
 
   const play = () => {
@@ -2714,6 +2757,11 @@ function LabVideo() {
   }
 
   useEffect(() => {
+    const video = ref.current
+    if (video && video.readyState >= 1) {
+      setReady(true)
+    }
+
     const v = ref.current
     if (!v) return
     const onTime = () => {
@@ -2727,7 +2775,7 @@ function LabVideo() {
   useEffect(() => {
     if (!ready) return
 
-    if (inView && !userPausedRef.current) {
+    if (inView && !userPausedRef.current && !reducedMotion) {
       play()
       return
     }
@@ -2735,7 +2783,7 @@ function LabVideo() {
     if (!inView && playing) {
       pause()
     }
-  }, [inView, ready, playing])
+  }, [inView, ready, playing, reducedMotion])
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return
@@ -2746,13 +2794,24 @@ function LabVideo() {
   }
 
   return (
-    <div
+    <div>
+      <div
       ref={containerRef}
       className="relative w-full overflow-hidden"
       style={{ aspectRatio: '16/9', backgroundColor: 'rgba(128,128,128,0.05)' }}
+      onFocusCapture={() => setHovering(true)}
+      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setHovering(false) }}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
+      <Image
+        src="/images/products/biofoam_detail.png"
+        alt="PALMYCO material surface"
+        fill
+        className="object-cover"
+        sizes="(max-width: 1024px) 100vw, 80vw"
+        style={{ opacity: ready && !videoFailed ? 0 : 1, transition: 'opacity 0.25s ease' }}
+      />
       <video
         ref={ref}
         src="/videos/numu_story_enhanced.mp4"
@@ -2760,45 +2819,36 @@ function LabVideo() {
         loop
         playsInline
         preload="metadata"
-        poster="/images/products/biofoam_detail.png"
-        onCanPlay={() => setReady(true)}
+        onLoadedMetadata={() => { setVideoFailed(false); setReady(true) }}
+        onCanPlay={() => { setVideoFailed(false); setReady(true) }}
+        onError={() => { setVideoFailed(true); setReady(false); setPlaying(false) }}
         onEnded={() => { if (ref.current) { ref.current.currentTime = 0; ref.current.play() } }}
         className="w-full h-full object-cover block"
-        style={{ opacity: ready ? 1 : 0.92, transition: 'opacity 0.25s ease' }}
+        style={{ opacity: ready && !videoFailed ? 1 : 0, transition: 'opacity 0.25s ease' }}
         suppressHydrationWarning
       />
-
-      {/* Placeholder */}
-      {!ready && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3" style={{ border: '1px solid rgba(128,128,128,0.1)', backgroundColor: 'rgba(26,23,20,0.08)' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" width={28} height={28} style={{ opacity: 0.18 }}>
-            <polygon points="5 3 19 12 5 21 5 3" />
-          </svg>
-          <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.625rem', opacity: 0.4 }}>Loading process documentation</p>
-        </div>
-      )}
 
       {/* Play hint — only when ready and not yet played */}
       {ready && !playing && !hovering && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.625rem', opacity: 0.48 }}>Process documentation</p>
+          <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Process documentation</p>
         </div>
       )}
 
       {/* Minimal hover controls — time bar + pause */}
       {ready && (
-        <div
+        <div className="lab-controls"
           style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
             padding: '14px 16px 12px',
             background: 'linear-gradient(to top, rgba(0,0,0,0.52) 0%, transparent 100%)',
-            opacity: hovering ? 1 : 0,
+            opacity: hovering || !playing ? 1 : 0,
             transition: 'opacity 0.25s ease',
             display: 'flex', alignItems: 'center', gap: 12,
           }}
         >
           {/* Pause / play icon */}
-          <button aria-label={playing ? 'Pause' : 'Play'} onClick={toggle} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+          <button aria-label={playing ? 'Pause' : 'Play'} onClick={toggle} style={{ background: 'none', border: 'none', padding: 12, minWidth: 44, minHeight: 44, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
             {playing ? (
               <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
                 <rect x="0" y="0" width="3.5" height="12" rx="1" fill="rgba(245,241,232,0.85)" />
@@ -2813,6 +2863,14 @@ function LabVideo() {
           {/* Scrubber bar */}
           <div
             onClick={seek}
+            role="slider" tabIndex={0} aria-label="Video position" aria-valuemin={0} aria-valuemax={MAX_VIDEO_TIME} aria-valuenow={Math.round(progress * MAX_VIDEO_TIME)} aria-valuetext={`${Math.round(progress * MAX_VIDEO_TIME)} seconds`}
+            onKeyDown={event => {
+              if (!ref.current || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return
+              event.preventDefault()
+              const next = event.key === 'Home' ? 0 : event.key === 'End' ? MAX_VIDEO_TIME - 0.1 : Math.max(0, Math.min(MAX_VIDEO_TIME - 0.1, ref.current.currentTime + (event.key === 'ArrowRight' ? 5 : -5)))
+              ref.current.currentTime = next
+              setProgress(next / MAX_VIDEO_TIME)
+            }}
             style={{ flex: 1, height: 2, backgroundColor: 'rgba(245,241,232,0.2)', borderRadius: 1, cursor: 'pointer', position: 'relative' }}
           >
             <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${progress * 100}%`, backgroundColor: 'rgba(245,241,232,0.85)', borderRadius: 1, transition: 'width 0.25s linear' }} />
@@ -2820,12 +2878,97 @@ function LabVideo() {
             <div style={{ position: 'absolute', top: '50%', left: `${progress * 100}%`, transform: 'translate(-50%,-50%)', width: 7, height: 7, borderRadius: '50%', backgroundColor: 'rgba(245,241,232,0.95)' }} />
           </div>
           {/* Time remaining */}
-          <p className="font-sans" style={{ fontSize: '0.5rem', opacity: 0.5, color: '#f5f1e8', flexShrink: 0, letterSpacing: '0.08em' }}>
+          <p className="font-sans" style={{ fontSize: '0.75rem', opacity: 0.9, color: '#f5f1e8', flexShrink: 0, letterSpacing: '0.08em' }}>
             {Math.floor((1 - progress) * MAX_VIDEO_TIME)}s
           </p>
         </div>
       )}
+      </div>
     </div>
+  )
+}
+
+const MOODBOARDS = [
+  {
+    label: 'Hospitality',
+    heading: 'Atmosphere, grown into place.',
+    copy: 'Warm, tactile interiors where acoustic surface, lighting, and material character create a memorable guest experience.',
+    images: [
+      { src: '/images/moodboards/hospitality-fold-restaurant.webp', alt: 'FOLD acoustic panels in a restaurant ceiling concept', featured: true },
+      { src: '/images/moodboards/hospitality-mushroomiya-lounge.webp', alt: 'Mushroomiya lighting in a hotel lounge concept', featured: true },
+      { src: '/images/moodboards/hospitality-fungal-art-lounge.webp', alt: 'Fungal art installation in a hospitality lounge concept' },
+      { src: '/images/moodboards/hospitality-fold-wall-wash.webp', alt: 'FOLD acoustic wall panels in a hospitality interior concept' },
+    ],
+  },
+  {
+    label: 'Workplace',
+    heading: 'A calmer kind of work.',
+    copy: 'Biobased acoustic elements give offices visual warmth and a more considered sense of focus, from shared rooms to open-plan ceilings.',
+    images: [
+      { src: '/images/moodboards/workplace-fold-ceiling-pendant.webp', alt: 'FOLD acoustic ceiling with Mushroomiya pendants in an office concept', featured: true },
+      { src: '/images/moodboards/workplace-meeting-room.webp', alt: 'FOLD texture detail in a meeting room concept' },
+      { src: '/images/moodboards/workplace-fold-feature-wall.webp', alt: 'FOLD feature wall in an office concept' },
+      { src: '/images/moodboards/workplace-fold-linear-ceiling.webp', alt: 'FOLD linear ceiling installation in an office concept' },
+    ],
+  },
+  {
+    label: 'Events',
+    heading: 'Temporary, without feeling disposable.',
+    copy: 'Pressed composite boards bring a warm, low-waste material language to exhibitions, brand activations, and temporary structures.',
+    images: [
+      { src: '/images/moodboards/events-exhibition-stand.png', alt: 'FOLD mycelium panels applied to an exhibition stand visualisation' },
+      { src: '/images/moodboards/events-pressed-board-booth.png', alt: 'Pressed mycelium board exhibition booth visualisation' },
+      { src: '/images/moodboards/events-display-plinths.png', alt: 'Pressed composite display plinths for an event visualisation' },
+      { src: '/images/moodboards/events-fluted-display.png', alt: 'Fluted mycelium product display visualisation' },
+    ],
+  },
+  {
+    label: 'Packaging',
+    heading: 'Protection with a better end of life.',
+    copy: 'Molded mycelium forms offer a natural route away from petroleum foam for thoughtful, protective packaging.',
+    images: [
+      { src: '/images/moodboards/packaging-modular-insert.png', alt: 'Modular mycelium protective insert visualisation' },
+      { src: '/images/moodboards/packaging-ceramic-bowl.png', alt: 'Mycelium protective insert for a ceramic bowl visualisation' },
+      { src: '/images/moodboards/packaging-serum-tray.png', alt: 'Molded mycelium serum-bottle tray visualisation' },
+      { src: '/images/moodboards/packaging-cylinder.png', alt: 'Mycelium cylinder packaging visualisation' },
+    ],
+  },
+]
+
+function Moodboards() {
+  return (
+    <VSection id="moodboards">
+      <div className="mb-14 md:mb-20 max-w-2xl">
+        <VLabel text="Spatial applications" />
+        <VHeading text="Material with a point of view." />
+        <p className="font-sans leading-[1.75] mt-6" style={{ fontSize: '1rem', opacity: 0.6 }}>
+          Four material-led directions for interiors, events, and products. Visualisations are indicative of application, not completed installations.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-14 xl:gap-8">
+        {MOODBOARDS.map((board) => (
+          <article key={board.label} className="p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.018)' }}>
+            <div className="pb-6 md:pb-7" style={{ minHeight: '15rem' }}>
+              <VLabel text={board.label} />
+              <h3 className="font-display mb-4" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.7rem)', lineHeight: 1, letterSpacing: '-0.035em' }}>{board.heading}</h3>
+              <p className="font-sans leading-[1.7] max-w-lg" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>{board.copy}</p>
+            </div>
+            <div
+              className="grid grid-cols-2 grid-rows-2 gap-2 aspect-square"
+            >
+              {board.images.map((image) => (
+                <div
+                  key={image.src}
+                  className="relative overflow-hidden bg-[#e7e0d5]"
+                >
+                  <Image src={image.src} alt={image.alt} fill className="object-cover transition-transform duration-700 hover:scale-[1.04]" sizes="(max-width: 1280px) 50vw, 25vw" />
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </VSection>
   )
 }
 
@@ -2865,7 +3008,7 @@ const PARTNERS = [
 function PartnersStrip() {
   return (
     <div className="pt-14 mt-14" style={{ borderTop: BORDER }}>
-      <p className="font-sans uppercase tracking-[0.18em] mb-8" style={{ fontSize: '0.625rem', opacity: 0.3 }}>
+      <p className="font-sans uppercase tracking-[0.18em] mb-8" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
         Partners &amp; institutions
       </p>
       <div className="flex flex-wrap gap-x-10 gap-y-5">
@@ -2884,7 +3027,7 @@ function PartnersStrip() {
             ) : (
               <p className="font-sans" style={{ fontSize: '0.8125rem', opacity: 0.55 }}>{p.name}</p>
             )}
-            <p className="font-sans uppercase tracking-[0.14em] mt-0.5" style={{ fontSize: '0.5625rem', opacity: 0.25 }}>{p.note}</p>
+            <p className="font-sans uppercase tracking-[0.14em] mt-0.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{p.note}</p>
           </div>
         ))}
       </div>
@@ -2892,9 +3035,179 @@ function PartnersStrip() {
   )
 }
 
+// ─── Platform Without Borders ────────────────────────────────────────────────
+
+function PlatformWithoutBorders() {
+  const platformImages = [
+    // TODO Andy: replace /public/images/platform/placeholder-earth-feedstock.jpg with final earth feedstock image.
+    {
+      src: '/images/platform/placeholder-earth-feedstock.jpg',
+      alt: 'Regional agricultural feedstock used in NUMU mycelium composites',
+      label: 'Regional feedstock',
+      note: 'Local biomass becomes manufacturing input.',
+    },
+    // TODO Andy: replace /public/images/platform/placeholder-grown-panel.jpg with final grown panel image.
+    {
+      src: '/images/platform/placeholder-grown-panel.jpg',
+      alt: 'NUMU grown mycelium composite panel',
+      label: 'Grown composite',
+      note: 'A material system grown into function.',
+    },
+    // TODO Andy: replace /public/images/platform/placeholder-extreme-environment.jpg with final extreme environment visual.
+    {
+      src: '/images/platform/placeholder-extreme-environment.jpg',
+      alt: 'Concept render of mycelium biomanufacturing in an extreme environment',
+      label: 'Extreme environments',
+      note: 'The same ISRU composites logic extends further.',
+    },
+  ]
+
+  return (
+    <VSectionFullBleed id="platform-without-borders">
+      <div className="px-6 md:px-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-14 lg:gap-20 items-start">
+          <div>
+            <VLabel text="ONE PLATFORM, MANY ENVIRONMENTS" />
+            <h2 className="font-display mb-9 max-w-4xl" style={{ fontSize: 'clamp(2.4rem, 5.6vw, 6.25rem)', lineHeight: '0.92', letterSpacing: '-0.04em', textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
+              A material platform for the GCC, the world, and beyond.
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-10 max-w-4xl">
+              <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.65 }}>
+                NUMU is built on a single principle. You make materials from what is around you, not what you ship in. In the Gulf that means turning regional agricultural waste into a local manufacturing base for acoustics, insulation, and composites. The same principle reaches much further.
+              </p>
+              <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.58 }}>
+                In resource-constrained and extreme environments, including space, the constraint is identical. You cannot ship everything in. You grow and build with what is local. Mycelium is one of the few material systems that works under both sets of conditions, which is why the NUMU platform extends naturally from regional industry to the hardest environments there are.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-6 md:p-8" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.025)' }}>
+            <p className="font-sans uppercase tracking-[0.18em] mb-5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
+              Strategic partnership
+            </p>
+            <h3 className="font-display mb-5" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.03em' }}>
+              Titans Space Industries
+            </h3>
+            <p className="font-sans leading-[1.75] mb-7" style={{ fontSize: '0.9375rem', opacity: 0.62 }}>
+              NUMU has signed a Memorandum of Understanding with Titans Space Industries (TSI), the Orlando-based developer of reusable spaceplanes and orbital infrastructure. NUMU joins the consortium as its Bio-Materials and ISRU Composites Partner, exploring how mycelium biomanufacturing can produce composites and structures in extreme environments.
+            </p>
+            <Link
+              href="/partnerships/titans-space"
+              className="font-sans text-label uppercase tracking-[0.14em] inline-block"
+              style={{ color: 'inherit', opacity: 0.78, textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 6 }}
+            >
+              Read about the partnership →
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-3">
+        {platformImages.map((item) => (
+          <div key={item.src}>
+            <div className="relative overflow-hidden" style={{ aspectRatio: item.src.includes('grown-panel') ? '4/5' : '1/1', backgroundColor: 'rgba(128,128,128,0.05)' }}>
+              <Image
+                src={item.src}
+                alt={item.alt}
+                fill
+                unoptimized
+                className="object-cover object-center"
+                sizes="(max-width: 768px) 100vw, 33vw"
+                style={{ mixBlendMode: item.src.includes('earth-feedstock') ? 'multiply' : 'normal' }}
+              />
+            </div>
+            <div className="px-6 md:px-8 pt-4">
+              <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
+                {item.label}
+              </p>
+              <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: 0.52 }}>
+                {item.note}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </VSectionFullBleed>
+  )
+}
+
+function PlatformEnginesPreview({ data }: { data: InvestorContent['revenue_engines'] }) {
+  return (
+    <VSectionFullBleed id="platform-engines">
+      <div className="px-6 md:px-12">
+        <VLabel text={data.label} />
+        <h2
+          className="font-display mb-8"
+          style={{
+            fontSize: 'clamp(2.2rem, 4.8vw, 5rem)',
+            lineHeight: '0.96',
+            letterSpacing: '-0.04em',
+          }}
+        >
+          {data.heading}
+        </h2>
+        <p className="font-sans leading-[1.8] max-w-3xl mb-12" style={{ fontSize: '1rem', opacity: 0.62 }}>
+          {data.body}
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
+        {data.engines.map((engine) => (
+          <div key={engine.id} className="px-6 md:px-8 py-8 md:py-10" style={{ backgroundColor: 'rgba(26,23,20,0.025)' }}>
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div className="flex items-center gap-3">
+                <div
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    backgroundColor:
+                      engine.status === 'active'
+                        ? '#8A7256'
+                        : engine.status === 'next'
+                          ? 'rgba(26,23,20,0.45)'
+                          : 'rgba(26,23,20,0.24)',
+                    flexShrink: 0,
+                  }}
+                />
+                <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
+                  {engine.id}
+                </p>
+              </div>
+              <span
+                className="font-sans uppercase tracking-[0.12em] px-2 py-1"
+                style={{
+                  fontSize: '0.5625rem',
+                  opacity: engine.status === 'active' ? 0.9 : 0.5,
+                  border: '1px solid rgba(26,23,20,0.14)',
+                }}
+              >
+                {engine.activation}
+              </span>
+            </div>
+            <p className="font-display mb-3" style={{ fontSize: '1.9rem', lineHeight: 0.98, letterSpacing: '-0.03em' }}>
+              {engine.name}
+            </p>
+            <p className="font-sans leading-[1.75] mb-7" style={{ fontSize: '0.95rem', opacity: 0.6 }}>
+              {engine.desc}
+            </p>
+          </div>
+        ))}
+      </div>
+    </VSectionFullBleed>
+  )
+}
+
 // ─── Visitor view ─────────────────────────────────────────────────────────────
 
-function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: PublicTeamMember[] }) {
+function VisitorView({
+  v,
+  teamMembers,
+  investorPreview,
+}: {
+  v: VisitorContent
+  teamMembers: PublicTeamMember[]
+  investorPreview: InvestorContent['revenue_engines']
+}) {
   return (
     <>
       {/* 01 Statement */}
@@ -2912,19 +3225,23 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
               Alongside PALMYCO™, NUMU leverages spent mushroom substrate — a regional waste stream — to produce heat-pressed composite boards. Two distinct material outputs, shared production infrastructure, four revenue lines. Circular by design.
             </p>
           </div>
-          <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
-            <AutoplayVideoBlock
-              src="/videos/numu_timelapse.mp4"
-              preload="auto"
-              overlay={
-                <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-start px-6 md:px-8 pb-6 md:pb-8" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)', paddingTop: 100 }}>
-                  <p className="font-display text-white mb-2" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}>Material in motion</p>
-                  <p className="font-sans text-white" style={{ fontSize: 'clamp(0.875rem, 1.8vw, 0.95rem)', opacity: 0.72, lineHeight: 1.6, maxWidth: 340 }}>
-                    A material grown over time, not manufactured. From agricultural fibres to structural form, the process unfolds through controlled biological growth over 5–7 days.
-                  </p>
-                </div>
-              }
-            />
+          <div>
+            <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
+              <AutoplayVideoBlock
+                src="/videos/numu_timelapse.mp4"
+                poster="/images/products/biofoam_detail.png"
+                altLabel="PALMYCO material growth process"
+                preload="auto"
+                overlay={
+                  <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-start px-6 md:px-8 pb-6 md:pb-8" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)', paddingTop: 100 }}>
+                    <p className="font-display text-white mb-2" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}>Material in motion</p>
+                    <p className="font-sans text-white" style={{ fontSize: 'clamp(0.875rem, 1.8vw, 0.95rem)', opacity: 0.72, lineHeight: 1.6, maxWidth: 340 }}>
+                      A material grown over time, not manufactured. From agricultural fibres to structural form, the process unfolds through controlled biological growth over 5–7 days.
+                    </p>
+                  </div>
+                }
+              />
+            </div>
           </div>
         </div>
       </VSection>
@@ -2946,7 +3263,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
               </p>
             </div>
             <div className="mt-auto pt-12" style={{ borderTop: '1px solid rgba(128,128,128,0.1)', marginTop: 'auto' }}>
-              <p className="font-sans uppercase tracking-[0.16em] mb-5" style={{ fontSize: 9, opacity: 0.55 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mb-5" style={{ fontSize: 9, opacity: 0.68 }}>
                 Substrate inputs — regional agricultural residues
               </p>
               <div className="grid grid-cols-2 gap-4 mb-12">
@@ -2976,7 +3293,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
             </div>
             {/* Production routes */}
             <div className="pt-12 mt-12" style={{ borderTop: '1px solid rgba(128,128,128,0.1)' }}>
-              <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: 9, opacity: 0.55 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: 9, opacity: 0.68 }}>
                 Production routes
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2985,7 +3302,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
                     <Image src="/images/products/Chair.jpg" alt="Grown mycelium chair — NUMU material formed into product application" fill unoptimized className="object-contain object-center" sizes="(max-width: 640px) 100vw, 50vw" style={{ mixBlendMode: 'multiply' }} />
                   </div>
                   <div className="p-5">
-                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.62 }}>Grown</p>
+                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.68 }}>Grown</p>
                     <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
                       Mycelium cultivated inside proprietary molds over a controlled growth cycle, then heat-stabilized into a finished form. Produces distinctive surface texture and complex three-dimensional form factors.
                     </p>
@@ -2997,7 +3314,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
                     <Image src="/images/products/pressed_detail.jpg" alt="Pressed mycelium board close-up — surface texture and cross-section detail" fill unoptimized className="object-cover object-center" sizes="(max-width: 640px) 100vw, 50vw" />
                   </div>
                   <div className="p-5">
-                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.62 }}>Pressed</p>
+                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.68 }}>Pressed</p>
                     <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
                       Spent mycelium biomass shredded and heat-pressed directly into flat board formats. Minutes of press time rather than weeks of cultivation.
                     </p>
@@ -3019,7 +3336,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
         <div className="mb-12 grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-8 lg:gap-14 items-end">
           <div>
             <h2 className="font-display" style={{ fontSize: 'clamp(3rem, 7vw, 7.5rem)', lineHeight: '0.9', letterSpacing: '-0.04em' }}>FOLD</h2>
-            <p className="font-sans uppercase tracking-[0.16em] mt-3" style={{ fontSize: '0.625rem', opacity: 0.32 }}>
+            <p className="font-sans uppercase tracking-[0.16em] mt-3" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
               Surface design in collaboration with NYXO Design Studio.
             </p>
           </div>
@@ -3046,22 +3363,22 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
             <div className="relative overflow-hidden w-full" style={{ aspectRatio: '4/3' }}>
               <Image src="/images/products/fold_context_scale.png" alt="Render — FOLD acoustic panel, urban concrete installation, 3x3 grid module" fill className="object-cover object-center" sizes="(max-width: 640px) 100vw, 55vw" />
             </div>
-            <p className="font-sans uppercase tracking-[0.14em] mt-2" style={{ fontSize: 9, opacity: 0.3 }}>
+            <p className="font-sans uppercase tracking-[0.14em] mt-2" style={{ fontSize: 9, opacity: 0.68 }}>
               Render — Urban concrete installation, 3×3 grid module
             </p>
           </div>
           <div>
             <div className="relative overflow-hidden w-full" style={{ aspectRatio: '4/3' }}>
               <AutoplayVideoBlock
-                src="/videos/numu_story.mp4"
-                poster="/images/products/fold_hero_interior.png"
-                altLabel="FOLD installation render while the animation loads"
-                preload="metadata"
-                className="w-full h-full object-cover block"
-                style={{ objectFit: 'cover' }}
-              />
+                  src="/videos/numu_story.mp4"
+                  poster="/images/products/fold_hero_interior.png"
+                  altLabel="FOLD installation render while the animation loads"
+                  preload="metadata"
+                  className="w-full h-full object-cover block"
+                  style={{ objectFit: 'cover' }}
+                />
             </div>
-            <p className="font-sans uppercase tracking-[0.14em] mt-2" style={{ fontSize: 9, opacity: 0.3 }}>
+            <p className="font-sans uppercase tracking-[0.14em] mt-2" style={{ fontSize: 9, opacity: 0.68 }}>
               Render — Urban concrete installation, variation
             </p>
           </div>
@@ -3069,7 +3386,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
 
         {/* FOLD Technical Specifications */}
         <div className="mt-16 pt-14" style={{ borderTop: BORDER }}>
-          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.625rem', opacity: 0.35 }}>
+          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
             Technical specifications
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
@@ -3085,13 +3402,17 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
               { field: 'End of life', value: '100% bio-based, biodegradable under natural composting conditions' },
             ].map(spec => (
               <div key={spec.field} className="px-6 py-7" style={{ backgroundColor: 'rgba(26,23,20,0.03)' }}>
-                <p className="font-sans uppercase tracking-[0.12em] mb-2.5" style={{ fontSize: '0.625rem', opacity: 0.4 }}>{spec.field}</p>
+                <p className="font-sans uppercase tracking-[0.12em] mb-2.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{spec.field}</p>
                 <p className="font-sans" style={{ fontSize: '0.9375rem', opacity: 0.78 }}>{spec.value}</p>
               </div>
             ))}
           </div>
         </div>
       </VSection>
+
+      {/* Spatial moodboards — product rendered in hospitality and workplace settings */}
+      <CollectionFeatures />
+      <Moodboards />
 
       {/* Installations — moved up: proof of execution, right after FOLD */}
       <VSection id="installations">
@@ -3152,7 +3473,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
               <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
                 PALMYCO™ is produced in our active production lab. This footage documents the full process cycle — substrate preparation, mycelium inoculation, growth, heat-stabilization, and finishing. No renders, no simulations. Real production conditions, repeatable process.
               </p>
-              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.28 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.68 }}>
                 Duration — 1 min 34 sec
               </p>
             </div>
@@ -3232,7 +3553,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
       {/* Platform horizon — Thermal */}
       <section id="thermal" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.55 }}>Platform horizon — Thermal</p>
+          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Platform horizon — Thermal</p>
           <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-12 lg:gap-20 items-start">
             <div className="w-full overflow-hidden">
               <Image src="/images/applications/thermal_panel_wall.png" alt="NUMU thermal panel — wall integration" width={2400} height={1350} style={{ width: '100%', height: 'auto', display: 'block' }} sizes="(max-width: 1440px) 100vw, 60vw" />
@@ -3247,7 +3568,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
               <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>
                 Designed for hot climates, the system supports reduced energy demand and improved indoor comfort without synthetic foams.
               </p>
-              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.42 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.68 }}>
                 In development — opens after certification of the acoustic line
               </p>
             </div>
@@ -3258,7 +3579,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
       {/* Platform horizon — Packaging */}
       <section id="packaging" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.55 }}>Platform horizon — Packaging</p>
+          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Platform horizon — Packaging</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-12 lg:gap-20 items-start mb-16">
             <div>
@@ -3271,10 +3592,10 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
               <p className="font-sans leading-[1.75] mb-10" style={{ fontSize: '0.9375rem', opacity: 0.5 }}>
                 Working with mycelium means manufacturing with a living material system. Each object is grown from natural fibers, shaped through biological growth, and stabilized into a functional product. Sustainability is not added afterward — it is built into the material process itself.
               </p>
-              <p className="font-sans uppercase tracking-[0.16em] mb-1" style={{ fontSize: 10, opacity: 0.48 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mb-1" style={{ fontSize: 10, opacity: 0.68 }}>
                 Scalable application — logistics and product protection
               </p>
-              <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: 10, opacity: 0.42 }}>
+              <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: 10, opacity: 0.68 }}>
                 European pathway — Biomyc partnership, LOI signed
               </p>
             </div>
@@ -3284,7 +3605,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
           </div>
 
           <div>
-            <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ fontSize: '0.5625rem', opacity: 0.5 }}>Material comparison</p>
+            <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Material comparison</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
               {[
                 {
@@ -3311,7 +3632,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
                 },
               ].map((col) => (
                 <div key={col.name} className="px-7 py-8" style={{ backgroundColor: col.highlight ? 'rgba(26,23,20,0.04)' : 'rgba(26,23,20,0.01)' }}>
-                  <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: '0.5625rem', opacity: col.highlight ? 0.72 : 0.5 }}>{col.name}</p>
+                  <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: '0.6875rem', opacity: col.highlight ? 0.72 : 0.5 }}>{col.name}</p>
                   {col.items.map((item, j) => (
                     <div key={j} className="flex items-start gap-3 mb-3">
                       <span style={{ fontSize: 7, opacity: col.highlight ? 0.6 : 0.42, flexShrink: 0, marginTop: 4 }}>
@@ -3330,7 +3651,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
       {/* Manifesto */}
       <section id="manifesto" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-16" style={{ fontSize: '0.6875rem', opacity: 0.55 }}>Manifesto</p>
+          <p className="font-sans uppercase tracking-[0.18em] mb-16" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Manifesto</p>
           <h2 className="font-sans uppercase tracking-[0.14em] mb-14" style={{ fontSize: '0.6875rem', opacity: 0.6 }}>What we believe.</h2>
           <div>
             {[
@@ -3371,6 +3692,12 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
           ))}
         </div>
       </VSection>
+
+      {/* Platform Without Borders */}
+      <PlatformWithoutBorders />
+
+      {/* Platform engines */}
+      <PlatformEnginesPreview data={investorPreview} />
 
       {/* 07 Contact */}
       <VSection id="contact">
@@ -3414,7 +3741,7 @@ function VisitorView({ v, teamMembers }: { v: VisitorContent; teamMembers: Publi
           </Link>
         </div>
         <div className="mt-8 pt-8" style={{ borderTop: BORDER }}>
-          <p className="font-sans uppercase tracking-[0.18em] mb-4" style={{ fontSize: '0.62rem', opacity: 0.42 }}>
+          <p className="font-sans uppercase tracking-[0.18em] mb-4" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
             Explore by application
           </p>
           <div className="flex flex-wrap gap-4">
@@ -3459,7 +3786,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
                   <span style={{ fontSize: '0.5em', opacity: 0.7 }}>{s.prefix}</span>
                   <CountUp to={s.to} suffix={s.suffix} duration={1.1 + i * 0.1} />
                 </p>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.5, fontSize: '0.5625rem' }}>{s.label}</p>
+                <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>{s.label}</p>
               </div>
             ))}
           </div>
@@ -3501,11 +3828,53 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
               </div>
             ))}
           </div>
+
+          <div className="mt-16 grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-8 items-start" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
+            <div className="relative overflow-hidden" style={{ aspectRatio: '16/10', backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)' }}>
+              <Image
+                src="/images/partnerships/tsi-official-orbitalport.jpg"
+                alt="Titans Space Industries orbital transport concept image"
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </div>
+            <div>
+              <ILabel text="Strategic partnership — 28 May 2026" />
+              <p className="font-display text-[clamp(1.5rem,2.6vw,2.4rem)] leading-[1.08]" style={{ letterSpacing: '-0.03em', marginBottom: 16 }}>
+                TSI MOU signed, extending NUMU into ISRU composites and extreme-environment materials.
+              </p>
+              <p className="font-sans text-base leading-[1.8] mb-6" style={{ opacity: 0.68 }}>
+                NUMU signed a Memorandum of Understanding with Titans Space Industries, designating NUMU as Bio-Materials and ISRU Composites Partner within the Space & Lunar Economy Consortium. For investors, this matters as an external validation of platform relevance beyond interiors and construction.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
+                {[
+                  ['Status', 'MOU signed'],
+                  ['Designation', 'Bio-Materials & ISRU Composites Partner'],
+                  ['Frame', 'Exploratory, non-binding, strategic'],
+                ].map(([label, value]) => (
+                  <div key={label} className="px-5 py-5" style={{ backgroundColor: '#0e0e0e' }}>
+                    <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{label}</p>
+                    <p className="font-sans leading-snug" style={{ fontSize: '0.875rem', opacity: 0.74 }}>{value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-5">
+                <Link
+                  href="/partnerships/titans-space"
+                  className="font-sans uppercase tracking-[0.14em] inline-block"
+                  style={{ fontSize: '0.6875rem', color: ACCENT, textDecoration: 'none', borderBottom: `1px solid ${ACCENT}66`, paddingBottom: 6, opacity: 0.88 }}
+                >
+                  Read the full partnership page →
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Featured In */}
         <div className="mt-16" style={{ borderTop: INV_BORDER, paddingTop: 40 }}>
-          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.5 }}>Featured In</p>
+          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Featured In</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
             {[
               { pub: 'Wallpaper*', headline: 'Postcard from Dubai Design Week 2024: the highlights', url: 'https://www.wallpaper.com/design-interiors/design-events/dubai-design-week-highlights', date: 'Nov 2024' },
@@ -3531,7 +3900,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(245,241,232,0.04)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#0e0e0e' }}
               >
-                <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.625rem', opacity: 0.55, letterSpacing: '0.16em' }}>{item.pub}</p>
+                <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.6875rem', opacity: 0.68, letterSpacing: '0.16em' }}>{item.pub}</p>
                 <p className="font-sans leading-[1.55] flex-1" style={{ fontSize: '0.8125rem', opacity: 0.76 }}>{item.headline}</p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="font-sans" style={{ fontSize: '0.625rem', opacity: 0.42, letterSpacing: '0.08em' }}>{item.date}</p>
@@ -3562,7 +3931,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
               {iv.platform.body}
             </p>
             <div style={{ border: INV_BORDER, padding: '28px', backgroundColor: `${ACCENT}06` }}>
-              <p className="font-sans uppercase tracking-[0.2em] mb-6" style={{ fontSize: '0.5rem', opacity: 0.38, letterSpacing: '0.22em' }}>Material system → Applications</p>
+              <p className="font-sans uppercase tracking-[0.2em] mb-6" style={{ fontSize: '0.6875rem', opacity: 0.68, letterSpacing: '0.22em' }}>Material system → Applications</p>
               <div>
                 <div className="flex items-center gap-3 pb-4" style={{ borderBottom: INV_BORDER_SUBTLE }}>
                   <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: ACCENT, flexShrink: 0, boxShadow: `0 0 10px ${ACCENT}55` }} />
@@ -3579,7 +3948,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
                       <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: a.active ? ACCENT : 'rgba(245,241,232,0.28)', flexShrink: 0 }} />
                       <div>
                         <p className="font-sans" style={{ fontSize: '0.8125rem', opacity: a.active ? 0.82 : 0.44 }}>{a.app}</p>
-                        <p className="font-sans uppercase tracking-[0.1em]" style={{ fontSize: '0.5rem', opacity: 0.3, color: a.active ? ACCENT : undefined }}>{a.status}</p>
+                        <p className="font-sans uppercase tracking-[0.1em]" style={{ fontSize: '0.6875rem', opacity: 0.68, color: a.active ? ACCENT : undefined }}>{a.status}</p>
                       </div>
                     </div>
                   ))}
@@ -3607,7 +3976,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
               background: 'linear-gradient(to bottom, rgba(14,14,14,0.08) 0%, transparent 25%, transparent 52%, rgba(14,14,14,0.92) 100%)',
             }} />
             <div style={{ position: 'absolute', bottom: 28, left: 28, right: 28 }}>
-              <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.5rem', opacity: 0.5, color: '#f5f1e8', marginBottom: 8 }}>
+              <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.68, color: '#f5f1e8', marginBottom: 8 }}>
                 Grown PALMYCO™ · UAE production · 2025
               </p>
               <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.375rem)', lineHeight: 1.25, letterSpacing: '-0.02em', color: '#f5f1e8', opacity: 0.95 }}>
@@ -3671,7 +4040,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             className="lg:sticky lg:top-24"
             style={{ border: INV_BORDER, backgroundColor: 'rgba(245,241,232,0.03)', padding: '40px 34px' }}
           >
-            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8 text-center" style={{ opacity: 0.4, fontSize: '0.625rem' }}>Platform structure — resilience diagram</p>
+            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8 text-center" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>Platform structure — resilience diagram</p>
             <svg viewBox="0 0 460 360" style={{ width: '100%', maxWidth: 460, display: 'block', margin: '0 auto' }}>
               <motion.rect
                 x={160}
@@ -3822,7 +4191,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
                 If one path is delayed, others continue
               </text>
             </svg>
-            <p className="font-sans text-label mt-6 text-center" style={{ opacity: 0.34, fontSize: '0.5625rem', letterSpacing: '0.06em' }}>
+            <p className="font-sans text-label mt-6 text-center" style={{ opacity: 0.68, fontSize: '0.6875rem', letterSpacing: '0.06em' }}>
               Shared production infrastructure — each branch activates independently
             </p>
           </motion.div>
@@ -3843,7 +4212,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             },
           ].map(col => (
             <div key={col.label} className="px-10 py-10" style={{ backgroundColor: '#0e0e0e' }}>
-              <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.5, color: col.color }}>{col.label}</p>
+              <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.68, color: col.color }}>{col.label}</p>
               {col.items.map(item => (
                 <div key={item} className="flex items-start gap-3 mb-4">
                   <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: col.color, flexShrink: 0, marginTop: 7 }} />
@@ -3886,7 +4255,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
               <p className="font-display mb-0.5" style={{ fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', letterSpacing: '-0.04em', lineHeight: 1, color: ACCENT }}>
                 {stat.num}
               </p>
-              <p className="font-sans uppercase tracking-[0.12em] mb-3" style={{ fontSize: '0.6875rem', opacity: 0.55 }}>{stat.unit}</p>
+              <p className="font-sans uppercase tracking-[0.12em] mb-3" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{stat.unit}</p>
               <p className="font-sans text-sm leading-[1.65] mt-auto" style={{ opacity: 0.4 }}>{stat.label}</p>
             </motion.div>
           ))}
@@ -3917,7 +4286,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
 
         {/* Selected Recognition */}
         <div className="mt-16" style={{ borderTop: INV_BORDER, paddingTop: 40 }}>
-          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.35 }}>Selected Recognition</p>
+          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Selected Recognition</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0" style={{ borderTop: INV_BORDER_SUBTLE }}>
             {[
               { year: '2024', text: 'Chapter author — Designing with Mycelium, Routledge (global reference volume for bio-based material design)' },
@@ -3981,7 +4350,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             { label: 'Stage', value: 'Pre-seed / Seed' },
           ].map(t => (
             <div key={t.label} className="px-5 py-3" style={{ border: INV_BORDER, backgroundColor: 'rgba(245,241,232,0.03)' }}>
-              <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.3 }}>{t.label}</p>
+              <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.68 }}>{t.label}</p>
               <p className="font-sans text-sm" style={{ opacity: 0.75 }}>{t.value}</p>
             </div>
           ))}
@@ -4010,6 +4379,8 @@ function InvestorGate({
   const [shaking, setShaking] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useModalFocus(dialogRef, onCancel)
 
   useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus(), 80)
@@ -4020,7 +4391,7 @@ function InvestorGate({
     e.preventDefault()
     if (!code.trim() || status === 'loading') return
     setStatus('loading')
-    const success = await onUnlock(code.trim())
+    const success = await onUnlock(code.trim()).catch(() => false)
     if (success) return
     setStatus('error')
     setShaking(true)
@@ -4031,7 +4402,7 @@ function InvestorGate({
   const fillPct = Math.min((code.length / 8) * 100, 100)
 
   return (
-    <motion.div
+    <motion.div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Investor access"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -4073,7 +4444,7 @@ function InvestorGate({
         </div>
 
         {/* Label */}
-        <p className="font-sans uppercase tracking-[0.3em]" style={{ fontSize: '0.5625rem', color: ACCENT, marginBottom: 44, opacity: 0.85, letterSpacing: '0.32em' }}>
+        <p className="font-sans uppercase tracking-[0.3em]" style={{ fontSize: '0.6875rem', color: ACCENT, marginBottom: 44, opacity: 0.85, letterSpacing: '0.32em' }}>
           Investor Access
         </p>
 
@@ -4088,6 +4459,7 @@ function InvestorGate({
             <input
               ref={inputRef}
               type="text"
+              aria-label="Investor access code"
               value={code}
               onChange={e => {
                 const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 14)
@@ -4136,7 +4508,7 @@ function InvestorGate({
 
           {/* Status hint */}
           <p className="font-sans uppercase tracking-[0.22em]" style={{
-            fontSize: '0.5625rem',
+            fontSize: '0.6875rem',
             color: status === 'error' ? 'rgba(210,65,50,0.8)' : ACCENT,
             opacity: status === 'loading' ? 0.4 : code.length > 0 ? 0.85 : 0.28,
             transition: 'opacity 0.2s, color 0.2s',
@@ -4153,7 +4525,7 @@ function InvestorGate({
         <button
           onClick={onCancel}
           className="font-sans uppercase tracking-[0.2em]"
-          style={{ marginTop: 60, fontSize: '0.5625rem', color: '#f5f1e8', opacity: 0.18, background: 'none', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s', letterSpacing: '0.22em' }}
+          style={{ marginTop: 60, fontSize: '0.5625rem', color: '#f5f1e8', opacity: 0.72, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s', letterSpacing: '0.22em' }}
           onMouseEnter={e => (e.currentTarget.style.opacity = '0.5')}
           onMouseLeave={e => (e.currentTarget.style.opacity = '0.18')}
         >
@@ -4169,9 +4541,11 @@ function InvestorGate({
 export default function PageClient({
   visitor,
   publicTeamMembers,
+  investorPreview,
 }: {
   visitor: VisitorContent
   publicTeamMembers: PublicTeamMember[]
+  investorPreview: InvestorContent['revenue_engines']
 }) {
   const [investor, setInvestor] = useState<InvestorContent | null>(null)
   const [isInvestor, setIsInvestor] = useState(false)
@@ -4206,6 +4580,8 @@ export default function PageClient({
       if (!payload) return null
       setInvestor(payload)
       return payload as InvestorContent
+    } catch {
+      return null
     } finally {
       setInvestorStatus('idle')
     }
@@ -4232,8 +4608,9 @@ export default function PageClient({
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <div style={{ backgroundColor: theme.bg, color: theme.fg, minHeight: '100vh', transition: 'background-color 0.6s cubic-bezier(0.25,0,0.2,1), color 0.6s cubic-bezier(0.25,0,0.2,1)', position: 'relative' }}>
-      <BackgroundAssetWarmup />
+
 
       {/* Subtle grain overlay — adds depth without visual noise */}
       {!investorMode && (
@@ -4245,7 +4622,7 @@ export default function PageClient({
         }} />
       )}
 
-      {/* Loading screen */}
+      {/* Original media warm-up and branded transition. */}
       {!loadingDone && <LoadingScreen onComplete={() => setLoadingDone(true)} />}
 
       {/* Investor gate */}
@@ -4259,7 +4636,8 @@ export default function PageClient({
       </AnimatePresence>
 
       {/* Nav */}
-      <nav
+      <a href="#main-content" className="skip-link">Skip to content</a>
+      <nav aria-label="Primary navigation"
         className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 h-16 md:h-20 flex items-center justify-between"
         style={{
           backgroundColor: investorMode ? 'rgba(14,14,14,0.82)' : 'rgba(245,241,232,0.82)',
@@ -4268,35 +4646,57 @@ export default function PageClient({
           transition: 'background-color 0.6s cubic-bezier(0.25,0,0.2,1)',
         }}
       >
+        <Link href="/" aria-label="NUMU homepage">
         <Image
           src={investorMode ? '/branding/logo-numu.png' : '/branding/logo-black-numu.png'}
           alt="NUMU" width={240} height={96}
-          className="h-16 md:h-20 w-auto object-contain"
+          className="h-12 md:h-16 w-auto object-contain"
           style={investorMode
             ? { filter: 'brightness(0) invert(1) sepia(1) saturate(0) brightness(0.92)' }
             : { mixBlendMode: 'multiply' }}
           priority
         />
-        <div className="flex items-center" style={{ border: BORDER, borderRadius: 999, padding: 3 }}>
-          {[
-            { id: 'explore', label: 'Explore', active: !investorMode, onClick: () => { if (investorMode) switchToVisitor() } },
-            { id: 'investor', label: investorStatus === 'loading' ? 'Checking…' : 'Investor', active: investorMode, onClick: handleInvestorClick },
-          ].map(btn => (
-            <button
-              key={btn.id} onClick={() => { void btn.onClick() }}
-              className="px-4 py-1.5 font-sans text-label uppercase tracking-[0.1em] rounded-full transition-colors duration-200"
-              disabled={investorStatus === 'loading' && btn.id === 'investor'}
-              style={{ backgroundColor: btn.active ? (investorMode ? 'rgba(245,241,232,0.14)' : 'rgba(26,23,20,0.12)') : 'transparent', cursor: investorStatus === 'loading' && btn.id === 'investor' ? 'wait' : 'pointer', opacity: investorStatus === 'loading' && btn.id === 'investor' ? 0.8 : 1 }}
-            >
-              {btn.label}
-            </button>
-          ))}
+        </Link>
+        <div className="flex items-center gap-2 md:gap-4">
+          <MobileNav dark={investorMode} />
+          <div className="hidden xl:flex items-center gap-4">
+            {PRIMARY_NAV_LINKS.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="font-sans uppercase tracking-[0.14em]"
+                style={{
+                  fontSize: '0.6875rem',
+                  color: investorMode ? 'rgba(245,241,232,0.72)' : 'rgba(26,23,20,0.72)',
+                  textDecoration: 'none',
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center" style={{ border: BORDER, borderRadius: 999, padding: 3 }}>
+            {[
+              { id: 'explore', label: 'Explore', active: !investorMode, onClick: () => { if (investorMode) switchToVisitor() } },
+              { id: 'investor', label: investorStatus === 'loading' ? 'Checking…' : 'Investor', active: investorMode, onClick: handleInvestorClick },
+            ].map(btn => (
+              <button
+                key={btn.id} onClick={() => { void btn.onClick() }}
+                className="px-2 md:px-4 py-1.5 font-sans text-label uppercase tracking-[0.1em] rounded-full transition-colors duration-200"
+                disabled={investorStatus === 'loading' && btn.id === 'investor'}
+                style={{ backgroundColor: btn.active ? (investorMode ? 'rgba(245,241,232,0.14)' : 'rgba(26,23,20,0.12)') : 'transparent', cursor: investorStatus === 'loading' && btn.id === 'investor' ? 'wait' : 'pointer', opacity: investorStatus === 'loading' && btn.id === 'investor' ? 0.8 : 1 }}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
 
+      <main id="main-content">
       {/* Hero 1 — identity */}
       <section className="flex flex-col items-center justify-center text-center px-6" style={{ height: '100vh', minHeight: 600, position: 'relative' }}>
-        <h1 className="font-display" style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em' }}>NUMU</h1>
+        <p className="font-display" style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em', margin: 0 }}>NUMU</p>
         <p
           lang="ar"
           dir="rtl"
@@ -4312,7 +4712,7 @@ export default function PageClient({
         >
           نُمُوّ
         </p>
-        <p className="font-sans mt-5 uppercase tracking-[0.18em]" style={{ fontSize: 'clamp(0.72rem, 1.1vw, 0.8rem)', opacity: 0.56 }}>
+        <p className="font-sans mt-5 uppercase tracking-[0.18em]" style={{ fontSize: 'clamp(0.72rem, 1.1vw, 0.8rem)', opacity: 0.68 }}>
           UAE — Bio-composites platform
         </p>
         <p className="font-sans mt-6" style={{ fontSize: 'clamp(0.9rem, 1vw, 0.98rem)', opacity: 0.68, letterSpacing: '0.04em', lineHeight: 1.7 }}>
@@ -4325,7 +4725,7 @@ export default function PageClient({
           transition={{ delay: 1.4, duration: 1.0 }}
           style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
         >
-          <p className="font-sans uppercase tracking-[0.2em]" style={{ fontSize: 7 }}>Scroll</p>
+          <p className="font-sans uppercase tracking-[0.2em]" style={{ fontSize: 11 }}>Scroll</p>
           <motion.div
             animate={{ y: [0, 4, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.3 }}
@@ -4415,25 +4815,26 @@ export default function PageClient({
             transform: investorMode ? 'translateY(-4vh)' : 'translateY(-3vh)',
           }}
         >
-          <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.44, fontSize: '0.75rem' }}>
+          <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.68, fontSize: '0.75rem' }}>
             {investorMode && investor ? investor.hero.sublabel : visitor.hero.sublabel}
           </p>
-          {(investorMode && investor ? investor.hero.lines : visitor.hero.lines).map((line, i) => (
-            <h2
-              key={i}
+          <h1
               className="font-display block text-center"
               style={{
                 fontSize: investorMode ? 'clamp(2.6rem, 5.2vw, 4.75rem)' : 'clamp(2.9rem, 6.3vw, 6.2rem)',
                 lineHeight: 1.02,
                 letterSpacing: '-0.03em',
               }}
-            >{line}</h2>
-          ))}
+            >
+              {(investorMode && investor ? investor.hero.lines : visitor.hero.lines).map((line) => (
+                <span key={line} className="block">{line}</span>
+              ))}
+          </h1>
           <div
             className="mt-8 pt-6 flex flex-col items-center mx-auto"
             style={{ borderTop: BORDER, width: investorMode ? 'min(100%, 820px)' : 'min(100%, 780px)' }}
           >
-            <p className="font-sans text-label uppercase tracking-[0.14em] mb-8" style={{ opacity: 0.44 }}>
+            <p className="font-sans text-label uppercase tracking-[0.14em] mb-8" style={{ opacity: 0.68 }}>
               {investorMode && investor ? investor.hero.meta : visitor.hero.meta}
             </p>
             <a
@@ -4454,7 +4855,7 @@ export default function PageClient({
                 ].map(s => (
                   <div key={s.l} className="px-4 py-4 md:px-5 md:py-5" style={{ backgroundColor: 'rgba(14,14,14,0.86)' }}>
                     <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.35rem)', letterSpacing: '-0.02em', lineHeight: 1.1, color: ACCENT }}>{s.v}</p>
-                    <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.5625rem', opacity: 0.52 }}>{s.l}</p>
+                    <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{s.l}</p>
                   </div>
                 ))}
               </div>
@@ -4463,11 +4864,15 @@ export default function PageClient({
         </div>
       </section>
 
+      {!investorMode && <HomeIntroduction />}
+
       {/* Page content */}
       <div style={{ opacity: transitioning ? 0 : 1, transition: 'opacity 0.35s cubic-bezier(0.25,0,0.2,1)' }}>
-        {investorMode && investor ? <InvestorView iv={investor} /> : <VisitorView v={visitor} teamMembers={publicTeamMembers} />}
+        {investorMode && investor ? <InvestorView iv={investor} /> : <VisitorView v={visitor} teamMembers={publicTeamMembers} investorPreview={investorPreview} />}
       </div>
 
+      </main>
     </div>
+    </MotionConfig>
   )
 }

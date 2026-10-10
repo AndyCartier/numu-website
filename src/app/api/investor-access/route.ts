@@ -6,7 +6,7 @@ import {
   INVESTOR_ACCESS_COOKIE,
   isValidInvestorCode,
 } from '@/lib/investorAccess'
-import { getAllowedOriginHosts, isLocalDevelopmentHost } from '@/lib/site'
+import { getAllowedOriginHosts, isLocalDevelopmentHost, shouldSecureCookies } from '@/lib/site'
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
     value: createInvestorAccessToken(),
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: shouldSecureCookies(req),
     path: '/',
     maxAge: COOKIE_MAX_AGE,
   })
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
   return response
 }
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
   const response = json({ ok: true })
 
   response.cookies.set({
@@ -172,7 +172,7 @@ export async function DELETE() {
     value: '',
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: shouldSecureCookies(req),
     path: '/',
     expires: new Date(0),
   })

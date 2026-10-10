@@ -7,7 +7,7 @@ const GOLD   = '#D9A878'
 const AMBER  = '#C66A3F'
 const MUTED  = '#807B70'
 const BORDER = 'rgba(239,234,216,0.10)'
-const TOTAL_SLIDES = 18
+const TOTAL_SLIDES = 19
 
 // ─── Hooks ───────────────────────────────────────────────────────────────────
 
@@ -604,13 +604,13 @@ function SlideCompetitive() {
 
 function CapacityRampChart({ inView }: { inView: boolean }) {
   const bars = [
-    { year: 'Y1', cap: 30,    detail: ['Founder-led lab'],                              raise: false },
-    { year: 'Y2', cap: 600,   detail: ['Post-SAFE', 'Module 1 · Phase 1'],             raise: true  },
-    { year: 'Y3', cap: 1200,  detail: ['Module 1 full', '+ certification'],            raise: false },
-    { year: 'Y4', cap: 3000,  detail: ['Series A deploys', 'thermal + packaging line'], raise: true  },
-    { year: 'Y5', cap: 12000, detail: ['Full factory', 'two-line industrial scale'],   raise: false },
+    { year: 'Y1', cap: 30,   detail: ['Founder-led lab'],                              raise: false },
+    { year: 'Y2', cap: 180,  detail: ['Post-SAFE', 'Module 1 · Phase 1'],             raise: true  },
+    { year: 'Y3', cap: 490,  detail: ['Module 1 full', '+ certification'],            raise: false },
+    { year: 'Y4', cap: 930,  detail: ['Series A deploys', 'thermal + packaging line'], raise: true  },
+    { year: 'Y5', cap: 3000, detail: ['Full factory', 'two-line industrial scale'],   raise: false },
   ]
-  const MAX_CAP = 12500
+  const MAX_CAP = 3200
   const W = 860
   const ABOVE_H = 22
   const BAR_AREA_H = 168
@@ -1035,7 +1035,116 @@ function SlideEcosystem() {
   )
 }
 
-// ─── 15 — Roadmap ────────────────────────────────────────────────────────────
+// ─── 15 — Partnerships & Ecosystem ──────────────────────────────────────────
+
+function SlidePartnershipsEcosystem() {
+  const [ref, inView] = useInView()
+
+  function Pill({ label, solid }: { label: string; solid: boolean }) {
+    return (
+      <span style={{
+        display: 'inline-block',
+        fontSize: '0.48rem',
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+        fontFamily: 'var(--font-sans, sans-serif)',
+        color: solid ? AMBER : 'rgba(239,234,216,0.52)',
+        border: `1px solid ${solid ? 'rgba(198,106,63,0.42)' : 'rgba(239,234,216,0.18)'}`,
+        background: solid ? 'rgba(198,106,63,0.09)' : 'rgba(239,234,216,0.03)',
+        padding: '0.18rem 0.44rem',
+      }}>{label}</span>
+    )
+  }
+
+  function PartnerItem({ name, location, desc, pills }: { name: string; location?: string; desc: string; pills: { label: string; solid: boolean }[] }) {
+    return (
+      <div style={{ paddingBottom: '0.8rem', marginBottom: '0.8rem', borderBottom: BORDER }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', marginBottom: '0.18rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.86rem', color: CREAM, fontFamily: 'var(--font-sans, sans-serif)', fontWeight: 600, lineHeight: 1.3 }}>{name}</span>
+          {location && <span style={{ fontSize: '0.72rem', color: 'rgba(239,234,216,0.44)', fontFamily: 'var(--font-sans, sans-serif)' }}>/ {location}</span>}
+        </div>
+        <p style={{ margin: '0 0 0.4rem', fontSize: '0.75rem', color: 'rgba(239,234,216,0.62)', lineHeight: 1.48, fontFamily: 'var(--font-sans, sans-serif)' }}>{desc}</p>
+        <div style={{ display: 'flex', gap: '0.26rem', flexWrap: 'wrap' }}>
+          {pills.map(p => <Pill key={p.label} label={p.label} solid={p.solid} />)}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div ref={ref} className="slide" style={{ display: 'flex', flexDirection: 'column', padding: '3.8% 5.5% 2.6%' }}>
+      {/* Header */}
+      <div className="anim-fade" style={{ ...fade(inView, 0), display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: BORDER, paddingBottom: '1rem', marginBottom: '1.3rem' }}>
+        <div>
+          <Label>Traction</Label>
+          <div className="deck-h2" style={{ fontSize: '2.6rem', marginBottom: 0 }}>Partnerships & Ecosystem</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingBottom: '0.2rem', fontSize: '0.5rem', fontFamily: 'var(--font-sans, sans-serif)', letterSpacing: '0.13em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+          <span style={{ color: AMBER }}>●</span>
+          <span style={{ color: 'rgba(239,234,216,0.52)' }}>Signed · Active · Completed</span>
+          <span style={{ color: 'rgba(239,234,216,0.22)', margin: '0 0.2rem' }}>·</span>
+          <span style={{ color: 'rgba(239,234,216,0.32)' }}>○</span>
+          <span style={{ color: 'rgba(239,234,216,0.38)' }}>In Progress · Submitted</span>
+        </div>
+      </div>
+
+      {/* 4-column grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0', flex: 1 }}>
+        {/* Col 1 — Commercial & Product */}
+        <div className="anim-fade" style={{ ...fade(inView, 0.1), paddingRight: '1.4rem' }}>
+          <div style={{ fontSize: '0.5rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(239,234,216,0.38)', fontFamily: 'var(--font-sans, sans-serif)', marginBottom: '0.85rem' }}>Commercial & Product</div>
+          <PartnerItem name="KAVE" location="Alserkal, Dubai" desc="Grown acoustic pilot installation." pills={[{ label: 'Installing Aug 2026', solid: true }]} />
+          <PartnerItem name="Beyond Chrysant" location="Netherlands" desc="First completed grown acoustic install." pills={[{ label: 'Completed 2022', solid: true }]} />
+          <PartnerItem name="Desert Board" location="UAE" desc="Board supply and waste-stream feedstock." pills={[{ label: 'Active Supply', solid: true }]} />
+          <PartnerItem name="BASE39" location="UAE" desc="Accelerator, graduated. Mushroomiya lamp developed; exhibiting Sept." pills={[{ label: 'Graduated', solid: true }]} />
+          <PartnerItem name="NYXO Design Studio" desc="Acoustic panel design collaboration." pills={[{ label: 'Active', solid: true }]} />
+          <PartnerItem name="Biomyc" location="EU" desc="Inbound GCC packaging licensing." pills={[{ label: 'LOI', solid: false }, { label: 'Non-Binding', solid: false }]} />
+        </div>
+
+        {/* Col 2 — Strategic & Ecosystem */}
+        <div className="anim-fade" style={{ ...fade(inView, 0.18), borderLeft: BORDER, paddingLeft: '1.4rem', paddingRight: '1.4rem' }}>
+          <div style={{ fontSize: '0.5rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(239,234,216,0.38)', fontFamily: 'var(--font-sans, sans-serif)', marginBottom: '0.85rem' }}>Strategic & Ecosystem</div>
+          <PartnerItem name="Titans Space (TSI)" desc="Bio-Materials & ISRU composites partner. Advisory seat proposed." pills={[{ label: 'MOU Signed', solid: true }]} />
+          <PartnerItem name="ASTRO Test Lab" location="Los Angeles" desc="US aerospace composite development partner." pills={[{ label: 'Active', solid: true }]} />
+          <PartnerItem name="UFO" location="US, est. 2025" desc="Co-founded venture. First mycelium skateboard, launching late 2026 with ASTRO Test Lab." pills={[{ label: 'Launching Late 2026', solid: false }]} />
+          <p style={{ margin: '0.6rem 0 0', fontSize: '0.72rem', color: 'rgba(239,234,216,0.42)', lineHeight: 1.52, fontFamily: 'var(--font-serif, serif)', fontStyle: 'italic' }}>
+            A cross-border bio-materials ecosystem. IP developed in the US network is deployable through NUMU for regional manufacturing.
+          </p>
+        </div>
+
+        {/* Col 3 — Research & Institutional */}
+        <div className="anim-fade" style={{ ...fade(inView, 0.26), borderLeft: BORDER, paddingLeft: '1.4rem', paddingRight: '1.4rem' }}>
+          <div style={{ fontSize: '0.5rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(239,234,216,0.38)', fontFamily: 'var(--font-sans, sans-serif)', marginBottom: '0.85rem' }}>Research & Institutional</div>
+          <PartnerItem name="Sustainable Packaging Consortium" desc="Member at Heriot-Watt University, alongside a UAE government entity, startups and academia. Plastic-alternative packaging." pills={[{ label: 'Active Member', solid: true }]} />
+          <PartnerItem name="Future of Construction" desc="Joint research proposal with Dr. Dima Alkawadri, Heriot-Watt University." pills={[{ label: 'In Application', solid: false }]} />
+          <PartnerItem name="Bauhaus Earth / Grounded Rewilding" desc="Expert consultant. Bio-based pavement from local resources, France." pills={[{ label: 'Active', solid: true }]} />
+          <PartnerItem name="Academic & Research" desc="American University of Sharjah, DIDI, De Montfort University." pills={[{ label: 'Active', solid: true }]} />
+        </div>
+
+        {/* Col 4 — Recognition & Pipeline */}
+        <div className="anim-fade" style={{ ...fade(inView, 0.34), borderLeft: BORDER, paddingLeft: '1.4rem' }}>
+          <div style={{ fontSize: '0.5rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(239,234,216,0.38)', fontFamily: 'var(--font-sans, sans-serif)', marginBottom: '0.85rem' }}>Recognition & Pipeline</div>
+          <PartnerItem name="ReRoot" location="Dubai Design Week 2024" desc="Award-winning commission, with Dalia Hamati." pills={[{ label: 'Awarded 2024', solid: true }]} />
+          <PartnerItem name="Doha Biennale" location="Qatar" desc="Commissioned research in mycelium, palm waste and woven palm mat. Shading for outdoor workers, with Dalia Hamati. Exhibiting Nov 2026." pills={[{ label: 'Commissioned', solid: true }]} />
+          <PartnerItem name="COP UAE Pavilion" desc="Shortlisted to propose. Paid sample panels delivered; decision pending." pills={[{ label: 'Shortlisted', solid: false }]} />
+          <PartnerItem name="Invited Engagements" desc="DIDI master class, industrial guest. Dubai WoodShow, speaker." pills={[{ label: '2026', solid: true }]} />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="anim-fade" style={{ ...fade(inView, 0.5), display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: BORDER, paddingTop: '0.65rem', marginTop: '0.8rem' }}>
+        <p style={{ margin: 0, fontSize: '0.58rem', color: 'rgba(239,234,216,0.32)', fontFamily: 'var(--font-serif, serif)', fontStyle: 'italic' }}>
+          Status shown as it stands: non-binding stays non-binding, in-selection stays in-selection.
+        </p>
+        <span style={{ fontFamily: 'var(--font-display, serif)', fontSize: '0.95rem', color: 'rgba(239,234,216,0.38)', letterSpacing: '0.1em' }}>NUMU</span>
+      </div>
+
+      <SlideNum n={15} />
+    </div>
+  )
+}
+
+// ─── 16 — Roadmap ────────────────────────────────────────────────────────────
 
 function SlideRoadmap() {
   const [ref, inView] = useInView()
@@ -1084,12 +1193,12 @@ function SlideRoadmap() {
           </div>
         ))}
       </div>
-      <SlideNum n={15} />
+      <SlideNum n={16} />
     </div>
   )
 }
 
-// ─── 16 — Team ───────────────────────────────────────────────────────────────
+// ─── 17 — Team ───────────────────────────────────────────────────────────────
 
 function SlideTeam() {
   const [ref, inView] = useInView()
@@ -1119,12 +1228,12 @@ function SlideTeam() {
           </div>
         ))}
       </div>
-      <SlideNum n={16} />
+      <SlideNum n={17} />
     </div>
   )
 }
 
-// ─── 17 — The Ask ────────────────────────────────────────────────────────────
+// ─── 18 — The Ask ────────────────────────────────────────────────────────────
 
 function SlideAsk() {
   const [ref, inView] = useInView()
@@ -1188,12 +1297,12 @@ function SlideAsk() {
           </div>
         ))}
       </div>
-      <SlideNum n={17} />
+      <SlideNum n={18} />
     </div>
   )
 }
 
-// ─── 18 — Closing (CTA untouched) ────────────────────────────────────────────
+// ─── 19 — Closing (CTA untouched) ────────────────────────────────────────────
 
 function SlideClosing() {
   const [ref, inView] = useInView()
@@ -1236,7 +1345,7 @@ function SlideClosing() {
         ))}
       </div>
 
-      <SlideNum n={18} />
+      <SlideNum n={19} />
     </div>
   )
 }
@@ -1244,26 +1353,36 @@ function SlideClosing() {
 // ─── DeckClient ───────────────────────────────────────────────────────────────
 
 export default function DeckClient({ fontVars }: { fontVars: string }) {
+  const [reading, setReading] = useState(false)
+  useEffect(() => {
+    document.documentElement.classList.toggle('deck-reading', reading)
+    return () => document.documentElement.classList.remove('deck-reading')
+  }, [reading])
   return (
     <main className={`${fontVars} deck-root`}>
-      <section className="deck-screen-frame"><SlideCover /></section>
-      <section className="deck-screen-frame"><SlideThesis /></section>
-      <section className="deck-screen-frame"><SlideProblem /></section>
-      <section className="deck-screen-frame"><SlideMarket /></section>
-      <section className="deck-screen-frame"><SlideWhyNow /></section>
-      <section className="deck-screen-frame"><SlideTraction /></section>
-      <section className="deck-screen-frame"><SlideWhatNumuBuilds /></section>
-      <section className="deck-screen-frame"><SlidePlatform /></section>
-      <section className="deck-screen-frame"><SlideFourEngines /></section>
-      <section className="deck-screen-frame"><SlideCompetitive /></section>
-      <section className="deck-screen-frame"><SlideFinancialProjection /></section>
-      <section className="deck-screen-frame"><SlideThermalCostCurve /></section>
-      <section className="deck-screen-frame"><SlideMoat /></section>
-      <section className="deck-screen-frame"><SlideEcosystem /></section>
-      <section className="deck-screen-frame"><SlideRoadmap /></section>
-      <section className="deck-screen-frame"><SlideTeam /></section>
-      <section className="deck-screen-frame"><SlideAsk /></section>
-      <section className="deck-screen-frame"><SlideClosing /></section>
+      <div className="deck-reader-controls" role="group" aria-label="Presentation view">
+        <button type="button" aria-pressed={reading} onClick={() => setReading(value => !value)}>{reading ? 'Fit slides' : 'Read details'}</button>
+        <span>{reading ? 'Scroll within each slide to read.' : 'Full deck · enlarge for detail.'}</span>
+      </div>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideCover /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideThesis /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideProblem /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideMarket /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideWhyNow /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideTraction /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideWhatNumuBuilds /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlidePlatform /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideFourEngines /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideCompetitive /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideFinancialProjection /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideThermalCostCurve /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideMoat /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideEcosystem /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlidePartnershipsEcosystem /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideRoadmap /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideTeam /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideAsk /></section>
+      <section tabIndex={reading ? 0 : undefined} aria-label={reading ? "Scrollable investor slide" : undefined} className="deck-screen-frame"><SlideClosing /></section>
     </main>
   )
 }

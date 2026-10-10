@@ -16,7 +16,6 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "connect-src 'self' ws: wss: https://vitals.vercel-insights.com",
   "worker-src 'self' blob:",
-  'upgrade-insecure-requests',
 ].join('; ')
 
 const nextConfig = {
@@ -26,7 +25,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['framer-motion'],
     outputFileTracingIncludes: {
-      '/api/contact': ['./exports/**'],
+      '/api/contact': ['./exports/NUMU_Investor_Deck_FINAL.pdf'],
     },
   },
   async headers() {
@@ -56,15 +55,14 @@ const nextConfig = {
           },
         ],
       },
+      // WebKit upgrades HTTP loopback assets to HTTPS when this directive is
+      // present, including local `next start`. Keep it for hosted requests.
+      {
+        source: '/:path*',
+        missing: [{ type: 'header', key: 'host', value: '(?:localhost|127\\.0\\.0\\.1|\\[::1\\])(?::\\d+)?' }],
+        headers: [{ key: 'Content-Security-Policy', value: `${contentSecurityPolicy}; upgrade-insecure-requests` }],
+      },
     ]
-  },
-  webpack(config) {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      // drei pulls in loaders not shipped with the package — stub them
-      './loaders/AssimpLoader.js': false,
-    }
-    return config
   },
 }
 

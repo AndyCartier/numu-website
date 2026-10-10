@@ -396,6 +396,7 @@ export const seoPages: SeoPageData[] = [
     schemaType: 'Product',
     schemaName: 'Palmyco™',
     schemaCategory: 'Mycelium and palm-fibre bio-composite material',
+    schemaDescription: 'proprietary bio-composite material system, mycelium grown on regional agricultural fibre',
   },
   {
     slug: 'case-studies',
@@ -457,9 +458,9 @@ export const seoPages: SeoPageData[] = [
         ],
       },
       {
-        title: 'Why this page exists for SEO',
+        title: 'Why project evidence matters',
         paragraphs: [
-          'Case studies, proof pages, and execution pages are some of the strongest assets for search because they answer the practical questions buyers ask before they reach out: has this been built, where, and by whom?',
+          'Case studies, proof pages, and execution records answer the practical questions buyers ask before they reach out: has this been built, where, and by whom? They connect a material proposition with its application and the people who deliver it.',
         ],
       },
     ],
@@ -475,9 +476,9 @@ export const seoPages: SeoPageData[] = [
           'No. The company presents itself as an operational Dubai lab with founder capital deployed, installations completed, partner activity underway, and active certification work.',
       },
       {
-        question: 'Why do case studies matter for ranking?',
+        question: 'How do case studies help with specification?',
         answer:
-          'They create indexable proof around real projects, locations, and materials, which helps both search engines and buyers understand that the company has execution history rather than abstract claims alone.',
+          'They document real projects, locations, and materials, helping buyers assess execution history alongside the material proposition. That evidence makes it easier to identify relevant applications and begin a specification conversation.',
       },
     ],
     relatedLinks: [

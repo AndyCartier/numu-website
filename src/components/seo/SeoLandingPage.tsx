@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
 import { buildSeoJsonLd, type SeoPageData } from '@/lib/seo'
 
@@ -135,13 +135,13 @@ export function SeoLandingPage({ page }: { page: SeoPageData }) {
                   marginBottom: 6,
                 }}
               >
-                Search-ready landing page
+                Material / application guide
               </p>
               <p
                 className="font-display"
                 style={{ fontSize: '1.4rem', lineHeight: 1.15, letterSpacing: '-0.02em' }}
               >
-                Built to rank for product intent, not just brand awareness.
+                Materials, applications and next steps for your project.
               </p>
             </div>
           </div>

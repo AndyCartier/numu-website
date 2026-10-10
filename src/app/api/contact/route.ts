@@ -203,6 +203,11 @@ export async function POST(req: Request) {
   if (!process.env.RESEND_API_KEY) return json({ error: 'Email service unavailable' }, 503)
 
   const resend = getResend()
+  async function sendEmail(message: Parameters<typeof resend.emails.send>[0]) {
+    const result = await resend.emails.send(message)
+    if (result.error) throw new Error('Email provider rejected the request')
+    return result
+  }
   const messageId = randomUUID()
   const sourceTag = sanitizeSourceTag(source)
   const timestamp = new Date().toUTCString()
@@ -211,14 +216,16 @@ export async function POST(req: Request) {
     if (requestType === 'investor_deck') {
       const attachment = loadDeckAttachment()
 
+      if (!attachment) return json({ error: 'The deck is temporarily unavailable. Please try again shortly.' }, 503)
+
       // Notification to Andy
-      await resend.emails.send({
+      await sendEmail({
         from: RESEND_FROM_EMAIL,
         to: [CONTACT_TO_EMAIL],
         ...(CONTACT_BCC_EMAIL ? { bcc: [CONTACT_BCC_EMAIL] } : {}),
         replyTo: email,
         subject: `Deck requested — ${email}`,
-        text: `Deck request\n\nFrom: ${email}\nSource: ${source || 'direct'}\nTime: ${timestamp}\n\nDeck ${attachment ? 'sent automatically' : 'FAILED TO ATTACH — send manually'}.`,
+        text: `Deck request\n\nFrom: ${email}\nSource: ${source || 'direct'}\nTime: ${timestamp}\n\nDeck ${attachment ? 'automatic delivery requested' : 'FAILED TO ATTACH — send manually'}.`,
         html: `
           <div style="font-family:Arial,sans-serif;color:#1a1714;">
             <p style="margin:0 0 16px;font-size:15px;"><strong>Deck requested</strong></p>
@@ -226,7 +233,7 @@ export async function POST(req: Request) {
               <tr><td style="padding:4px 16px 4px 0;opacity:0.5;">From</td><td><a href="mailto:${email}">${email}</a></td></tr>
               <tr><td style="padding:4px 16px 4px 0;opacity:0.5;">Source</td><td>${source || 'direct'}</td></tr>
               <tr><td style="padding:4px 16px 4px 0;opacity:0.5;">Time</td><td>${timestamp}</td></tr>
-              <tr><td style="padding:4px 16px 4px 0;opacity:0.5;">Deck</td><td style="color:${attachment ? '#2a7a2a' : '#c0392b'};">${attachment ? 'Sent automatically ✓' : 'FAILED — send manually'}</td></tr>
+              <tr><td style="padding:4px 16px 4px 0;opacity:0.5;">Deck</td><td style="color:${attachment ? '#2a7a2a' : '#c0392b'};">${attachment ? 'Automatic delivery requested' : 'FAILED — send manually'}</td></tr>
             </table>
           </div>
         `,
@@ -236,7 +243,7 @@ export async function POST(req: Request) {
 
       // Deck to requester
       if (attachment) {
-        await resend.emails.send({
+        await sendEmail({
           from: FOUNDER_FROM_EMAIL,
           to: [email],
           replyTo: CONTACT_TO_EMAIL,
@@ -250,7 +257,7 @@ export async function POST(req: Request) {
       }
     } else {
       // Standard notification for project / samples
-      await resend.emails.send({
+      await sendEmail({
         from: RESEND_FROM_EMAIL,
         to: [CONTACT_TO_EMAIL],
         ...(CONTACT_BCC_EMAIL ? { bcc: [CONTACT_BCC_EMAIL] } : {}),

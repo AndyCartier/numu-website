@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Playfair Display', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Georgia', 'serif'],
+        sans: ['system-ui', 'sans-serif'],
       },
       fontSize: {
         headline: ['2.5rem', { lineHeight: '1.1' }],

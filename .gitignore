@@ -10,5 +10,16 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+tmp/
+scripts/__pycache__/
 exports/
 public/exports/
+# Local source photography and generated moodboard renders. These must not enter
+# the website bundle or source control.
+assets/
+renders/
+manifest/
+pipeline/.env
+pipeline/__pycache__/
+
+.quarantine
