@@ -304,7 +304,7 @@ export default function MushroomiyaPage() {
               {[
                 ['Category', 'Lighting'],
                 ['Type', 'Monumental ceiling lamp'],
-                ['Dimensions', 'Approx. Ø 1060 mm reference design; final size per commission'],
+                ['Dimensions', 'Ø 1200 mm'],
                 ['Structure', 'Half-sphere open-cell dome'],
                 ['Light source', 'Warm white 2700K, dimmable; electrical specification per project'],
                 ['Material system', 'Mycelium on palm-tree fibre waste'],

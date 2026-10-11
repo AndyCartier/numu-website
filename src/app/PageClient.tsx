@@ -1043,7 +1043,7 @@ function CollectionBand() {
             Surfaces, light and works, grown to order.
           </h2>
           <p className="font-sans mt-6 max-w-xl leading-[1.7]" style={{ fontSize: '0.9375rem', color: '#f5f1e8', opacity: 0.78 }}>
-            Acoustic surfaces, Mushroomiya lighting, Fungal Art Series® works and bespoke commissions. Every piece is offered by inquiry, with price on request.
+            Acoustic surfaces, grown veneer furniture and cladding, Mushroomiya lighting, Fungal Art Series® works and bespoke commissions. Every piece is offered by inquiry, with price on request.
           </p>
           <Link
             href="/shop"
@@ -2889,6 +2889,19 @@ const MOODBOARDS = [
       { src: '/images/moodboards/packaging-cylinder.png', alt: 'Mycelium cylinder packaging visualisation' },
     ],
   },
+  {
+    label: 'Furniture & cladding',
+    heading: 'Between wood and marble.',
+    copy: 'Grown veneer, a technique developed in house: plates, 20 × 20 cm tiles or sizes cut to the drawing, set into walnut and oak furniture or run across a wall. Visualisation studies of the exclusive collection.',
+    wide: true,
+    links: [{ href: '/shop/grown-veneer-furniture', label: 'Grown veneer furniture' }, { href: '/shop/architectural-surfaces', label: 'Grown veneer cladding' }],
+    images: [
+      { src: '/images/catalogue/veneer/veneer-tile-sideboard.jpg', alt: 'Walnut sideboard with a front of grown veneer tiles, visualisation' },
+      { src: '/images/catalogue/veneer/veneer-plate-cabinet.jpg', alt: 'Cabinet with grown veneer plate doors, visualisation' },
+      { src: '/images/catalogue/veneer/veneer-cladding-bedroom.jpg', alt: 'Bedroom wall clad in grown veneer plates, visualisation' },
+      { src: '/images/catalogue/veneer/veneer-material-01.jpg', alt: 'Grown veneer plates, material photograph' },
+    ],
+  },
 ]
 
 function Moodboards() {
@@ -2898,24 +2911,32 @@ function Moodboards() {
         <VLabel text="Spatial applications" />
         <VHeading text="Material with a point of view." />
         <p className="font-sans leading-[1.75] mt-6" style={{ fontSize: '1rem', opacity: 0.6 }}>
-          Four material-led directions for interiors, events, and products. Visualisations are indicative of application, not completed installations.
+          Five material-led directions for interiors, furniture, events, and products. Visualisations are indicative of application, not completed installations.
         </p>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-14 xl:gap-8">
         {MOODBOARDS.map((board) => (
-          <article key={board.label} className="p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.018)' }}>
+          <article key={board.label} className={`p-4 md:p-5 ${'wide' in board && board.wide ? 'xl:col-span-2' : ''}`} style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.018)' }}>
             <div className="pb-6 md:pb-7" style={{ minHeight: '15rem' }}>
               <VLabel text={board.label} />
               <h3 className="font-display mb-4" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.7rem)', lineHeight: 1, letterSpacing: '-0.035em' }}>{board.heading}</h3>
               <p className="font-sans leading-[1.7] max-w-lg" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>{board.copy}</p>
+              {'links' in board && board.links && (
+                <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+                  {board.links.map(link => (
+                    <Link key={link.href} href={link.href} className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.6875rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 4 }}>{link.label} →</Link>
+                  ))}
+                </div>
+              )}
             </div>
             <div
-              className="grid grid-cols-2 grid-rows-2 gap-2 aspect-square"
+              className={'wide' in board && board.wide ? 'grid grid-cols-2 md:grid-cols-4 gap-2' : 'grid grid-cols-2 grid-rows-2 gap-2 aspect-square'}
             >
               {board.images.map((image) => (
                 <div
                   key={image.src}
                   className="relative overflow-hidden bg-[#e7e0d5]"
+                  style={'wide' in board && board.wide ? { aspectRatio: '4 / 5' } : undefined}
                 >
                   <Image src={image.src} alt={image.alt} fill className="object-cover transition-transform duration-700 hover:scale-[1.04]" sizes="(max-width: 1280px) 50vw, 25vw" />
                 </div>
@@ -2954,7 +2975,7 @@ function ExploreCTA() {
 const PARTNERS = [
   { name: 'NYXO Design Studio', note: 'Design partner', href: 'https://www.nyxostudio.com/' },
   { name: 'Biomyc', note: 'Packaging — LOI', href: 'https://new.biomyc.eu/' },
-  { name: 'Base39', note: 'Creative accelerator — 2nd place 2026', href: 'https://base39.com/' },
+  { name: 'Base39', note: 'Creative accelerator — winning finalist 2026', href: 'https://base39.com/' },
   { name: 'De Montfort University', note: 'Academic' },
   { name: 'American University of Sharjah', note: 'Academic' },
   { name: 'Heriot-Watt University Dubai', note: 'Academic' },
@@ -3208,7 +3229,7 @@ function VisitorView({
                 PALMYCO™ — grown, not manufactured.
               </h2>
               <p className="font-sans leading-[1.75] mb-5" style={{ fontSize: '1rem', opacity: 0.65 }}>
-                PALMYCO™ is NUMU&apos;s proprietary grown mycelium foam — a bio-composite cultivated from regional agricultural fibers bound by a living mycelium network. Rigid, breathable, sound-absorbent, and home-compostable. No binders. No petroleum. No synthetic residue. Trademarked material, grown in Dubai.
+                PALMYCO™ is NUMU&apos;s proprietary grown mycelium foam — a bio-composite cultivated from regional agricultural fibers bound by a living mycelium network. Rigid, breathable, sound-absorbent, and home-compostable. No binders. No petroleum. No synthetic residue. Trademark pending. Grown in Dubai.
               </p>
               <p className="font-sans leading-[1.75]" style={{ fontSize: '0.9375rem', opacity: 0.5 }}>
                 PALMYCO™ properties are tuned through the growth cycle itself. Alongside it, NUMU presses composite boards from spent mushroom substrate — a separate material, a separate waste stream, a separate product line. The platform compounds both.
@@ -4256,7 +4277,7 @@ function InvestorView({ iv }: { iv: InvestorContent }) {
             {[
               { year: '2024', text: 'Chapter author — Designing with Mycelium, Routledge (global reference volume for bio-based material design)' },
               { year: '2022–23', text: '2 process-level patents filed — Belgium (mycelium composite formation and no-mold growth technique)' },
-              { year: '2026', text: 'BASE39 Creative Accelerator — second place, Mushroomiya grown lighting concept' },
+              { year: '2026', text: 'BASE39 Creative Accelerator — winning finalist, Mushroomiya grown lighting concept' },
               { year: '2022', text: 'Beyond Chrysant installation — Netherlands (multi-panel grown acoustic system, public documentation)' },
               { year: 'Ongoing', text: 'Academic partnerships — De Montfort University, American University of Sharjah, Heriot-Watt Dubai, DIDI' },
               { year: 'Ongoing', text: '7+ years applied industrialization — mycelium composites, EU and GCC production environments' },

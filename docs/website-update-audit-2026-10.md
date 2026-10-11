@@ -109,3 +109,26 @@ No file named "cladding" exists. Cladding is presented through the existing wall
 - Browser form test with mocked 200 and 503: the payload carries product, option, quantity, project type and page URL; success shows only on 2xx; on failure the visitor sees "Nothing was sent" and a prefilled email.
 - A live email was not sent, to avoid writing to the real inbox.
 - Preservation check: every homepage section ID retained (plus `#collection`), 3 of 3 videos, 104 gallery images. The four old TSI anchors are kept as aliases.
+
+## 8. Follow-up, 11 October 2026 (decisions from Andy)
+
+| Point | Decision | Implemented |
+|---|---|---|
+| BASE39 | Confirmed; do not say "second" | "Winning finalist, 2026" in the catalogue, homepage partners, investor recognition and case studies |
+| Mushroomiya size | Ø 1200 mm | Catalogue and `/mushroomiya` specs. Light source still "per project" |
+| PALMYCO™ trademark | Pending | Homepage "Trademarked material" replaced with "Trademark pending" (the `/palmyco` FAQ already said pending) |
+| Humidity FAQ | Leave as is | No change |
+| Mushroomiya Threshold | OK | No change |
+| Founder capital on `/case-studies` | Remove | "AED 184K" highlight and "founder capital deployed" FAQ wording removed. Still present in the password-gated investor view |
+| Hotline | Cal.com; otherwise a booking link | Cal.com button when `NEXT_PUBLIC_CAL_HOTLINE_URL` is set; otherwise "Request a session" opens a booking-request form emailed to NUMU (subject "Session booking request") |
+| Portfolio content | Use it, except KAVE | Artist background, exhibitions, collected works #1/#9/#11 (no prices), "future vision" commissions text |
+
+New content from `NUMU_Furniture_Cladding.pdf` (Downloads), whose embedded images were extracted at source resolution to `public/images/catalogue/veneer/`:
+- `/shop/architectural-surfaces` (same URL) is now **Grown Veneer Cladding**: plates, 20 × 20 cm tiles, cut to size, with wood. Interior only.
+- New `/shop/grown-veneer-furniture`: tile composition, plate composition and tile to timber; walnut/oak frames, bronze plinth option.
+- The homepage "Spatial applications" section gains a fifth, full-width board, "Furniture & cladding", linking to both pages.
+- The `/collections` gallery gains 11 veneer images (3 material photographs, 8 visualisation studies).
+
+The earlier "PALMYCO Surfaces" visualisations (FOLD relief walls, cell screens) remain in the homepage moodboards and the gallery.
+
+Unable to check: whether `NEXT_PUBLIC_CAL_HOTLINE_URL` is set in Vercel. The connector has no permission to read environment variables, and the Vercel CLI isn't installed. The Gmail connector returned "precondition failed".

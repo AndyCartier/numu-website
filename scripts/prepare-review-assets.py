@@ -71,6 +71,12 @@ for source in sorted(lamps.rglob('*')):
 for source in sorted((public/'images/moodboards').rglob('*')):
     if source.suffix.lower() in ['.png','.jpg','.jpeg','.webp']:
         add(source,'Spaces',title(source),'Spatial application concept. Visualisation. Indicative only.')
+# Grown veneer furniture & cladding collection (NUMU_Furniture_Cladding.pdf, October 2026).
+for source in sorted((public/'images/catalogue/veneer').glob('*.jpg')):
+    if 'material' in source.stem:
+        add(source,'Material','Grown veneer surface','Grown veneer, developed in house at NUMU. Material photograph.')
+    else:
+        add(source,'Spaces',title(source).replace('veneer ','Grown veneer, '),'Grown veneer furniture and cladding. Visualisation study. Indicative only.')
 for folder in ['products','projects','applications','materials']:
     for source in sorted((public/'images'/folder).glob('*')):
         if source.suffix.lower() in ['.png','.jpg','.jpeg','.webp']:

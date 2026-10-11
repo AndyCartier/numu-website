@@ -10,6 +10,7 @@ type Props = {
   slug: string
   variants?: ProductVariant[]
   inquiry?: InquiryConfig
+  booking?: boolean
 }
 
 const PROJECT_TYPES = ['Hospitality', 'Residential', 'Workplace', 'Retail', 'Cultural / gallery', 'Event', 'Private collection', 'Other']
@@ -19,7 +20,7 @@ const labelStyle = { fontSize: '.75rem' } as const
 
 // Product-specific inquiry. Posts to the existing Resend-backed /api/shop/inquiry route; if that is
 // unavailable the visitor is offered a prefilled email instead. Success is shown only on a 2xx.
-export default function ProductInquiry({ productId, productName, slug, variants, inquiry }: Props) {
+export default function ProductInquiry({ productId, productName, slug, variants, inquiry, booking = false }: Props) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [error, setError] = useState('')
   const [fallback, setFallback] = useState('')
@@ -69,7 +70,7 @@ export default function ProductInquiry({ productId, productName, slug, variants,
 
   return (
     <form onSubmit={submit} aria-busy={status === 'sending'} className="grid gap-6" aria-describedby={`${id}-note`}>
-      <p className="font-sans uppercase tracking-[.14em]" style={{ fontSize: '.625rem', opacity: .6 }}>Inquiry for <strong style={{ fontWeight: 600 }}>{productName}</strong></p>
+      <p className="font-sans uppercase tracking-[.14em]" style={{ fontSize: '.625rem', opacity: .6 }}>{booking ? 'Booking request for' : 'Inquiry for'} <strong style={{ fontWeight: 600 }}>{productName}</strong></p>
       <div className="grid sm:grid-cols-2 gap-6">
         <label className="font-sans" style={labelStyle}>Name<input required name="name" autoComplete="name" maxLength={120} className={field} /></label>
         <label className="font-sans" style={labelStyle}>Email<input required type="email" name="email" autoComplete="email" maxLength={254} className={field} /></label>
@@ -100,7 +101,7 @@ export default function ProductInquiry({ productId, productName, slug, variants,
       <div>
         <button className="shop-cta" disabled={status === 'sending'}>{status === 'sending' ? 'Sending…' : `${inquiry?.cta || 'Send inquiry'} →`}</button>
         <p id={`${id}-note`} className="font-sans mt-4 leading-[1.6]" style={{ fontSize: '.72rem', opacity: .56 }}>
-          Price on request. Your inquiry goes directly to the NUMU team with this product and page attached.
+          {booking ? 'Your request goes directly to the NUMU team. We reply with a booking link and the session fee.' : 'Price on request. Your inquiry goes directly to the NUMU team with this product and page attached.'}
         </p>
       </div>
       {status === 'error' && (

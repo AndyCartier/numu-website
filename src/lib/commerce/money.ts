@@ -11,7 +11,7 @@ export function formatMoney(aedFils: number, currency: 'AED' | 'USD' = 'AED') {
 export function productPriceLabel(product: { category?: string; bookingUrl?: string; status?: string }) {
   if (product.category === 'Experiences') {
     if (product.status === 'coming_soon') return 'Dates to be announced'
-    return product.bookingUrl ? 'Book online' : 'By arrangement'
+    return product.bookingUrl ? 'Book online' : 'Booking on request'
   }
   return 'Price on request'
 }

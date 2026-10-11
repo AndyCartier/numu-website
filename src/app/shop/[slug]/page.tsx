@@ -8,6 +8,7 @@ import ProductInquiry from '@/components/shop/ProductInquiry'
 import { EVIDENCE_LABEL, STAGE_LABEL, getProduct, isPhysical, publicProducts, relatedProducts, type ProductImage } from '@/lib/commerce/catalogue'
 import { productPriceLabel } from '@/lib/commerce/money'
 import { buildAbsoluteUrl, SITE_URL } from '@/lib/site'
+import responsiveImages from '@/generated/responsive-images.json'
 
 const BORDER = '1px solid rgba(128,128,128,.15)'
 const KIND_LABEL: Record<NonNullable<ProductImage['kind']>, string> = { photograph: 'Photograph', visualisation: 'Visualisation', design_study: 'Design study' }
@@ -48,8 +49,14 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const product = getProduct(params.slug)
   if (!product || product.status === 'draft' || product.status === 'archived') notFound()
   const physical = isPhysical(product)
+  // Experiences without a live Cal.com link fall back to a booking request through the same form.
+  const bookingRequest = !physical && product.transactionMode === 'booking' && product.status !== 'coming_soon' && !product.bookingUrl
+  const showInquiry = physical || bookingRequest
   const stage = product.status === 'coming_soon' ? 'Coming soon' : product.stage ? STAGE_LABEL[product.stage] : 'On request'
   const hero = product.images[0]
+  // The hero frame follows the image: portrait stays 4:5, landscape renders at 3:2 instead of being cropped.
+  const heroSize = hero ? (responsiveImages as Record<string, { width: number; height: number }>)[hero.src] : undefined
+  const heroAspect = heroSize && heroSize.width > heroSize.height * 1.1 ? '3 / 2' : '4 / 5'
   const gallery = product.images.slice(1)
   const related = relatedProducts(product)
   const url = buildAbsoluteUrl(`/shop/${product.slug}`).toString()
@@ -81,7 +88,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
         <Link href={`/shop?family=${encodeURIComponent(product.category)}`} style={{ color: 'inherit' }}>{product.category}</Link>
       </nav>
       <div className="max-w-[1440px] mx-auto mt-8 grid lg:grid-cols-[1.25fr_.75fr] gap-10 lg:gap-16 items-start">
-        <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', maxHeight: '86vh', width: '100%', background: 'rgba(26,23,20,.05)' }}>
+        <div className="relative overflow-hidden" style={{ aspectRatio: heroAspect, maxHeight: '86vh', width: '100%', background: 'rgba(26,23,20,.05)' }}>
           {hero && <Image src={hero.src} alt={hero.alt} data-lightbox-caption={`${product.name} — ${hero.caption || hero.alt}${hero.kind && hero.kind !== 'photograph' ? ` ${KIND_LABEL[hero.kind]}. Indicative only.` : ''}`} fill priority className="object-cover" sizes="(max-width:1024px) 100vw, 60vw" />}
           {hero?.kind && <span className="catalogue-badge">{KIND_LABEL[hero.kind]}</span>}
         </div>
@@ -191,17 +198,19 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     )}
 
     {/* Inquiry */}
-    {physical && (
+    {showInquiry && (
       <section id="inquiry" className="px-6 md:px-12 py-16 md:py-24 scroll-mt-20" style={{ borderTop: BORDER, background: 'rgba(26,23,20,.03)' }}>
         <div className="max-w-[1440px] mx-auto grid lg:grid-cols-[.8fr_1.2fr] gap-10 lg:gap-20">
           <div>
             <Label>{product.inquiry?.cta || 'Request a quote'}</Label>
             <h2 className="font-display mt-5" style={{ fontSize: 'clamp(2.2rem,4vw,3.8rem)', lineHeight: 1.04, letterSpacing: '-.025em' }}>{product.inquiry?.projectFields ? 'Tell us about your project.' : 'Tell us what you are looking for.'}</h2>
             <p className="font-sans mt-6 leading-[1.8] max-w-md" style={{ fontSize: '.92rem', opacity: .66 }}>
-              We reply with availability, a sample route where relevant, and a written quote. Price, lead time and delivery are confirmed for each request.
+              {bookingRequest
+                ? 'Tell us what you would like to discuss and when suits you. We reply with a booking link and the session fee.'
+                : 'We reply with availability, a sample route where relevant, and a written quote. Price, lead time and delivery are confirmed for each request.'}
             </p>
           </div>
-          <ProductInquiry productId={product.id} productName={product.name} slug={product.slug} variants={product.variants} inquiry={product.inquiry} />
+          <ProductInquiry productId={product.id} productName={product.name} slug={product.slug} variants={product.variants} inquiry={product.inquiry} booking={bookingRequest} />
         </div>
       </section>
     )}

@@ -421,7 +421,7 @@ export const seoPages: SeoPageData[] = [
     ],
     highlights: [
       { label: 'Built installation', value: 'Netherlands, 2022' },
-      { label: 'Founder capital', value: 'AED 184K deployed' },
+      { label: 'Recognition', value: 'BASE39 2026, winning finalist' },
       { label: 'Packaging path', value: '1 LOI active' },
       { label: 'Base', value: 'Operational lab in Dubai' },
     ],
@@ -473,7 +473,7 @@ export const seoPages: SeoPageData[] = [
       {
         question: 'Is NUMU only a concept-stage company?',
         answer:
-          'No. NUMU operates a Dubai lab with founder capital deployed, a completed installation in the Netherlands, partner activity underway, and active certification work.',
+          'No. NUMU operates a Dubai lab, has a completed installation in the Netherlands, partner activity underway, and active certification work.',
       },
       {
         question: 'How do case studies help with specification?',
