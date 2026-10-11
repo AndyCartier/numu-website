@@ -887,24 +887,13 @@ function ProductionFeature() {
 // ─── Process & Test Carousel ─────────────────────────────────────────────────
 
 const CAROUSEL_ITEMS = [
-  { src: '/images/textures/texture_closeup_01.jpg', alt: 'Material surface — texture study', label: 'Surface texture' },
-  { src: '/images/products/biofoam_detail.png', alt: 'Biofoam block — material study', label: 'Biofoam material' },
-  { src: '/images/founder/founder_in_action.jpg', alt: 'Production lab — process documentation', label: 'Lab process' },
-  { src: '/images/textures/texture_closeup_02.jpg', alt: 'Material surface — detail', label: 'Surface detail' },
-  { src: '/images/products/fold_solo_panel.png', alt: 'FOLD panel — product study', label: 'FOLD panel' },
-  { src: '/images/hero/mycofoam_block_01.png', alt: 'Mycofoam composite block', label: 'Composite form' },
-  { src: '/images/applications/event_board.jpg', alt: 'Pressed composite board — test batch', label: 'Pressed board' },
-  { src: '/images/projects/Mymo01.jpg', alt: 'Mymo — material experiment', label: 'Mymo' },
-  { src: '/images/products/fold_context_scale.png', alt: 'FOLD installation — scale context', label: 'Scale context' },
-  { src: '/images/projects/Insulation.jpg', alt: 'Mycelium insulation — material research', label: 'Insulation' },
-  { src: '/images/projects/Kinoko.jpg', alt: 'Kinoko project — grown form', label: 'Kinoko' },
-  { src: '/images/projects/Kinoko02.jpg', alt: 'Kinoko project — detail', label: 'Kinoko detail' },
-  { src: '/images/projects/Lamp01.jpg', alt: 'Mycelium lamp — applied research', label: 'Lamp 01' },
-  { src: '/images/projects/Lamp02.jpg', alt: 'Mycelium lamp — form study', label: 'Lamp 02' },
-  { src: '/images/projects/Pressed_samples.jpg', alt: 'Pressed samples — batch testing', label: 'Pressed samples' },
-  { src: '/images/projects/Reroot_panels.jpg', alt: 'Reroot panels — acoustic surface', label: 'Reroot panels' },
-  { src: '/images/projects/Spora_panels.jpg', alt: 'Spora panels — grown acoustic', label: 'Spora panels' },
-  { src: '/images/projects/pressed_booth.jpg', alt: 'Pressed booth — applied installation', label: 'Pressed booth' },
+  { src: '/images/catalogue/material/palmyco-samples-in-hand.jpg', alt: 'Two PALMYCO™ grown samples held in hand, showing the section', label: 'Grown samples' },
+  { src: '/images/textures/texture_closeup_01.jpg', alt: 'Close view of the grown PALMYCO™ surface', label: 'Surface texture' },
+  { src: '/images/catalogue/veneer/veneer-material-02.jpg', alt: 'Grown veneer surface with dark veins through a pale ground', label: 'Grown veneer' },
+  { src: '/images/applications/event_board.jpg', alt: 'Pressed mycelium composite board from a test batch', label: 'Pressed board' },
+  { src: '/images/projects/Pressed_samples.jpg', alt: 'Pressed composite samples laid out for batch testing', label: 'Batch testing' },
+  { src: '/images/textures/texture_closeup_02.jpg', alt: 'Macro view of fibre bound by mycelium', label: 'Surface detail' },
+  { src: '/images/projects/pressed_booth.jpg', alt: 'Pressed board panels assembled into a booth', label: 'Pressed board in use' },
 ]
 const CAROUSEL_W = 400
 const CAROUSEL_H = 300
@@ -926,7 +915,7 @@ function ProcessCarousel() {
 
       <div className="max-w-[1440px] mx-auto mb-8">
         <p className="font-sans text-label uppercase tracking-[0.18em] mb-2" style={{ opacity: 0.68 }}>
-          Material Experiments &amp; Applied Research
+          Material &amp; process — photographs from the Dubai lab
         </p>
         <p className="font-sans text-xs" style={{ opacity: 0.7 }}>← scroll · click to enlarge →</p>
         <div className="carousel-actions"><button type="button" aria-label="Previous material images" onClick={() => carouselRef.current?.scrollBy({ left: -408, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })}>← Previous</button><button type="button" aria-label="Next material images" onClick={() => carouselRef.current?.scrollBy({ left: 408, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })}>Next →</button></div>
@@ -2761,12 +2750,12 @@ function LabVideo() {
       onMouseLeave={() => setHovering(false)}
     >
       <Image
-        src="/images/products/biofoam_detail.png"
-        alt="PALMYCO material surface"
+        src="/images/products/lab-film-poster.jpg"
+        alt="Inspecting a freshly grown panel at the drying rack, from the NUMU process film"
         fill
         className="object-cover"
         sizes="(max-width: 1024px) 100vw, 80vw"
-        style={{ opacity: ready && !videoFailed ? 0 : 1, transition: 'opacity 0.25s ease' }}
+        style={{ opacity: ready && !videoFailed && (playing || progress > 0) ? 0 : 1, transition: 'opacity 0.25s ease' }}
       />
       <video
         ref={ref}
@@ -2780,14 +2769,14 @@ function LabVideo() {
         onError={() => { setVideoFailed(true); setReady(false); setPlaying(false) }}
         onEnded={() => { if (ref.current) { ref.current.currentTime = 0; ref.current.play() } }}
         className="w-full h-full object-cover block"
-        style={{ opacity: ready && !videoFailed ? 1 : 0, transition: 'opacity 0.25s ease' }}
+        style={{ opacity: ready && !videoFailed && (playing || progress > 0) ? 1 : 0, transition: 'opacity 0.25s ease' }}
         suppressHydrationWarning
       />
 
       {/* Play hint — only when ready and not yet played */}
       {ready && !playing && !hovering && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Process documentation</p>
+          <p className="font-sans uppercase tracking-[0.18em] px-4 py-2" style={{ fontSize: '0.6875rem', color: '#f5f1e8', backgroundColor: 'rgba(26,23,20,0.62)' }}>Play process film</p>
         </div>
       )}
 
@@ -2868,28 +2857,6 @@ const MOODBOARDS = [
     ],
   },
   {
-    label: 'Events',
-    heading: 'Temporary, without feeling disposable.',
-    copy: 'Pressed composite boards bring a warm, low-waste material language to exhibitions, brand activations, and temporary structures.',
-    images: [
-      { src: '/images/moodboards/events-exhibition-stand.png', alt: 'FOLD mycelium panels applied to an exhibition stand visualisation' },
-      { src: '/images/moodboards/events-pressed-board-booth.png', alt: 'Pressed mycelium board exhibition booth visualisation' },
-      { src: '/images/moodboards/events-display-plinths.png', alt: 'Pressed composite display plinths for an event visualisation' },
-      { src: '/images/moodboards/events-fluted-display.png', alt: 'Fluted mycelium product display visualisation' },
-    ],
-  },
-  {
-    label: 'Packaging',
-    heading: 'Protection with a better end of life.',
-    copy: 'Molded mycelium forms offer a natural route away from petroleum foam for thoughtful, protective packaging.',
-    images: [
-      { src: '/images/moodboards/packaging-modular-insert.png', alt: 'Modular mycelium protective insert visualisation' },
-      { src: '/images/moodboards/packaging-ceramic-bowl.png', alt: 'Mycelium protective insert for a ceramic bowl visualisation' },
-      { src: '/images/moodboards/packaging-serum-tray.png', alt: 'Molded mycelium serum-bottle tray visualisation' },
-      { src: '/images/moodboards/packaging-cylinder.png', alt: 'Mycelium cylinder packaging visualisation' },
-    ],
-  },
-  {
     label: 'Furniture & cladding',
     heading: 'Between wood and marble.',
     copy: 'Grown veneer, a technique developed in house: plates, 20 × 20 cm tiles or sizes cut to the drawing, set into walnut and oak furniture or run across a wall. Visualisation studies of the exclusive collection.',
@@ -2911,7 +2878,7 @@ function Moodboards() {
         <VLabel text="Spatial applications" />
         <VHeading text="Material with a point of view." />
         <p className="font-sans leading-[1.75] mt-6" style={{ fontSize: '1rem', opacity: 0.6 }}>
-          Five material-led directions for interiors, furniture, events, and products. Visualisations are indicative of application, not completed installations.
+          Three material-led directions for hospitality, workplace and furniture. Visualisations are indicative of application, not completed installations.
         </p>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-14 xl:gap-8">
@@ -3104,72 +3071,6 @@ function PlatformWithoutBorders() {
   )
 }
 
-function PlatformEnginesPreview({ data }: { data: InvestorContent['revenue_engines'] }) {
-  return (
-    <VSectionFullBleed id="platform-engines">
-      <div className="px-6 md:px-12">
-        <VLabel text={data.label} />
-        <h2
-          className="font-display mb-8"
-          style={{
-            fontSize: 'clamp(2.2rem, 4.8vw, 5rem)',
-            lineHeight: '0.96',
-            letterSpacing: '-0.04em',
-          }}
-        >
-          {data.heading}
-        </h2>
-        <p className="font-sans leading-[1.8] max-w-3xl mb-12" style={{ fontSize: '1rem', opacity: 0.62 }}>
-          {data.body}
-        </p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
-        {data.engines.map((engine) => (
-          <div key={engine.id} className="px-6 md:px-8 py-8 md:py-10" style={{ backgroundColor: 'rgba(26,23,20,0.025)' }}>
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div className="flex items-center gap-3">
-                <div
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: '50%',
-                    backgroundColor:
-                      engine.status === 'active'
-                        ? '#8A7256'
-                        : engine.status === 'next'
-                          ? 'rgba(26,23,20,0.45)'
-                          : 'rgba(26,23,20,0.24)',
-                    flexShrink: 0,
-                  }}
-                />
-                <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
-                  {engine.id}
-                </p>
-              </div>
-              <span
-                className="font-sans uppercase tracking-[0.12em] px-2 py-1"
-                style={{
-                  fontSize: '0.5625rem',
-                  opacity: engine.status === 'active' ? 0.9 : 0.5,
-                  border: '1px solid rgba(26,23,20,0.14)',
-                }}
-              >
-                {engine.activation}
-              </span>
-            </div>
-            <p className="font-display mb-3" style={{ fontSize: '1.9rem', lineHeight: 0.98, letterSpacing: '-0.03em' }}>
-              {engine.name}
-            </p>
-            <p className="font-sans leading-[1.75] mb-7" style={{ fontSize: '0.95rem', opacity: 0.6 }}>
-              {engine.desc}
-            </p>
-          </div>
-        ))}
-      </div>
-    </VSectionFullBleed>
-  )
-}
-
 // ─── Visitor view ─────────────────────────────────────────────────────────────
 
 function VisitorView({
@@ -3195,7 +3096,7 @@ function VisitorView({
               NUMU operates a bio-composites platform built for the GCC. Our flagship material, <strong>PALMYCO™</strong>, is a grown mycelium foam — a proprietary bio-composite cultivated inside molds from regional agricultural fibers, producing lightweight panels with distinctive three-dimensional texture.
             </p>
             <p className="font-sans leading-[1.75] max-w-md" style={{ fontSize: '0.9375rem', opacity: 0.62 }}>
-              Alongside PALMYCO™, NUMU leverages spent mushroom substrate — a regional waste stream — to produce heat-pressed composite boards. Two distinct material outputs, shared production infrastructure, four revenue lines. Circular by design.
+              Alongside PALMYCO™, NUMU leverages spent mushroom substrate — a regional waste stream — to produce heat-pressed composite boards. Two material outputs, one production base in Dubai. Circular by design.
             </p>
           </div>
           <div>
@@ -3475,18 +3376,19 @@ function VisitorView({
 
       {/* Applications — platform horizons */}
       <VSection id="applications">
-        <VLabel text="07 — Platform Horizons" />
-        <VHeading text="One material platform. Current product. Future lines." />
+        <VLabel text="05 — Applications" />
+        <VHeading text="What the material does today, and what comes next." />
         <p className="font-sans leading-[1.75] mb-3 max-w-2xl" style={{ fontSize: '1rem', opacity: 0.62 }}>
-          Acoustic panels are the entry product, available now. The platform expands across four revenue lines, each running on the same material system and the same production infrastructure.
+          Grown acoustic surfaces and pressed boards are in production today. Thermal insulation and protective packaging are in development on the same material system and the same Dubai production base.
         </p>
         <p className="font-sans leading-[1.75] mb-14 max-w-2xl" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
-          PALMYCO™ — the grown line — enters the market through decorative acoustic panels, scales through certified architectural specification, and extends into thermal wall assemblies. The pressed-board line — built from spent mushroom substrate on the same production infrastructure — serves events, brand activations, and non-structural interior applications. Packaging and regional licensing open in phase two.
+          PALMYCO™, the grown material, is used for acoustic panels, wall surfaces, lighting and furniture. The pressed board, made from spent mushroom substrate, serves events, brand activations and non-structural interiors.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {[
             {
               title: 'Acoustic — Grown',
+              href: '/shop/fold',
               tagline: 'Decorative and specification-grade mycelium panels for interior architecture. First product: FOLD.',
               status: 'Active',
               active: true,
@@ -3495,6 +3397,7 @@ function VisitorView({
             },
             {
               title: 'Boards — Pressed',
+              href: '/shop/bespoke-commissions',
               tagline: 'Heat-pressed mycelium composite boards for events, brand activations, and temporary architecture.',
               status: 'Active',
               active: true,
@@ -3503,6 +3406,7 @@ function VisitorView({
             },
             {
               title: 'Thermal',
+              href: '/thermal-insulation-uae',
               tagline: 'Passive insulation grown from palm fibre, designed for hot-climate wall assemblies.',
               status: 'In Development',
               active: false,
@@ -3511,6 +3415,7 @@ function VisitorView({
             },
             {
               title: 'Packaging',
+              href: '/mycelium-packaging-uae',
               tagline: 'Molded protective forms, compostable alternative to petroleum-based foams.',
               status: 'In Development',
               active: false,
@@ -3518,7 +3423,7 @@ function VisitorView({
               imageAlt: 'NUMU protective packaging — molded mycelium form',
             },
           ].map(app => (
-            <div key={app.title} style={{ border: BORDER }}>
+            <Link key={app.title} href={app.href} className="group" style={{ border: BORDER, color: 'inherit', textDecoration: 'none', display: 'block' }}>
               <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
                 <Image src={app.image} alt={app.imageAlt} fill className="object-cover object-center" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw" />
                 <div className="absolute bottom-3 left-3">
@@ -3530,109 +3435,12 @@ function VisitorView({
               <div className="px-5 py-6">
                 <p className="font-display mb-2" style={{ fontSize: '1.25rem', letterSpacing: '-0.02em', opacity: app.active ? 1 : 0.55 }}>{app.title}</p>
                 <p className="font-sans leading-relaxed" style={{ fontSize: 13, opacity: app.active ? 0.6 : 0.42 }}>{app.tagline}</p>
+                <p className="font-sans uppercase tracking-[0.14em] mt-4" style={{ fontSize: 10, opacity: 0.6 }}>{app.active ? 'View' : 'Read more'} →</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </VSection>
-
-      {/* Platform horizon — Thermal */}
-      <section id="thermal" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
-        <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Platform horizon — Thermal</p>
-          <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-12 lg:gap-20 items-start">
-            <div className="w-full overflow-hidden">
-              <Image src="/images/applications/thermal_panel_wall.png" alt="NUMU thermal panel — wall integration" width={2400} height={1350} style={{ width: '100%', height: 'auto', display: 'block' }} sizes="(max-width: 1440px) 100vw, 60vw" />
-            </div>
-            <div className="lg:pt-4">
-              <p className="font-display mb-6" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.75rem)', lineHeight: '1.1', letterSpacing: '-0.025em', opacity: 0.85 }}>
-                Bio-based thermal systems.
-              </p>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>
-                NUMU materials can be integrated within wall assemblies to provide passive thermal performance. The porous structure of the material enables insulation while remaining breathable.
-              </p>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>
-                Designed for hot climates, the system supports reduced energy demand and improved indoor comfort without synthetic foams.
-              </p>
-              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.68 }}>
-                In development — opens after certification of the acoustic line
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Platform horizon — Packaging */}
-      <section id="packaging" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
-        <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Platform horizon — Packaging</p>
-
-          <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-12 lg:gap-20 items-start mb-16">
-            <div>
-              <p className="font-display mb-6" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.75rem)', lineHeight: '1.1', letterSpacing: '-0.025em', opacity: 0.85 }}>
-                Molded protection, grown not manufactured.
-              </p>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.6 }}>
-                NUMU materials can be shaped into protective packaging forms — a compostable alternative to petroleum-based foams. Each piece is grown into shape from agricultural waste, maintaining shock absorption while remaining fully biodegradable at end of life.
-              </p>
-              <p className="font-sans leading-[1.75] mb-10" style={{ fontSize: '0.9375rem', opacity: 0.5 }}>
-                Working with mycelium means manufacturing with a living material system. Each object is grown from natural fibers, shaped through biological growth, and stabilized into a functional product. Sustainability is not added afterward — it is built into the material process itself.
-              </p>
-              <p className="font-sans uppercase tracking-[0.16em] mb-1" style={{ fontSize: 10, opacity: 0.68 }}>
-                Scalable application — logistics and product protection
-              </p>
-              <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: 10, opacity: 0.68 }}>
-                European pathway — Biomyc partnership, LOI signed
-              </p>
-            </div>
-            <div className="w-full overflow-hidden" style={{ position: 'relative', aspectRatio: '1/1' }}>
-              <Image src="/images/applications/packaging01.jpg" alt="NUMU mycelium packaging — protective molded form grown from agricultural waste" fill unoptimized className="object-cover object-center" sizes="(max-width: 768px) 100vw, 50vw" />
-            </div>
-          </div>
-
-          <div>
-            <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Material comparison</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
-              {[
-                {
-                  name: 'Styrofoam — EPS',
-                  items: [
-                    'Fossil-based petroleum derivative',
-                    'Persistent pollutant — 500+ year lifespan',
-                    'Extremely difficult to recycle',
-                    'Non-biodegradable in natural conditions',
-                    'High embedded carbon',
-                  ],
-                  highlight: false,
-                },
-                {
-                  name: 'Mycelium packaging',
-                  items: [
-                    'Grown from agricultural waste residues',
-                    'Bio-based — no synthetic binders or polymers',
-                    'Equal or superior shock absorption',
-                    'Home-compostable at end of life',
-                    'Carbon-sequestering feedstock',
-                  ],
-                  highlight: true,
-                },
-              ].map((col) => (
-                <div key={col.name} className="px-7 py-8" style={{ backgroundColor: col.highlight ? 'rgba(26,23,20,0.04)' : 'rgba(26,23,20,0.01)' }}>
-                  <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: '0.6875rem', opacity: col.highlight ? 0.72 : 0.5 }}>{col.name}</p>
-                  {col.items.map((item, j) => (
-                    <div key={j} className="flex items-start gap-3 mb-3">
-                      <span style={{ fontSize: 7, opacity: col.highlight ? 0.6 : 0.42, flexShrink: 0, marginTop: 4 }}>
-                        {col.highlight ? '◆' : '○'}
-                      </span>
-                      <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: col.highlight ? 0.72 : 0.55 }}>{item}</p>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Manifesto */}
       <section id="manifesto" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
@@ -3644,7 +3452,7 @@ function VisitorView({
               'Performance before narrative.',
               'Waste is feedstock.',
               'The region builds its own.',
-              'Platforms outlast products.',
+              'Every piece is grown, so no two repeat.',
               'Grown, not manufactured.',
             ].map((statement, i) => (
               <p
@@ -3669,9 +3477,9 @@ function VisitorView({
 
       {/* Team */}
       <VSection id="team">
-        <VLabel text="08 — Team" />
-        <VHeading text="Built by a team already executing." />
-        <VBody text="NUMU is not a solo-founder story. The company combines industrialization, construction finance, IP strategy, and commercial growth to turn the material platform into real projects." />
+        <VLabel text="06 — Team" />
+        <VHeading text="The people behind the material." />
+        <VBody text="A Dubai team combining material design and industrialisation, construction finance, IP strategy and commercial growth, from the first sample to delivery." />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
           {teamMembers.map((member) => (
             <PublicTeamCard key={member.name} member={member} />
@@ -3682,8 +3490,6 @@ function VisitorView({
       {/* Platform Without Borders */}
       <PlatformWithoutBorders />
 
-      {/* Platform engines */}
-      <PlatformEnginesPreview data={investorPreview} />
 
       {/* 07 Contact */}
       <VSection id="contact">

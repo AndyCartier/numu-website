@@ -28,6 +28,10 @@ const nextConfig = {
       '/api/contact': ['./exports/NUMU_Investor_Deck_FINAL.pdf'],
     },
   },
+  // The image gallery was retired in October 2026; send any old links to the product catalogue.
+  async redirects() {
+    return [{ source: '/collections', destination: '/shop', permanent: true }]
+  },
   async headers() {
     return [
       {

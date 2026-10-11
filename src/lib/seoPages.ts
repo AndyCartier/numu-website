@@ -146,10 +146,10 @@ export const seoPages: SeoPageData[] = [
     ],
     sections: [
       {
-        title: 'Why thermal is strategically important',
+        title: 'Why thermal matters in the GCC',
         paragraphs: [
-          'Acoustics proves the platform. Thermal changes the scale of the business. It is the application that connects local feedstock economics to the largest imported material gap in the GCC.',
-          'That is why the story for investors is not just sustainability. It is cost structure, regional supply resilience, and a route to construction-scale manufacturing.',
+          'Acoustic panels come first; thermal insulation is the larger construction application. It connects regional agricultural feedstock to one of the biggest categories of imported building material in the GCC.',
+          'For builders and developers, the interest is practical: insulation made close to site, from regional residue rather than imported foam, with supply that does not depend on long logistics chains.',
         ],
       },
       {
@@ -252,10 +252,10 @@ export const seoPages: SeoPageData[] = [
         ],
       },
       {
-        title: 'How NUMU is approaching the market',
+        title: 'How NUMU is developing packaging',
         paragraphs: [
-          'The company is not claiming global packaging scale from day one. It is approaching the segment through technology access, regional execution, and a phased activation path.',
-          'That makes the offer more credible to investors and to early commercial partners who want to see real manufacturing readiness rather than a concept render.',
+          'NUMU is not claiming packaging at scale from day one. The line is being developed through technology access with Biomyc, regional production in Dubai, and pilot runs with early partners.',
+          'Brands and logistics partners can start with a defined product, a sample insert and a small batch, before any decision on volume.',
         ],
       },
       {
@@ -351,10 +351,10 @@ export const seoPages: SeoPageData[] = [
         ],
       },
       {
-        title: 'Why investors care about the platform framing',
+        title: 'One material, many products',
         paragraphs: [
-          'A single product business can look fragile. A material platform with multiple sequenced revenue engines looks more durable because learning, tooling, supplier relationships, and process know-how compound across applications.',
-          'That is why Palmyco™ should be understood as the base layer of the company, not a one-off object material.',
+          'Palmyco™ is the base of everything NUMU makes: acoustic panels, wall surfaces, lighting, furniture and artworks. Moulds, growing know-how and finishing improve with every product and carry across to the next.',
+          'For a client, that means a material with a track record across applications, and a team that can take a new form from sample to production in the same Dubai lab.',
         ],
       },
       {
@@ -444,10 +444,10 @@ export const seoPages: SeoPageData[] = [
     ],
     sections: [
       {
-        title: 'What investors should see here',
+        title: 'What these projects show',
         paragraphs: [
-          'The point of these projects is not that they are already giant revenue lines. The point is that the company has moved material, built an installation, grown full-scale prototypes, activated partners, and advanced a real operational line in Dubai.',
-          'That matters because early-stage materials businesses often die in the gap between narrative and fabrication. NUMU is already on the fabrication side of that line.',
+          'NUMU has built a grown installation, produced full-scale prototypes, worked with design partners, and runs a real production line in Dubai.',
+          'For architects and clients, that matters more than any render: the material has been grown, finished and installed, and the team knows where it performs and where it still needs testing.',
         ],
       },
       {

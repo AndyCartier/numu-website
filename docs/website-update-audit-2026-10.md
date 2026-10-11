@@ -132,3 +132,41 @@ New content from `NUMU_Furniture_Cladding.pdf` (Downloads), whose embedded image
 The earlier "PALMYCO Surfaces" visualisations (FOLD relief walls, cell screens) remain in the homepage moodboards and the gallery.
 
 Unable to check: whether `NEXT_PUBLIC_CAL_HOTLINE_URL` is set in Vercel. The connector has no permission to read environment variables, and the Vercel CLI isn't installed. The Gmail connector returned "precondition failed".
+
+## 9. Visual and content pass for a design studio and manufacturer, 11 October 2026
+
+Removed or condensed (content still reachable where noted):
+- `/collections` image gallery (114 images) removed; it 308-redirects to `/shop`. Navigation, footer, sitemap and in-page links now point to products. The page was never live on www.numu.bio.
+- Homepage "Four engines. One platform." revenue-engine block (investor content) removed from the public view; still in the gated investor view.
+- Homepage Thermal and Packaging "platform horizon" sections are folded into the Applications cards, which link to `/thermal-insulation-uae` and `/mycelium-packaging-uae`.
+- Homepage Events and Packaging moodboards removed; Hospitality, Workplace and Furniture & cladding remain.
+- "Material experiments" carousel: unrelated projects (Mymo, Kinoko, Reroot, Spora, old lamps) and repeated renders removed. It is now 7 real NUMU material and process photographs.
+
+Rewritten for clients rather than investors:
+- Hero: "Grown materials, surfaces and objects. Made in Dubai." (replaces the unverifiable "Middle East's first…").
+- Statement (no "four revenue lines"), Applications intro, Team intro and one manifesto line.
+- Investor-framed passages on the thermal, packaging, PALMYCO and case-studies SEO pages.
+- Navigation: About, PALMYCO™, Products, FOLD, Mushroomiya, Spaces, Partnerships.
+
+Visual fixes:
+- The lab film showed a grey box until hovered. It now keeps a poster until it plays; the poster is a frame from the film itself (`/images/products/lab-film-poster.jpg`).
+- Long product titles shrink instead of breaking mid-word.
+- The lightbox now loads the web derivative; `/collections/...` keys previously pointed to non-public files.
+- 27 orphaned web derivatives (5.8 MB) deleted.
+
+Fungal Art imagery: older works as the main set, from full-resolution originals.
+
+| Image | Source |
+|---|---|
+| Copper-framed work and edge detail | `Downloads/Images/IMG_8147` and `IMG_8153` (HEIC) |
+| Black-framed rust work | `Pictures_Cartier/Cartier_Figure3-2` |
+| Slim black-framed work | `IMG_8228` |
+| #9 diptych | Portfolio reference image, label cropped |
+| Rust close-up | `04 - Fungal Art Series 2 closeup` |
+| #1 in sunlight | `Cartier_Figure3-1` |
+| Outdoor work | `IMG_8608` |
+| Aurum desert shot | `IMG_9535` (4257 × 5134) |
+| Second Aurum gold detail | `IMG_9297` |
+| Collaboration Series (4 images) | `IMG_8244`, `8245`, `8321`, `8323` (1536 × 2048), replacing 600 px copies |
+
+Several older works also exist only as previews in the Photos library (originals in iCloud). Downloading those originals would allow sharper versions.

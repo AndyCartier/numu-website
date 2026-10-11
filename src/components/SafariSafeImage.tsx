@@ -18,11 +18,12 @@ export default function SafariSafeImage({ src, alt, fill = false, priority = fal
   const preserveOriginal = src.startsWith('/branding/') || src.endsWith('.svg')
   const asset = preserveOriginal ? undefined : assets[src]
   // Existing pre-generated srcsets avoid duplicate optimization and retain originals.
+  // The lightbox reads data-full-src: use the largest web derivative, since some keys (/collections/...) are not public files.
   // eslint-disable-next-line @next/next/no-img-element
   return <img {...props} alt={alt} src={asset?.src || src} srcSet={props.srcSet || asset?.srcSet}
     sizes={props.sizes || (fill ? '100vw' : undefined)}
     width={props.width || (!fill ? asset?.width : undefined)} height={props.height || (!fill ? asset?.height : undefined)}
-    data-full-src={src}
+    data-full-src={asset?.src || src}
     loading={priority ? 'eager' : props.loading || 'lazy'} fetchPriority={priority ? 'high' : 'auto'} decoding="async"
     style={fill ? { position: 'absolute', inset: 0, width: '100%', height: '100%', ...style } : style} />
 }

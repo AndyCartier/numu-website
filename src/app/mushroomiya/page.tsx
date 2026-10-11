@@ -157,7 +157,7 @@ export default function MushroomiyaPage() {
         </div>
       </header>
 
-      <aside className="review-container lamp-gallery-link"><p>Explore the complete lighting collection, including later renders, material details and design studies.</p><Link className="review-link" href="/collections?category=Lighting">View the lighting collection ↗</Link><Link className="review-link secondary" href="/shop/mushroomiya">View commissioning options ↗</Link></aside>
+      <aside className="review-container lamp-gallery-link"><p>Mushroomiya is made to order by commission, Ø 1200 mm, grown in Dubai.</p><Link className="review-link" href="/shop/mushroomiya">View commissioning options ↗</Link></aside>
       <section className="px-6 md:px-12 py-16 md:py-24" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-16 items-start">
           <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', backgroundColor: 'rgba(26,23,20,0.04)' }}>

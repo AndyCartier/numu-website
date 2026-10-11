@@ -127,8 +127,8 @@ export type InvestorContent = {
 export function loadVisitorContent(): VisitorContent {
   return {
     hero: {
-      lines: ["The Middle East's first", 'bio-engineered', 'material platform.'],
-      sublabel: 'UAE — Bio-composites platform',
+      lines: ['Grown materials,', 'surfaces and objects.', 'Made in Dubai.'],
+      sublabel: 'Material design & manufacturing — Dubai, UAE',
       meta: 'Est. 2025 — Dubai, UAE',
       cta: { label: 'Explore the material system', href: '#statement' },
     },

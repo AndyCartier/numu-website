@@ -54,6 +54,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const showInquiry = physical || bookingRequest
   const stage = product.status === 'coming_soon' ? 'Coming soon' : product.stage ? STAGE_LABEL[product.stage] : 'On request'
   const hero = product.images[0]
+  // Long single words (e.g. 'Collaboration') get a smaller title so they never break mid-word.
+  const longestWord = Math.max(...product.name.split(/\s+/).map(word => word.length))
   // The hero frame follows the image: portrait stays 4:5, landscape renders at 3:2 instead of being cropped.
   const heroSize = hero ? (responsiveImages as Record<string, { width: number; height: number }>)[hero.src] : undefined
   const heroAspect = heroSize && heroSize.width > heroSize.height * 1.1 ? '3 / 2' : '4 / 5'
@@ -94,7 +96,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
         </div>
         <aside className="lg:sticky lg:top-24">
           <Label>{product.category} · {stage}</Label>
-          <h1 className="font-display mt-5" style={{ fontSize: 'clamp(3rem,6vw,6.5rem)', lineHeight: 1, letterSpacing: '-.03em', overflowWrap: 'anywhere' }}>{product.name}</h1>
+          <h1 className="font-display mt-5" style={{ fontSize: longestWord > 10 ? 'clamp(2.4rem,4.2vw,4.6rem)' : 'clamp(3rem,6vw,6.5rem)', lineHeight: 1, letterSpacing: '-.03em', overflowWrap: 'break-word', hyphens: 'manual' }}>{product.name}</h1>
           <p className="font-sans mt-4" style={{ fontSize: '.95rem', opacity: .62 }}>{product.subtitle}</p>
           <p className="font-sans mt-8 leading-[1.8]" style={{ fontSize: '1rem', opacity: .74 }}>{product.description}</p>
           {product.stageNote && <p className="font-sans mt-6 p-4 leading-[1.65]" style={{ fontSize: '.8rem', border: BORDER, background: 'rgba(26,23,20,.025)', opacity: .82 }}>{product.stageNote}</p>}

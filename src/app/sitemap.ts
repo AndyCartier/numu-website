@@ -16,7 +16,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/thermal-insulation-uae', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/mycelium-packaging-uae', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/mushroomiya', priority: 0.75, changeFrequency: 'monthly' as const },
-    { path: '/collections', priority: 0.8, changeFrequency: 'weekly' as const },
     { path: '/shop', priority: 0.85, changeFrequency: 'weekly' as const },
     ...publicProducts.filter(product => ['available', 'made_to_order'].includes(product.status) && product.slug !== 'shop-review-object').map(product => ({ path: `/shop/${product.slug}`, priority: product.category === 'Experiences' ? 0.5 : 0.72, changeFrequency: 'monthly' as const })),
     { path: '/palmyco', priority: 0.8, changeFrequency: 'weekly' as const },

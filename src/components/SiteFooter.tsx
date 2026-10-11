@@ -16,7 +16,6 @@ export default function SiteFooter() {
           {[
             ['/', 'Home'],
             ['/shop', 'Products'],
-            ['/collections', 'Gallery'],
             ['/mushroomiya', 'Mushroomiya'],
             ['/case-studies', 'Projects'],
             ['/partnerships', 'Partnerships'],
