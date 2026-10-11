@@ -5,11 +5,12 @@ export type ProductCategory = 'Acoustic & Architectural Surfaces' | 'Lighting' |
 export type ShippingClass = 'small_parcel' | 'medium_parcel' | 'large_parcel' | 'oversize' | 'oversize_fragile' | 'artwork' | 'project_freight' | 'digital_or_service'
 
 import { type DevelopmentStage, type SpecEvidence } from './labels'
+import type { ImageFraming } from './imageFit'
 export { STAGE_LABEL, EVIDENCE_LABEL, type DevelopmentStage, type SpecEvidence } from './labels'
 
 export type ProductSpec = { label: string; value: string; evidence?: SpecEvidence }
 export type ImageKind = 'photograph' | 'visualisation' | 'design_study'
-export type ProductImage = { src: string; alt: string; kind?: ImageKind; caption?: string }
+export type ProductImage = { src: string; alt: string; kind?: ImageKind; caption?: string } & ImageFraming
 export type ProductVariant = { id: string; name: string; description?: string; priceAdjustmentAed?: number; available?: boolean }
 export type ProductInquiry = { cta: string; projectFields?: boolean; quantityLabel?: string }
 
@@ -302,7 +303,7 @@ export const PRODUCTS: Product[] = [
       { title: 'Collectors and galleries', text: 'One-off pieces developed with the studio to a brief.' },
     ],
     images: [
-      { src: '/images/catalogue/veneer/veneer-tile-sideboard.jpg', alt: 'Long walnut sideboard with a front of 20 × 20 cm grown veneer tiles on a bronze plinth', kind: 'visualisation' },
+      { src: '/images/catalogue/veneer/veneer-tile-sideboard.jpg', alt: 'Long walnut sideboard with a front of 20 × 20 cm grown veneer tiles on a bronze plinth', kind: 'visualisation', fit: 'contain', matte: 'linear-gradient(#baa99a 0%, #baa99a 50%, #cdb7a6 50%, #cdb7a6 100%)' },
       { src: '/images/catalogue/veneer/veneer-material-02.jpg', alt: 'Grown veneer surface with dark linear veins through a pale ground', kind: 'photograph', caption: 'The grown veneer surface. Real material.' },
       { src: '/images/catalogue/veneer/veneer-plate-cabinet.jpg', alt: 'Tall cabinet with two grown veneer plate doors open onto a lit bar', kind: 'visualisation' },
       { src: '/images/catalogue/veneer/veneer-tile-low-table.jpg', alt: 'Low table clad in grown veneer tiles on all faces', kind: 'visualisation' },
@@ -359,7 +360,7 @@ export const PRODUCTS: Product[] = [
       { label: 'Minimum quantity and lead time', value: 'Confirmed with the brief', evidence: 'on_request' },
     ],
     images: [
-      { src: '/collections/objects/13 - Triangular Milestone Desk Gifts.png', alt: 'Triangular grown milestone pieces with engraved brass plates and a fitted box', kind: 'visualisation' },
+      { src: '/collections/objects/13 - Triangular Milestone Desk Gifts.png', alt: 'Triangular grown milestone pieces with engraved brass plates and a fitted box', kind: 'visualisation', focus: '38% 50%' },
       { src: '/collections/objects/01 - Aperture Award.png', alt: 'Aperture award, a grown ring on a dark base', kind: 'visualisation' },
       { src: '/collections/objects/02 - Centre Award.png', alt: 'Centre award, a grown upright form', kind: 'visualisation' },
       { src: '/collections/objects/04 - Facet Medal.png', alt: 'Faceted grown medal', kind: 'visualisation' },
@@ -408,15 +409,16 @@ export const PRODUCTS: Product[] = [
     seo: { title: 'Bespoke Mycelium Commissions in Dubai | NUMU', description: 'Custom PALMYCO™ mycelium pieces for hospitality, culture, events and architecture: walls, lighting, objects and artworks grown in Dubai to a brief. Price on request.' },
   },
   {
-    id: 'mycelium-hotline', slug: 'mycelium-hotline', name: 'Mycelium Hotline', subtitle: 'A material conversation', category: 'Experiences', transactionMode: 'booking', status: 'available', priceType: 'on_request', stage: 'service',
-    description: 'A focused conversation for material questions, project thinking, and early-stage collaboration.', story: 'Forty-five minutes with the people who grow the material.',
+    id: 'mycelium-hotline', slug: 'mycelium-hotline', name: 'Mycelium Hotline', subtitle: 'Open every Wednesday · 30 minutes per line', category: 'Experiences', transactionMode: 'booking', status: 'available', priceType: 'on_request', stage: 'service',
+    description: 'Seven years of mycelium mistakes. Brutally honest answers. A 30-minute call with Andy Cartier, every Wednesday.', story: 'Seven years of mycelium mistakes. Brutally honest answers.',
     storyParagraphs: [
-      'The Mycelium Hotline is a one-to-one call with the NUMU team for designers, architects, makers and researchers working with mycelium: growing problems, material choices, feasibility of a project, or how to start.',
-      'Sessions are booked and paid through Cal.com. If online booking is not open at the moment, send a request with your preferred times and we will reply with a booking link.',
+      'The Mycelium Hotline is a one-to-one, 30-minute call with Andy Cartier, open every Wednesday, for designers, architects, makers and researchers working with mycelium: contamination and growing problems, material choices, the feasibility of a project, or simply how to start.',
+      'It is a service of Studio Cartier, Andy’s design studio, drawing on seven years of growing, failing and fixing in labs and workshops in Europe and Dubai.',
+      'Sessions are booked and paid through Cal.com. If online booking is not open at the moment, send a request with your preferred Wednesday and we will reply with a booking link.',
     ],
-    inquiry: { cta: 'Request a session', quantityLabel: 'Preferred dates and times (Dubai time)' },
-    leadTime: '45 minutes', images: [{ src: '/images/projects/production_detail_03.jpg', alt: 'NUMU material production detail', kind: 'photograph' }], bookingProvider: 'cal.com', bookingUrl: process.env.NEXT_PUBLIC_CAL_HOTLINE_URL,
-    seo: { title: 'Mycelium Hotline | NUMU', description: 'Book a NUMU material conversation.' },
+    inquiry: { cta: 'Request a session', quantityLabel: 'Preferred Wednesday and time (Dubai time)' },
+    leadTime: '30 minutes, every Wednesday', images: [{ src: '/images/catalogue/hotline/mycelium-hotline-poster.jpg', alt: 'The Mycelium Hotline poster: a red polka-dot rotary telephone, open every Wednesday, 30 minutes per line' }], bookingProvider: 'cal.com', bookingUrl: process.env.NEXT_PUBLIC_CAL_HOTLINE_URL,
+    seo: { title: 'Mycelium Hotline | 30-Minute Mycelium Calls with Andy Cartier | NUMU', description: 'Seven years of mycelium mistakes, brutally honest answers. Book a 30-minute call with Andy Cartier, every Wednesday. A service of Studio Cartier.' },
   },
   {
     id: 'masterclass', slug: 'masterclass', name: 'Masterclass', subtitle: 'Future workshop', category: 'Experiences', transactionMode: 'booking', status: 'coming_soon', priceType: 'on_request', stage: 'service',

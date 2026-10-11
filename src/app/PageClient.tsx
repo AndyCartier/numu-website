@@ -15,6 +15,7 @@ import {
   warmMediaAssets,
 } from './preloadAssets'
 import ProcessDiagram from '@/components/ProcessDiagram'
+import { framing, type ImageFraming } from '@/lib/commerce/imageFit'
 import CollectionFeatures, { HomeIntroduction } from '@/components/CollectionFeatures'
 import MobileNav from '@/components/MobileNav'
 import ImageDialog from '@/components/ImageDialog'
@@ -2863,8 +2864,8 @@ const MOODBOARDS = [
     wide: true,
     links: [{ href: '/shop/grown-veneer-furniture', label: 'Grown veneer furniture' }, { href: '/shop/architectural-surfaces', label: 'Grown veneer cladding' }],
     images: [
-      { src: '/images/catalogue/veneer/veneer-tile-sideboard.jpg', alt: 'Walnut sideboard with a front of grown veneer tiles, visualisation' },
-      { src: '/images/catalogue/veneer/veneer-plate-cabinet.jpg', alt: 'Cabinet with grown veneer plate doors, visualisation' },
+      { src: '/images/catalogue/veneer/veneer-tile-sideboard.jpg', alt: 'Walnut sideboard with a front of grown veneer tiles, visualisation', fit: 'contain', matte: 'linear-gradient(#baa99a 0%, #baa99a 50%, #cdb7a6 50%, #cdb7a6 100%)' },
+      { src: '/images/catalogue/veneer/veneer-plate-cabinet.jpg', alt: 'Cabinet with grown veneer plate doors, visualisation', focus: '62% 50%' },
       { src: '/images/catalogue/veneer/veneer-cladding-bedroom.jpg', alt: 'Bedroom wall clad in grown veneer plates, visualisation' },
       { src: '/images/catalogue/veneer/veneer-material-01.jpg', alt: 'Grown veneer plates, material photograph' },
     ],
@@ -2903,9 +2904,9 @@ function Moodboards() {
                 <div
                   key={image.src}
                   className="relative overflow-hidden bg-[#e7e0d5]"
-                  style={'wide' in board && board.wide ? { aspectRatio: '4 / 5' } : undefined}
+                  style={{ ...('wide' in board && board.wide ? { aspectRatio: '4 / 5' } : {}), ...framing(image as ImageFraming & { src: string }, 'wide' in board && board.wide ? 4 / 5 : 1).frameStyle }}
                 >
-                  <Image src={image.src} alt={image.alt} fill className="object-cover transition-transform duration-700 hover:scale-[1.04]" sizes="(max-width: 1280px) 50vw, 25vw" />
+                  <Image src={image.src} alt={image.alt} fill className="object-cover transition-transform duration-700 hover:scale-[1.04]" style={framing(image as ImageFraming & { src: string }, 'wide' in board && board.wide ? 4 / 5 : 1).imgStyle} sizes="(max-width: 1280px) 50vw, 25vw" />
                 </div>
               ))}
             </div>
@@ -3305,8 +3306,8 @@ function VisitorView({
             </p>
           </div>
           <div className="h-full p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.02)' }}>
-            <div className="relative mb-4 overflow-hidden" style={{ aspectRatio: '4/3', backgroundColor: 'rgba(128,128,128,0.06)' }}>
-              <Image src="/images/user/fold-panel-studio.jpg" alt="A real FOLD acoustic panel prototype in the NUMU studio, Dubai" fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+            <div className="relative mb-4 overflow-hidden" style={{ aspectRatio: '4/3', background: 'linear-gradient(#a1a097 5%, #989990 14%, #909087 23%, #8b8b82 32%, #84847c 41%, #92928a 50%, #cac9c5 59%, #cfcecb 68%, #d0cfcd 77%, #cecdcc 86%, #cccbc9 95%)' }}>
+              <Image src="/images/user/fold-panel-studio.jpg" alt="A real FOLD acoustic panel prototype in the NUMU studio, Dubai" fill className="object-cover" style={{ objectFit: 'contain' }} sizes="(max-width: 768px) 100vw, 33vw" />
             </div>
             <VLabel text="Dubai, UAE — 2026 · Prototype" />
             <p className="font-display text-xl md:text-2xl mt-1">FOLD panels</p>

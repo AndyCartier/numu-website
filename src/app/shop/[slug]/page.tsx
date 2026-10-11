@@ -9,6 +9,7 @@ import { EVIDENCE_LABEL, STAGE_LABEL, getProduct, isPhysical, publicProducts, re
 import { productPriceLabel } from '@/lib/commerce/money'
 import { buildAbsoluteUrl, SITE_URL } from '@/lib/site'
 import responsiveImages from '@/generated/responsive-images.json'
+import { framing } from '@/lib/commerce/imageFit'
 
 const BORDER = '1px solid rgba(128,128,128,.15)'
 const KIND_LABEL: Record<NonNullable<ProductImage['kind']>, string> = { photograph: 'Photograph', visualisation: 'Visualisation', design_study: 'Design study' }
@@ -59,6 +60,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   // The hero frame follows the image: portrait stays 4:5, landscape renders at 3:2 instead of being cropped.
   const heroSize = hero ? (responsiveImages as Record<string, { width: number; height: number }>)[hero.src] : undefined
   const heroAspect = heroSize && heroSize.width > heroSize.height * 1.1 ? '3 / 2' : '4 / 5'
+  const heroFrame = framing(hero, heroAspect === '3 / 2' ? 3 / 2 : 4 / 5)
   const gallery = product.images.slice(1)
   const related = relatedProducts(product)
   const url = buildAbsoluteUrl(`/shop/${product.slug}`).toString()
@@ -90,8 +92,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
         <Link href={`/shop?family=${encodeURIComponent(product.category)}`} style={{ color: 'inherit' }}>{product.category}</Link>
       </nav>
       <div className="max-w-[1440px] mx-auto mt-8 grid lg:grid-cols-[1.25fr_.75fr] gap-10 lg:gap-16 items-start">
-        <div className="relative overflow-hidden" style={{ aspectRatio: heroAspect, maxHeight: '86vh', width: '100%', background: 'rgba(26,23,20,.05)' }}>
-          {hero && <Image src={hero.src} alt={hero.alt} data-lightbox-caption={`${product.name} — ${hero.caption || hero.alt}${hero.kind && hero.kind !== 'photograph' ? ` ${KIND_LABEL[hero.kind]}. Indicative only.` : ''}`} fill priority className="object-cover" sizes="(max-width:1024px) 100vw, 60vw" />}
+        <div className="relative overflow-hidden" style={{ aspectRatio: heroAspect, maxHeight: '86vh', width: '100%', background: 'rgba(26,23,20,.05)', ...heroFrame.frameStyle }}>
+          {hero && <Image src={hero.src} alt={hero.alt} data-lightbox-caption={`${product.name} — ${hero.caption || hero.alt}${hero.kind && hero.kind !== 'photograph' ? ` ${KIND_LABEL[hero.kind]}. Indicative only.` : ''}`} fill priority className="object-cover" style={heroFrame.imgStyle} sizes="(max-width:1024px) 100vw, 60vw" />}
           {hero?.kind && <span className="catalogue-badge">{KIND_LABEL[hero.kind]}</span>}
         </div>
         <aside className="lg:sticky lg:top-24">
@@ -228,8 +230,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {related.map(item => (
               <Link key={item.id} href={`/shop/${item.slug}`} className="group" style={{ color: 'inherit', textDecoration: 'none' }}>
-                <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 3', background: 'rgba(26,23,20,.05)' }}>
-                  {item.images[0] && <Image src={item.images[0].src} alt={item.images[0].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" sizes="(max-width:640px) 100vw, 33vw" />}
+                <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', background: 'rgba(26,23,20,.05)', ...framing(item.images[0], 4 / 5).frameStyle }}>
+                  {item.images[0] && <Image src={item.images[0].src} alt={item.images[0].alt} fill className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" style={framing(item.images[0], 4 / 5).imgStyle} sizes="(max-width:640px) 100vw, 33vw" />}
                 </div>
                 <p className="font-sans uppercase tracking-[.14em] mt-4" style={{ fontSize: '.6rem', opacity: .55 }}>{item.category}</p>
                 <p className="font-display mt-1" style={{ fontSize: '1.45rem' }}>{item.name}</p>

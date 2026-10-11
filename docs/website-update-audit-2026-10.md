@@ -170,3 +170,14 @@ Fungal Art imagery: older works as the main set, from full-resolution originals.
 | Collaboration Series (4 images) | `IMG_8244`, `8245`, `8321`, `8323` (1536 × 2048), replacing 600 px copies |
 
 Several older works also exist only as previews in the Photos library (originals in iCloud). Downloading those originals would allow sharper versions.
+
+## 10. Hotline poster and product framing, 11 October 2026
+
+- Mycelium Hotline: Andy's poster (`public/images/catalogue/hotline/mycelium-hotline-poster.jpg`, 1080 × 1350) is now the product image. The page reflects the poster's facts: open every Wednesday, 30 minutes per line (it previously said 45), "Seven years of mycelium mistakes. Brutally honest answers.", a service of Studio Cartier.
+- Product framing (`src/lib/commerce/imageFit.ts`): an image can set `focus` (crop position) or `fit: 'contain'` with a `matte` sampled from the photo's own edge colours, plus feathered edges, so very wide or tall products stay whole and centred. Applied to:
+  - the Grown Veneer sideboard (catalogue card, related thumbnails, homepage furniture board);
+  - the real FOLD prototype photo (homepage intro and "Built work" card);
+  - Objects & Editions (focus);
+  - the veneer cabinet tile (focus).
+- "Related" thumbnails changed from 4:3 to 4:5, so portrait works and posters are no longer cut at top and bottom.
+- Checked with simulated crops of every product's lead image (card, hero and related) and of the homepage frames, then in Chromium and WebKit.

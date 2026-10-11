@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import type { Product, ProductCategory } from '@/lib/commerce/catalogue'
 import { STAGE_LABEL } from '@/lib/commerce/labels'
+import { framing } from '@/lib/commerce/imageFit'
 import { productPriceLabel } from '@/lib/commerce/money'
 
 type Filter = 'All' | Exclude<ProductCategory, 'Experiences'>
@@ -18,11 +19,12 @@ function stageLabel(product: Product) {
 
 function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
   const image = product.images[0]
+  const { imgStyle, frameStyle } = framing(image, 4 / 5)
   return (
     <Link href={`/shop/${product.slug}`} className="group catalogue-card" style={{ color: 'inherit', textDecoration: 'none' }}>
-      <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', background: 'rgba(26,23,20,.05)' }}>
+      <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', background: 'rgba(26,23,20,.05)', ...frameStyle }}>
         {image
-          ? <Image src={image.src} alt={image.alt} fill priority={priority} className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
+          ? <Image src={image.src} alt={image.alt} fill priority={priority} className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" style={imgStyle} sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />
           : <div className="h-full flex items-end p-6 font-sans uppercase tracking-[.16em]" style={{ fontSize: '.625rem', opacity: .45 }}>Image forthcoming</div>}
         {image?.kind === 'visualisation' && (
           <span className="catalogue-badge">Visualisation</span>
