@@ -17,3 +17,11 @@ mushroomiya_parametric
 output
 pipeline
 workspace
+# Local-only files that must never be uploaded (Oct 2026)
+.env*.local
+.venv*
+renders
+scripts/reference_photos
+Codex Image*
+.agents
+_references
