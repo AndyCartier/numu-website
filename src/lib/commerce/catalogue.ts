@@ -414,10 +414,10 @@ export const PRODUCTS: Product[] = [
     storyParagraphs: [
       'The Mycelium Hotline is a one-to-one, 30-minute call with Andy Cartier, open every Wednesday, for designers, architects, makers and researchers working with mycelium: contamination and growing problems, material choices, the feasibility of a project, or simply how to start.',
       'It is a service of Studio Cartier, Andy’s design studio, drawing on seven years of growing, failing and fixing in labs and workshops in Europe and Dubai.',
-      'Sessions are booked and paid through Cal.com. If online booking is not open at the moment, send a request with your preferred Wednesday and we will reply with a booking link.',
+      'Sessions are booked and paid online through Cal.com: choose a Wednesday slot and you will receive the call details by email.',
     ],
     inquiry: { cta: 'Request a session', quantityLabel: 'Preferred Wednesday and time (Dubai time)' },
-    leadTime: '30 minutes, every Wednesday', images: [{ src: '/images/catalogue/hotline/mycelium-hotline-poster.jpg', alt: 'The Mycelium Hotline poster: a red polka-dot rotary telephone, open every Wednesday, 30 minutes per line', fit: 'contain', matte: '#f4e9d5' }], bookingProvider: 'cal.com', bookingUrl: process.env.NEXT_PUBLIC_CAL_HOTLINE_URL,
+    leadTime: '30 minutes, every Wednesday', images: [{ src: '/images/catalogue/hotline/mycelium-hotline-poster.jpg', alt: 'The Mycelium Hotline poster: a red polka-dot rotary telephone, open every Wednesday, 30 minutes per line', fit: 'contain', matte: '#f4e9d5' }], bookingProvider: 'cal.com', bookingUrl: process.env.NEXT_PUBLIC_CAL_HOTLINE_URL || 'https://www.cal.eu/andycartier/hotline',
     seo: { title: 'Mycelium Hotline | 30-Minute Mycelium Calls with Andy Cartier | NUMU', description: 'Seven years of mycelium mistakes, brutally honest answers. Book a 30-minute call with Andy Cartier, every Wednesday. A service of Studio Cartier.' },
   },
   {
