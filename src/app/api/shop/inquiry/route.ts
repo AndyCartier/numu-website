@@ -70,7 +70,7 @@ export async function POST(req: Request) {
       from: process.env.RESEND_FROM_EMAIL || 'NUMU Website <notifications@numu.bio>',
       to: [process.env.ORDER_NOTIFICATION_EMAIL || process.env.CONTACT_TO_EMAIL || 'andy@numu.bio'],
       replyTo: email,
-      subject: `${product?.category === 'Experiences' ? 'Session booking request' : SUBJECT[kind]} — ${productName || name}`,
+      subject: `${product?.category === 'Experiences' ? (product.status === 'coming_soon' ? 'Interest registration' : 'Session booking request') : SUBJECT[kind]} — ${productName || name}`,
       text: fields,
       headers: { 'X-Entity-Ref-ID': randomUUID() },
       tags: [{ name: 'request_type', value: `shop_${kind}` }],

@@ -421,8 +421,13 @@ export const PRODUCTS: Product[] = [
     seo: { title: 'Mycelium Hotline | 30-Minute Mycelium Calls with Andy Cartier | NUMU', description: 'Seven years of mycelium mistakes, brutally honest answers. Book a 30-minute call with Andy Cartier, every Wednesday. A service of Studio Cartier.' },
   },
   {
-    id: 'masterclass', slug: 'masterclass', name: 'Masterclass', subtitle: 'Future workshop', category: 'Experiences', transactionMode: 'booking', status: 'coming_soon', priceType: 'on_request', stage: 'service',
-    description: 'A future NUMU workshop around materials, making, and biological systems.', story: 'Programme details will be announced when confirmed.',
+    id: 'masterclass', slug: 'masterclass', name: 'Masterclass', subtitle: 'Hands-on mycelium workshops', category: 'Experiences', transactionMode: 'booking', status: 'coming_soon', priceType: 'on_request', stage: 'service',
+    description: 'Hands-on workshops on growing and working with mycelium materials, for architects, designers and makers. Next dates announced to those who register interest.', story: 'Learn the material by growing it.',
+    storyParagraphs: [
+      'NUMU has run paid mycelium masterclasses for architects and designers. Each one covers how the material grows, how it is formed and finished, and where it performs, with time spent on real samples from the Dubai lab.',
+      'The next dates and programme are not yet fixed. Register your interest and you will be the first to hear when sessions open.',
+    ],
+    inquiry: { cta: 'Register interest', quantityLabel: 'Number of participants' },
     images: [{ src: '/images/projects/production_detail_02.jpg', alt: 'NUMU material process', kind: 'photograph' }], seo: { title: 'Masterclass | NUMU', description: 'Future NUMU materials workshop.' },
   },
   // Draft records prove the catalogue supports future objects without publishing commercial claims.

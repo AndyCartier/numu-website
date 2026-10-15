@@ -408,7 +408,7 @@ function SlideTraction() {
 function SlideWhatNumuBuilds() {
   const [ref, inView] = useInView()
   const attrs = [
-    ['Material',     'Palmyco · proprietary mycelium + regional palm-fibre composite'],
+    ['Material',     'PALMYCO · proprietary mycelium + regional palm-fibre composite'],
     ['Feedstock',    'Regional agricultural waste · near-zero input cost'],
     ['Process',      'Proprietary hot-arid growth + pressing · in-house spawn + substrate'],
     ['Applications', 'Acoustic · thermal · packaging · certified specification'],
@@ -436,7 +436,7 @@ function SlideWhatNumuBuilds() {
         </div>
       </div>
       <div className="slide-two-col-image">
-        <img src="/images/products/biofoam_detail.png" alt="Palmyco material detail" style={{ objectPosition: 'center center' }} />
+        <img src="/images/products/biofoam_detail.png" alt="PALMYCO material detail" style={{ objectPosition: 'center center' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(26,23,20,0.6) 100%)' }} />
       </div>
       <SlideNum n={7} />

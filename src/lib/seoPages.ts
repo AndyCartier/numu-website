@@ -25,7 +25,7 @@ export const seoPages: SeoPageData[] = [
     highlights: [
       { label: 'Base', value: 'Dubai, UAE' },
       { label: 'Use case', value: 'Hospitality, retail, offices' },
-      { label: 'Material', value: 'Palmyco™ grown bio-composite' },
+      { label: 'Material', value: 'PALMYCO™ grown bio-composite' },
       { label: 'Buyers', value: 'Architects + fit-out teams' },
     ],
     applications: [
@@ -49,7 +49,7 @@ export const seoPages: SeoPageData[] = [
       {
         title: 'Why this matters in the UAE',
         paragraphs: [
-          'The GCC imports its acoustic construction materials. That makes lead times, pricing, and material choices dependent on overseas suppliers.',
+          'The GCC imports most of its acoustic construction materials. That makes lead times, pricing, and material choices dependent on overseas suppliers.',
           'NUMU is building local production in Dubai so acoustic projects can source a distinctive bio-based system regionally rather than treating sustainability as an imported add-on.',
         ],
       },
@@ -57,7 +57,7 @@ export const seoPages: SeoPageData[] = [
         title: 'What makes NUMU different',
         paragraphs: [
           'The entry product is not a commodity board. It is a premium acoustic surface grown from mycelium and regional agricultural fibres, tuned for interiors where design and specification meet.',
-          'That matters commercially because the acoustic line supports stronger early margins, faster sales cycles, and a credible route to larger specification work after certification.',
+          'Each panel is grown, finished and checked in Dubai, with layout, finish and fixing agreed per project after a sample review.',
         ],
       },
       {
@@ -87,12 +87,12 @@ export const seoPages: SeoPageData[] = [
     relatedLinks: [
       {
         href: '/palmyco',
-        title: 'Palmyco™ material platform',
+        title: 'PALMYCO™ material platform',
         description: 'See the material system behind the acoustic line.',
       },
       {
         href: '/case-studies',
-        title: 'Case studies and traction',
+        title: 'Projects and installations',
         description: 'Review installations, project status, and material proof points.',
       },
     ],
@@ -109,7 +109,7 @@ export const seoPages: SeoPageData[] = [
     kicker: 'Thermal insulation UAE',
     heading: 'A local thermal insulation pathway for the GCC.',
     intro:
-      'NUMU is developing thermal insulation as the scale application of its material platform. The thesis is simple: near-free palm waste, regional production, and in-house spawn capability can create a locally relevant alternative to imported insulation systems.',
+      'NUMU is developing thermal insulation grown from PALMYCO™. The idea is simple: regional palm waste, production in Dubai and in-house spawn can create a local alternative to imported insulation for hot-climate buildings.',
     image: {
       src: '/images/applications/thermal_panel_wall.png',
       alt: 'NUMU thermal insulation panel concept integrated into a wall assembly',
@@ -170,7 +170,7 @@ export const seoPages: SeoPageData[] = [
       {
         question: 'Is NUMU thermal insulation already on the market?',
         answer:
-          'Not yet. NUMU positions thermal insulation as a later-stage scale application after earlier acoustic and certification milestones are reached.',
+          'Not yet. Thermal insulation is in development and will be offered once testing is complete. Acoustic surfaces are available by project today.',
       },
       {
         question: 'Why focus on mycelium insulation in the UAE?',
@@ -191,8 +191,8 @@ export const seoPages: SeoPageData[] = [
       },
       {
         href: '/palmyco',
-        title: 'Palmyco™ material system',
-        description: 'Understand the material platform behind the insulation thesis.',
+        title: 'PALMYCO™ material system',
+        description: 'The grown material behind the insulation work.',
       },
     ],
     schemaType: 'Service',
@@ -286,11 +286,11 @@ export const seoPages: SeoPageData[] = [
       {
         href: '/thermal-insulation-uae',
         title: 'Thermal insulation pathway',
-        description: 'See the other scale application on the same platform.',
+        description: 'The other application in development on the same material.',
       },
       {
         href: '/case-studies',
-        title: 'Projects and traction',
+        title: 'Projects and installations',
         description: 'Review what NUMU has already built and activated.',
       },
     ],
@@ -301,59 +301,59 @@ export const seoPages: SeoPageData[] = [
   {
     slug: 'palmyco',
     path: '/palmyco',
-    title: 'Palmyco™ Mycelium and Palm-Fibre Material Platform | NUMU',
+    title: 'PALMYCO™ Mycelium and Palm-Fibre Material Platform | NUMU',
     description:
-      'Palmyco™ is NUMU’s mycelium-and-palm-fibre material platform for acoustic, thermal, packaging, and specification-grade bio-composite applications in the UAE and GCC.',
+      'PALMYCO™ is NUMU’s mycelium-and-palm-fibre material platform for acoustic, thermal, packaging, and specification-grade bio-composite applications in the UAE and GCC.',
     kicker: 'Material platform',
-    heading: 'Palmyco™ is the platform, not just the product.',
+    heading: 'PALMYCO™, grown from the region’s palm fibre.',
     intro:
-      'Palmyco™ is NUMU’s proprietary mycelium-and-palm-fibre biocomposite. It is being developed as a regional material platform that can move from premium acoustic surfaces into thermal, packaging, and broader specification-grade construction applications. Trademark application pending.',
+      'PALMYCO™ is NUMU’s proprietary mycelium-and-palm-fibre biocomposite, grown in Dubai. It is used today for acoustic surfaces, wall cladding, lighting, furniture and artworks, and is being developed for thermal insulation and protective packaging. Trademark application pending.',
     image: {
       src: '/images/products/biofoam_detail.png',
-      alt: 'Close-up of NUMU Palmyco material texture',
+      alt: 'Close-up of NUMU PALMYCO material texture',
     },
     keywords: [
-      'Palmyco',
+      'PALMYCO',
       'mycelium palm fibre composite',
       'bio composite material UAE',
       'mycelium materials Dubai',
       'palm fibre building material GCC',
     ],
     highlights: [
-      { label: 'Platform', value: 'Acoustic, thermal, packaging' },
+      { label: 'Used for', value: 'Surfaces, lighting, furniture' },
       { label: 'Feedstock', value: 'Mycelium + regional palm fibre' },
-      { label: 'Climate thesis', value: 'Built for hot-arid conditions' },
+      { label: 'Climate', value: 'Built for hot-arid conditions' },
       { label: 'Origin', value: 'Developed in Dubai' },
     ],
     applications: [
       {
-        title: 'Acoustic surfaces',
+        title: 'Surfaces, lighting and furniture',
         description:
-          'Premium interior panels where form, tactility, and sound performance work together.',
+          'Acoustic panels, grown veneer cladding, the Mushroomiya pendant and bespoke pieces, available by inquiry today.',
       },
       {
         title: 'Thermal systems',
         description:
-          'A later-stage scale application aimed at insulation and construction assemblies.',
+          'In development: insulation for hot-climate wall assemblies, offered once testing is complete.',
       },
       {
         title: 'Packaging and specification products',
         description:
-          'Extensions of the same material logic into molded protection and broader building-material categories.',
+          'In development: moulded protective packaging as an alternative to petroleum-based foams.',
       },
     ],
     sections: [
       {
         title: 'Why palm fibre matters',
         paragraphs: [
-          'NUMU is not just substituting one imported bio-material for another. The platform is built around regional feedstocks, especially palm-derived agricultural residues that are structurally relevant to the GCC context.',
-          'That regional feedstock story matters operationally, economically, and narratively. It gives the material a reason to exist here beyond trend-driven sustainability branding.',
+          'NUMU is not substituting one imported bio-material for another. PALMYCO™ is built around regional feedstocks, especially palm-derived agricultural residues that are abundant across the GCC.',
+          'Growing close to the feedstock keeps the material local, traceable and specific to the region: a reason to exist here beyond trend-driven sustainability branding.',
         ],
       },
       {
         title: 'One material, many products',
         paragraphs: [
-          'Palmyco™ is the base of everything NUMU makes: acoustic panels, wall surfaces, lighting, furniture and artworks. Moulds, growing know-how and finishing improve with every product and carry across to the next.',
+          'PALMYCO™ is the base of everything NUMU makes: acoustic panels, wall surfaces, lighting, furniture and artworks. Moulds, growing know-how and finishing improve with every product and carry across to the next.',
           'For a client, that means a material with a track record across applications, and a team that can take a new form from sample to production in the same Dubai lab.',
         ],
       },
@@ -366,19 +366,19 @@ export const seoPages: SeoPageData[] = [
     ],
     faq: [
       {
-        question: 'What is Palmyco™?',
+        question: 'What is PALMYCO™?',
         answer:
-          'Palmyco™ is NUMU’s proprietary mycelium-and-palm-fibre biocomposite platform. It is being developed for multiple building-material and protective-format applications across the UAE and GCC.',
+          'PALMYCO™ is NUMU’s proprietary mycelium-and-palm-fibre biocomposite platform. It is being developed for multiple building-material and protective-format applications across the UAE and GCC.',
       },
       {
-        question: 'Is Palmyco™ a registered trademark?',
+        question: 'Is PALMYCO™ a registered trademark?',
         answer:
-          'No. Palmyco™ is presented with the trademark symbol because the trademark application is pending, not yet registered.',
+          'No. PALMYCO™ is presented with the trademark symbol because the trademark application is pending, not yet registered.',
       },
       {
         question: 'Why use palm fibre in a mycelium material?',
         answer:
-          'Palm-derived agricultural residues are regionally abundant in the GCC and support NUMU’s thesis of local bio-composite manufacturing rather than dependence on imported feedstocks.',
+          'Palm-derived agricultural residues are abundant in the GCC, which lets NUMU manufacture bio-composites locally rather than depend on imported feedstocks.',
       },
     ],
     relatedLinks: [
@@ -390,11 +390,11 @@ export const seoPages: SeoPageData[] = [
       {
         href: '/thermal-insulation-uae',
         title: 'Thermal insulation',
-        description: 'See the long-horizon scale application built on the same material base.',
+        description: 'Insulation in development on the same material.',
       },
     ],
     schemaType: 'Product',
-    schemaName: 'Palmyco™',
+    schemaName: 'PALMYCO™',
     schemaCategory: 'Mycelium and palm-fibre bio-composite material',
     schemaDescription: 'proprietary bio-composite material system, mycelium grown on regional agricultural fibre',
   },
@@ -403,8 +403,8 @@ export const seoPages: SeoPageData[] = [
     path: '/case-studies',
     title: 'NUMU Case Studies, Installations, and Material Projects | NUMU',
     description:
-      'Review NUMU installations, project traction, and material development signals across the UAE and Europe, including acoustic applications and platform proof points.',
-    kicker: 'Projects and traction',
+      'Review NUMU installations, prototypes and material development across the UAE and Europe, including acoustic applications and platform proof points.',
+    kicker: 'Projects',
     heading: 'Proof matters. This is what exists today.',
     intro:
       'NUMU is early, but not imaginary. The company has a completed installation in the Netherlands, full-scale prototypes grown in Dubai, a live production base, and technical work that grounds the larger platform story in execution.',
@@ -422,7 +422,7 @@ export const seoPages: SeoPageData[] = [
     highlights: [
       { label: 'Built installation', value: 'Netherlands, 2022' },
       { label: 'Recognition', value: 'BASE39 2026, winning finalist' },
-      { label: 'Packaging path', value: '1 LOI active' },
+      { label: 'Design partner', value: 'NYXO Design Studio' },
       { label: 'Base', value: 'Operational lab in Dubai' },
     ],
     applications: [
@@ -437,9 +437,9 @@ export const seoPages: SeoPageData[] = [
           'Full-scale FOLD acoustic panels grown and finished in the Dubai lab. Acoustic and fire testing is in progress; published performance figures remain design targets.',
       },
       {
-        title: 'Platform validation',
+        title: 'Mushroomiya, BASE39 2026',
         description:
-          'Certification work, packaging pathway, and adjacent R&D projects extend the story beyond one-off installations.',
+          'The grown pendant dome developed during the BASE39 Creative Accelerator, where it was a winning finalist. Made to order by commission.',
       },
     ],
     sections: [
@@ -451,10 +451,10 @@ export const seoPages: SeoPageData[] = [
         ],
       },
       {
-        title: 'Signals that compound credibility',
+        title: 'Experience behind the work',
         paragraphs: [
-          'Two Belgian patent families from prior work, active acoustic and fire certification programmes, paid mycelium masterclasses, and ongoing R&D discussions all strengthen the credibility stack around the business.',
-          'Each one on its own is not the story. Together they show accumulated domain depth rather than a startup that appeared last week with a fashionable deck.',
+          'Two Belgian patent families from prior work, acoustic and fire testing under way, paid mycelium masterclasses, and seven years of growing at production scale in Europe and the Gulf.',
+          'Together they mean a client works with a team that has already solved most of the problems a grown material can throw up.',
         ],
       },
       {

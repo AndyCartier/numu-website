@@ -181,3 +181,24 @@ Several older works also exist only as previews in the Photos library (originals
   - the veneer cabinet tile (focus).
 - "Related" thumbnails changed from 4:3 to 4:5, so portrait works and posters are no longer cut at top and bottom.
 - Checked with simulated crops of every product's lead image (card, hero and related) and of the homepage frames, then in Chromium and WebKit.
+
+## 11. Pre-deployment visitor pass, 15 October 2026
+
+Read every public page as a visitor (rendered text, desktop and mobile screenshots), then fixed:
+- Navigation: the SEO landing pages (PALMYCO, acoustic, thermal, packaging, case studies) and the FAQ had only a "Back home" link. They now carry the site navigation. Their second button now goes to Objects & Surfaces.
+- 404: the black Next.js default is replaced by a branded page with routes to Products, FOLD, Mushroomiya and Contact.
+- Masterclass: the "coming soon" dead end now has a "Register interest" form (emails NUMU with the subject "Interest registration") and notes that NUMU has run paid masterclasses.
+- Homepage copy:
+  - "Grown, not manufactured" reduced from four uses to two.
+  - FOLD end of life now reads "Bio-based material; end-of-life route confirmed for the chosen finish" (no longer "100% biodegradable" alongside a sealed finish).
+  - Investor phrases removed ("The platform compounds both", "Near-zero feedstock cost").
+  - Grammar fix ("has run … since 2025") and consistent UK spelling (moulds, fibres, stabilised).
+- PALMYCO, case studies, acoustic and thermal pages: remaining investor framing rewritten for clients ("platform, not just the product", "climate thesis", "capital milestones", "traction", "credibility stack", "margins", "thesis").
+- Brand name standardised to PALMYCO™ in visible copy (the gated investor deck keeps its styled wordmark).
+- Partnerships: "BioMyc" corrected to "Biomyc"; "thesis" wording replaced. Legacy `/shop/international`: label "NUMU / Products" (noindex).
+
+Verification:
+- Production build passes.
+- Crawl of 27 sitemap pages: no metadata, JSON-LD, link or KAVE problems.
+- 56 Chromium page views (desktop and mobile) and 20 WebKit page views (desktop and iPhone): no overflow, broken images or errors; homepage videos readyState 4.
+- Masterclass and Hotline forms tested with mocked responses.

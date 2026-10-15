@@ -1,5 +1,6 @@
 import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
+import { SubpageNav } from '@/components/SubpageNav'
 import { buildSeoJsonLd, type SeoPageData } from '@/lib/seo'
 
 const sectionLabelStyle = {
@@ -21,19 +22,8 @@ export function SeoLandingPage({ page }: { page: SeoPageData }) {
         color: '#1a1714',
       }}
     >
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '2rem 1.5rem 5rem' }}>
-        <Link
-          href="/"
-          style={{
-            ...sectionLabelStyle,
-            display: 'inline-block',
-            marginBottom: '2.25rem',
-            textDecoration: 'none',
-            color: 'inherit',
-          }}
-        >
-          NUMU / Back Home
-        </Link>
+      <SubpageNav currentPath={page.path} />
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '3rem 1.5rem 5rem' }}>
 
         <section
           style={{
@@ -85,7 +75,7 @@ export function SeoLandingPage({ page }: { page: SeoPageData }) {
                 Contact NUMU
               </Link>
               <Link
-                href="/#material"
+                href="/shop"
                 style={{
                   padding: '0.95rem 1.2rem',
                   border: '1px solid rgba(26,23,20,0.18)',
@@ -96,7 +86,7 @@ export function SeoLandingPage({ page }: { page: SeoPageData }) {
                   letterSpacing: '0.14em',
                 }}
               >
-                Explore the material system
+                View objects &amp; surfaces
               </Link>
             </div>
           </div>

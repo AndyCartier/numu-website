@@ -52,7 +52,9 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const physical = isPhysical(product)
   // Experiences without a live Cal.com link fall back to a booking request through the same form.
   const bookingRequest = !physical && product.transactionMode === 'booking' && product.status !== 'coming_soon' && !product.bookingUrl
-  const showInquiry = physical || bookingRequest
+  // Upcoming experiences collect interest through the same form rather than ending in a dead end.
+  const interestRequest = !physical && product.transactionMode === 'booking' && product.status === 'coming_soon'
+  const showInquiry = physical || bookingRequest || interestRequest
   const stage = product.status === 'coming_soon' ? 'Coming soon' : product.stage ? STAGE_LABEL[product.stage] : 'On request'
   const hero = product.images[0]
   // Long single words (e.g. 'Collaboration') get a smaller title so they never break mid-word.
@@ -209,12 +211,14 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             <Label>{product.inquiry?.cta || 'Request a quote'}</Label>
             <h2 className="font-display mt-5" style={{ fontSize: 'clamp(2.2rem,4vw,3.8rem)', lineHeight: 1.04, letterSpacing: '-.025em' }}>{product.inquiry?.projectFields ? 'Tell us about your project.' : 'Tell us what you are looking for.'}</h2>
             <p className="font-sans mt-6 leading-[1.8] max-w-md" style={{ fontSize: '.92rem', opacity: .66 }}>
-              {bookingRequest
+              {interestRequest
+                ? 'Leave your details and what you would like to learn. We will write when dates and the programme are confirmed.'
+                : bookingRequest
                 ? 'Tell us what you would like to discuss and when suits you. We reply with a booking link and the session fee.'
                 : 'We reply with availability, a sample route where relevant, and a written quote. Price, lead time and delivery are confirmed for each request.'}
             </p>
           </div>
-          <ProductInquiry productId={product.id} productName={product.name} slug={product.slug} variants={product.variants} inquiry={product.inquiry} booking={bookingRequest} />
+          <ProductInquiry productId={product.id} productName={product.name} slug={product.slug} variants={product.variants} inquiry={product.inquiry} booking={bookingRequest ? 'session' : interestRequest ? 'interest' : undefined} />
         </div>
       </section>
     )}

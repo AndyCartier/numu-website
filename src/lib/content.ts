@@ -141,7 +141,7 @@ export function loadVisitorContent(): VisitorContent {
     },
     process: {
       label: '04 — Process',
-      heading: 'Grown, not manufactured.',
+      heading: 'From palm fibre to finished piece.',
     },
     founder: {
       label: '06 — Founder',

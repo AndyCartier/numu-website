@@ -85,7 +85,7 @@ export default function PartnershipsPage() {
                 NUMU has signed an MOU with Titans Space Industries as its Bio-Materials and ISRU Composites Partner. The collaboration explores how mycelium material logic applies when local resource use is not just efficient, but necessary.
               </p>
               <p className="font-sans leading-[1.85]" style={{ fontSize: '1rem', opacity: 0.58 }}>
-                The GCC thesis and the ISRU thesis share the same foundation. You build with what is available in place, rather than shipping in every material dependency. That is why TSI sits here as a future-facing exploration. Other early conversations, including BioMyc, stay intentionally light until they mature further.
+                Making materials in the GCC and making materials beyond Earth share the same foundation: you build with what is available in place, rather than shipping in every material dependency. That is why TSI sits here as an exploratory research partnership. Other collaborations, including Biomyc on packaging, are described on the pages they relate to as they mature.
               </p>
               <Link
                 href="/partnerships/titans-space"
