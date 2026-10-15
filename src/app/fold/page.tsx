@@ -8,7 +8,7 @@ const pageTitle = 'FOLD | Grown acoustic wall panels by NUMU'
 const pageDescription =
   'FOLD is NUMU’s grown acoustic panel system, using PALMYCO mycelium composite to create tactile, architectural surfaces for interiors in the UAE.'
 const heroImage = '/images/products/fold_hero_interior.png'
-const detailImage = '/images/products/fold_solo_panel.png'
+const detailImage = '/images/catalogue/fold/fold-surface-closeup.jpg'
 const contextImage = '/images/products/fold_context_scale.png'
 const BORDER = '1px solid rgba(128,128,128,0.15)'
 
@@ -110,10 +110,10 @@ export default function FoldPage() {
           <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', backgroundColor: 'rgba(26,23,20,0.04)' }}>
             <Image
               src={detailImage}
-              alt="FOLD panel detail showing pattern and material depth"
-              data-lightbox-caption="Close view of a FOLD panel, where texture, porosity, and geometry carry the material identity."
+              alt="Low sunlight across the grown relief of FOLD panels, showing the palm-fibre texture"
+              data-lightbox-caption="Real grown FOLD panels in the Dubai lab: texture, porosity and geometry carry the material identity."
               fill
-              className="object-cover object-center"
+              className="object-cover" style={{ objectPosition: '50% 82%' }}
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
           </div>

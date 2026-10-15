@@ -3306,8 +3306,8 @@ function VisitorView({
             </p>
           </div>
           <div className="h-full p-4 md:p-5" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.02)' }}>
-            <div className="relative mb-4 overflow-hidden" style={{ aspectRatio: '4/3', background: 'linear-gradient(#a1a097 5%, #989990 14%, #909087 23%, #8b8b82 32%, #84847c 41%, #92928a 50%, #cac9c5 59%, #cfcecb 68%, #d0cfcd 77%, #cecdcc 86%, #cccbc9 95%)' }}>
-              <Image src="/images/user/fold-panel-studio.jpg" alt="A real FOLD acoustic panel prototype in the NUMU studio, Dubai" fill className="object-cover" style={{ objectFit: 'contain' }} sizes="(max-width: 768px) 100vw, 33vw" />
+            <div className="relative mb-4 overflow-hidden" style={{ aspectRatio: '4/3', backgroundColor: 'rgba(128,128,128,0.06)' }}>
+              <Image src="/images/catalogue/fold/fold-drying-rack.jpg" alt="Freshly grown FOLD panels drying on a rack in the NUMU lab, Dubai" fill className="object-cover" style={{ objectPosition: '50% 62%' }} sizes="(max-width: 768px) 100vw, 33vw" />
             </div>
             <VLabel text="Dubai, UAE — 2026 · Prototype" />
             <p className="font-display text-xl md:text-2xl mt-1">FOLD panels</p>
