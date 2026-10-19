@@ -4,10 +4,12 @@ import { join } from 'path'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getAllowedOriginHosts, isLocalDevelopmentHost } from '@/lib/site'
+import { NOTIFY_FROM, logEmailError } from '@/lib/email'
 
 const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL || 'andy@numu.bio'
 const CONTACT_BCC_EMAIL = process.env.CONTACT_BCC_EMAIL || ''
-const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'NUMU Website <notifications@numu.bio>'
+// Notifications to NUMU come from a dedicated sender (see src/lib/email.ts); the deck goes out from Andy.
+const RESEND_FROM_EMAIL = NOTIFY_FROM
 const FOUNDER_FROM_EMAIL = process.env.FOUNDER_FROM_EMAIL || 'Andy Cartier — NUMU <andy@numu.bio>'
 
 const DECK_FILENAME = 'NUMU_Investor_Deck_FINAL.pdf'
@@ -205,7 +207,7 @@ export async function POST(req: Request) {
   const resend = getResend()
   async function sendEmail(message: Parameters<typeof resend.emails.send>[0]) {
     const result = await resend.emails.send(message)
-    if (result.error) throw new Error('Email provider rejected the request')
+    if (result.error) { logEmailError('contact form', result.error); throw new Error('Email provider rejected the request') }
     return result
   }
   const messageId = randomUUID()
@@ -237,7 +239,7 @@ export async function POST(req: Request) {
             </table>
           </div>
         `,
-        headers: { 'X-Entity-Ref-ID': messageId, 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
+        headers: { 'X-Entity-Ref-ID': messageId, 'X-NUMU-Website': 'contact', 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
         tags: [{ name: 'request_type', value: 'investor_deck' }, { name: 'source', value: sourceTag }],
       })
 
@@ -273,7 +275,7 @@ export async function POST(req: Request) {
             <p style="margin:0;color:#6f6458;">${meta.followUp}</p>
           </div>
         `,
-        headers: { 'X-Entity-Ref-ID': messageId, 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
+        headers: { 'X-Entity-Ref-ID': messageId, 'X-NUMU-Website': 'contact', 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
         tags: [{ name: 'request_type', value: requestType }, { name: 'source', value: sourceTag }],
       })
     }

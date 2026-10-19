@@ -16,6 +16,13 @@ export const metadata: Metadata = {
 
 const CONTACTS = [
   {
+    label: 'Save contact',
+    value: 'Andy Cartier · NUMU',
+    href: '/numu.vcf',
+    note: 'Add NUMU to your phone in one tap',
+    action: 'Save contact',
+  },
+  {
     label: 'Website',
     value: 'numu.bio',
     href: 'https://www.numu.bio',

@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { buildAbsoluteUrl, getAllowedOriginHosts, isLocalDevelopmentHost } from '@/lib/site'
+import { NOTIFY_FROM, logEmailError, notificationHeaders, notificationHtml } from '@/lib/email'
 
 const MAX = 8_192
 const KINDS = ['international', 'project', 'product'] as const
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
   const product = getProduct(value(body.slug) || value(body.productId))
   const productName = product?.name || value(body.productName)
   const productUrl = product ? buildAbsoluteUrl(`/shop/${product.slug}`).toString() : ''
-  const fields = [
+  const rows = [
     ['Product', productName], ['Product page', productUrl], ['Option', value(body.variant, 120)],
     ['Name', name], ['Email', email], ['Country', country], ['Company', value(body.company)],
     ['Project type', value(body.projectType, 60)], ['Project location', value(body.projectLocation)],
@@ -63,19 +64,22 @@ export async function POST(req: Request) {
     ['Product ID', product?.id || value(body.productId)],
     ['Cart selection', normalizeCart(body.cartLines).map(line => `${getProduct(line.productId)?.name} / ${line.variantId || 'standard'} × ${line.quantity}`).join('; ')],
     ['Submitted from', value(body.sourcePage, 1000)], ['Time', new Date().toUTCString()],
-  ].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n')
+  ].filter(([, v]) => v) as [string, string][]
+  const fields = rows.map(([k, v]) => `${k}: ${v}`).join('\n')
+  const subjectKind = product?.category === 'Experiences' ? (product.status === 'coming_soon' ? 'Interest registration' : 'Session booking request') : SUBJECT[kind]
 
   try {
     const result = await new Resend(process.env.RESEND_API_KEY).emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'NUMU Website <notifications@numu.bio>',
+      from: NOTIFY_FROM,
       to: [process.env.ORDER_NOTIFICATION_EMAIL || process.env.CONTACT_TO_EMAIL || 'andy@numu.bio'],
       replyTo: email,
-      subject: `${product?.category === 'Experiences' ? (product.status === 'coming_soon' ? 'Interest registration' : 'Session booking request') : SUBJECT[kind]} — ${productName || name}`,
+      subject: `${subjectKind} — ${productName || name}`,
       text: fields,
-      headers: { 'X-Entity-Ref-ID': randomUUID() },
+      html: notificationHtml(`${subjectKind}${productName ? ` — ${productName}` : ''}`, rows.filter(([k]) => k !== 'Message'), message || undefined),
+      headers: notificationHeaders(randomUUID(), `shop_${kind}`),
       tags: [{ name: 'request_type', value: `shop_${kind}` }],
     })
-    if (result.error) return json({ error: 'Failed to send' }, 502)
+    if (result.error) { logEmailError('shop inquiry', result.error); return json({ error: 'Failed to send' }, 502) }
     return json({ ok: true })
-  } catch { return json({ error: 'Failed to send' }, 500) }
+  } catch (error) { logEmailError('shop inquiry', error); return json({ error: 'Failed to send' }, 500) }
 }

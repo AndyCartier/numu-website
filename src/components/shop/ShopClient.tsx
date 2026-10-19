@@ -21,7 +21,7 @@ function ProductCard({ product, priority }: { product: Product; priority?: boole
   const image = product.images[0]
   const { imgStyle, frameStyle } = framing(image, 4 / 5)
   return (
-    <Link href={`/shop/${product.slug}`} className="group catalogue-card" style={{ color: 'inherit', textDecoration: 'none' }}>
+    <Link href={`/shop/${product.slug}`} data-reveal className="group catalogue-card" style={{ color: 'inherit', textDecoration: 'none' }}>
       <div className="relative overflow-hidden" style={{ aspectRatio: '4 / 5', background: 'rgba(26,23,20,.05)', ...frameStyle }}>
         {image
           ? <Image src={image.src} alt={image.alt} fill priority={priority} className="object-cover transition-transform duration-700 group-hover:scale-[1.02]" style={imgStyle} sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" />

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
 import { motion, AnimatePresence, useInView, useMotionValue, animate, MotionConfig, useReducedMotion } from 'framer-motion'
@@ -21,7 +20,6 @@ import MobileNav from '@/components/MobileNav'
 import ImageDialog from '@/components/ImageDialog'
 import { useModalFocus } from '@/components/useModalFocus'
 
-const LoadingScreen = dynamic(() => import('./LoadingScreen'), { ssr: false })
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
 const VISITOR = { bg: '#f5f1e8', fg: '#1a1714' }
@@ -364,6 +362,23 @@ function AutoplayVideoBlock({
   useEffect(() => { if (reducedMotion) videoRef.current?.pause() }, [reducedMotion])
   const [videoFailed, setVideoFailed] = useState(false)
   const [playing, setPlaying] = useState(false)
+  // Load and play only near the viewport, pause when scrolled away: phones on mobile data
+  // (e.g. visitors arriving from an exhibition QR code) no longer download every film up front.
+  const frameRef = useRef<HTMLDivElement>(null)
+  const [near, setNear] = useState(false)
+  useEffect(() => {
+    const frame = frameRef.current
+    if (!frame || typeof IntersectionObserver === 'undefined') { setNear(true); return }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setNear(true)
+      const video = videoRef.current
+      if (!video || reducedMotion) return
+      if (entry.isIntersecting) void video.play().catch(() => undefined)
+      else video.pause()
+    }, { rootMargin: '400px 0px' })
+    observer.observe(frame)
+    return () => observer.disconnect()
+  }, [reducedMotion])
   const togglePlayback = () => {
     const video = videoRef.current
     if (!video) return
@@ -371,7 +386,7 @@ function AutoplayVideoBlock({
     else video.pause()
   }
   return (
-    <div style={{ position: 'absolute', inset: 0, backgroundColor: '#1a1714', overflow: 'hidden' }}>
+    <div ref={frameRef} style={{ position: 'absolute', inset: 0, backgroundColor: '#1a1714', overflow: 'hidden' }}>
       {poster && (
         <Image
           src={poster}
@@ -387,9 +402,9 @@ function AutoplayVideoBlock({
         ref={videoRef}
         aria-label={altLabel || "NUMU material film"}
         controls={Boolean(reducedMotion)}
-        src={src}
-        preload={preload}
-        autoPlay={!reducedMotion}
+        src={near ? src : undefined}
+        preload={near ? preload : 'none'}
+        autoPlay={!reducedMotion && near}
         muted
         loop
         playsInline
@@ -435,6 +450,27 @@ function BackgroundAssetWarmup() {
   }, [])
 
   return null
+}
+
+// ─── Event notice ────────────────────────────────────────────────────────────
+// Shown in the hero only while an event is current. Wording and dates match the printed
+// Taghazout leaflet (numu-exhibition-leaflet/variants/taghazout.json). Hidden automatically after.
+const CURRENT_EVENT = {
+  label: 'Taghazout Surf Festival · Morocco · 22–25 October',
+  ends: '2026-10-26T00:00:00+01:00',
+  href: '#surf-research',
+}
+
+function EventNotice() {
+  const [show, setShow] = useState(false)
+  useEffect(() => { setShow(Date.now() < new Date(CURRENT_EVENT.ends).getTime()) }, [])
+  if (!show) return null
+  return (
+    <a href={CURRENT_EVENT.href} className="event-notice">
+      <span className="event-notice-dot" aria-hidden />
+      <span>Meet NUMU at the {CURRENT_EVENT.label}</span>
+    </a>
+  )
 }
 
 // ─── Spore Field — visitor hero: organic growing hyphae + spore flutter ────────
@@ -794,7 +830,7 @@ function VSectionFullBleed({ id, children }: { id: string; children: React.React
 
 function VLabel({ text }: { text: string }) {
   return (
-    <p className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.68, fontSize: 'clamp(0.68rem, 1.2vw, 0.78rem)' }}>
+    <p data-reveal className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.68, fontSize: 'clamp(0.68rem, 1.2vw, 0.78rem)' }}>
       {text}
     </p>
   )
@@ -802,7 +838,7 @@ function VLabel({ text }: { text: string }) {
 
 function VHeading({ text }: { text: string }) {
   return (
-    <h2 className="font-display text-headline mb-10 max-w-3xl" style={{ textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
+    <h2 data-reveal className="font-display text-headline mb-10 max-w-3xl" style={{ textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
       {text}
     </h2>
   )
@@ -3441,6 +3477,20 @@ function VisitorView({
             </Link>
           ))}
         </div>
+        <div id="surf-research" className="mt-12 grid grid-cols-1 md:grid-cols-[0.8fr_1.2fr] gap-6 md:gap-12 p-6 md:p-8 scroll-mt-24" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.025)' }}>
+          <div>
+            <p className="font-sans uppercase tracking-[0.16em] mb-3" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>In research</p>
+            <p className="font-display" style={{ fontSize: 'clamp(1.6rem, 2.6vw, 2.4rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>Surf &amp; shaped products.</p>
+          </div>
+          <div>
+            <p className="font-sans leading-[1.75]" style={{ fontSize: '0.9375rem', opacity: 0.66 }}>
+              Research into bio-based foam and composite-core materials for surfboards and other shaped products, exploring where naturally grown alternatives could replace selected synthetic components. Research stage: no surf product is offered yet.
+            </p>
+            <a href="#contact" className="font-sans uppercase tracking-[0.14em] inline-block mt-5" style={{ fontSize: '0.6875rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 4 }}>
+              Talk to us about surf research →
+            </a>
+          </div>
+        </div>
       </VSection>
 
       {/* Manifesto */}
@@ -4344,7 +4394,6 @@ export default function PageClient({
   const [isInvestor, setIsInvestor] = useState(false)
   const [showGate, setShowGate] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
-  const [loadingDone, setLoadingDone] = useState(false)
   const [investorStatus, setInvestorStatus] = useState<'idle' | 'loading'>('idle')
 
   const investorMode = isInvestor && investor !== null
@@ -4416,7 +4465,6 @@ export default function PageClient({
       )}
 
       {/* Original media warm-up and branded transition. */}
-      {!loadingDone && <LoadingScreen onComplete={() => setLoadingDone(true)} />}
 
       {/* Investor gate */}
       <AnimatePresence>
@@ -4589,11 +4637,12 @@ export default function PageClient({
             filter: 'contrast(1.02) saturate(0.88)',
           }}>
             <Image
-              src="/images/hero/mycofoam_block_01.png"
+              src="/images/hero/mycofoam_block_01_multiply.jpg"
               alt=""
               aria-hidden
               width={440}
-              height={440}
+              height={550}
+              sizes="(max-width: 815px) 54vw, 440px"
               priority
               style={{ width: '100%', height: 'auto', display: 'block' }}
             />
@@ -4639,6 +4688,7 @@ export default function PageClient({
             >
               {investorMode && investor ? investor.hero.cta.label : visitor.hero.cta.label} ↓
             </a>
+            {!investorMode && <EventNotice />}
             {investorMode && (
               <div className="mt-10 grid grid-cols-3 gap-px overflow-hidden rounded-sm" style={{ backgroundColor: 'rgba(245,241,232,0.2)', maxWidth: 700, width: '100%' }}>
                 {[

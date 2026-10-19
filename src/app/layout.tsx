@@ -1,11 +1,15 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { buildAbsoluteUrl, SITE_URL } from '@/lib/site'
 import { NUMU_NAP } from '@/lib/siteFacts'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import GlobalImageLightbox from '@/components/GlobalImageLightbox'
 import SiteFooter from '@/components/SiteFooter'
+import ScrollReveal from '@/components/ScrollReveal'
 import './globals.css'
 
+
+// Browser chrome and home-screen colour match the site's cream background.
+export const viewport: Viewport = { themeColor: '#f5f1e8', width: 'device-width', initialScale: 1 }
 
 export const metadata: Metadata = {
   metadataBase: buildAbsoluteUrl('/'),
@@ -131,6 +135,7 @@ export default function RootLayout({
         {children}
         <SiteFooter />
         <GlobalImageLightbox />
+        <ScrollReveal />
         <BreadcrumbJsonLd />
       </body>
     </html>
