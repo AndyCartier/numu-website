@@ -1,7 +1,7 @@
 # Design pass, 2 November 2026
 
 Branch `design/visual-pass-2026-11`, from tag `numu/pre-design-pass-2026-11` (= the live site, 3f74ffc, deployed 19 Oct).
-**Not deployed.** Kill switch: build with `NEXT_PUBLIC_NUMU_DESIGN=classic` to turn off the new hero, the footer and the eggs (flags in `src/lib/design.ts`).
+**Deployed to production 2 November 2026** (round 2, Vercel deployment numu-website-jv4qqmfld). Roll back by redeploying tag `numu/pre-design-pass-2026-11`. Kill switch: build with `NEXT_PUBLIC_NUMU_DESIGN=classic` to turn off the new hero, the footer and the eggs (flags in `src/lib/design.ts`).
 
 ## What a visitor saw before
 
