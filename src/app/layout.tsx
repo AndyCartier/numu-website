@@ -5,7 +5,15 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import GlobalImageLightbox from '@/components/GlobalImageLightbox'
 import SiteFooter from '@/components/SiteFooter'
 import ScrollReveal from '@/components/ScrollReveal'
+import { Fraunces, Inter } from 'next/font/google'
+import { DESIGN } from '@/lib/design'
+import Eggs from '@/components/eggs/Eggs'
 import './globals.css'
+
+// Self-hosted at build time (no request to Google from the visitor's browser).
+// Fraunces is the display serif named in NUMU_DESIGN.md; Inter is its text grotesk.
+const display = Fraunces({ subsets: ['latin'], axes: ['opsz', 'SOFT'], variable: '--font-fraunces', display: 'swap' })
+const text = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 
 
 // Browser chrome and home-screen colour match the site's cream background.
@@ -120,7 +128,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${display.variable} ${text.variable}`}>
       <body>
         <script
           type="application/ld+json"
@@ -137,6 +145,7 @@ export default function RootLayout({
         <GlobalImageLightbox />
         <ScrollReveal />
         <BreadcrumbJsonLd />
+        {DESIGN.eggs && <Eggs />}
       </body>
     </html>
   )

@@ -104,7 +104,7 @@ const jsonLd = [
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.52 }}>
+    <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.75rem', opacity: 0.52 }}>
       {children}
     </p>
   )
@@ -195,7 +195,7 @@ export default function MushroomiyaPage() {
                 ['Adaptation', 'Andy Cartier into a monumental lamp shade'],
               ].map(([label, value]) => (
                 <div key={label} className="px-5 py-6" style={{ backgroundColor: 'rgba(26,23,20,0.025)' }}>
-                  <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: '0.5625rem', opacity: 0.38 }}>{label}</p>
+                  <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: '0.75rem', opacity: 0.38 }}>{label}</p>
                   <p className="font-sans leading-snug" style={{ fontSize: '0.9375rem', opacity: 0.72 }}>{value}</p>
                 </div>
               ))}
@@ -229,7 +229,7 @@ export default function MushroomiyaPage() {
                   sizes="(max-width: 768px) 100vw, 33vw"
                 />
               </div>
-              <p className="font-sans uppercase tracking-[0.14em] mt-4 mb-1" style={{ fontSize: '0.5625rem', opacity: 0.36 }}>Assembly</p>
+              <p className="font-sans uppercase tracking-[0.14em] mt-4 mb-1" style={{ fontSize: '0.75rem', opacity: 0.36 }}>Assembly</p>
               <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: 0.54 }}>A full-scale study of how the grown shell is handled. Visualisation.</p>
             </div>
             <div>
@@ -244,7 +244,7 @@ export default function MushroomiyaPage() {
                   sizes="(max-width: 768px) 100vw, 33vw"
                 />
               </div>
-              <p className="font-sans uppercase tracking-[0.14em] mt-4 mb-1" style={{ fontSize: '0.5625rem', opacity: 0.36 }}>Material system</p>
+              <p className="font-sans uppercase tracking-[0.14em] mt-4 mb-1" style={{ fontSize: '0.75rem', opacity: 0.36 }}>Material system</p>
               <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: 0.54 }}>Shell, inoculated substrate, and loose fibre read as one continuous material story.</p>
             </div>
             <div>
@@ -259,7 +259,7 @@ export default function MushroomiyaPage() {
                   sizes="(max-width: 768px) 100vw, 33vw"
                 />
               </div>
-              <p className="font-sans uppercase tracking-[0.14em] mt-4 mb-1" style={{ fontSize: '0.5625rem', opacity: 0.36 }}>Grown finish</p>
+              <p className="font-sans uppercase tracking-[0.14em] mt-4 mb-1" style={{ fontSize: '0.75rem', opacity: 0.36 }}>Grown finish</p>
               <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: 0.54 }}>Fibrous, tactile, naturally irregular, and shaped by living growth.</p>
             </div>
           </div>
@@ -310,7 +310,7 @@ export default function MushroomiyaPage() {
                 ['Material system', 'Mycelium on palm-tree fibre waste'],
               ].map(([label, value]) => (
                 <div key={label} className="px-5 py-6" style={{ backgroundColor: 'rgba(26,23,20,0.025)' }}>
-                  <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: '0.5625rem', opacity: 0.38 }}>{label}</p>
+                  <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: '0.75rem', opacity: 0.38 }}>{label}</p>
                   <p className="font-sans leading-snug" style={{ fontSize: '0.9375rem', opacity: 0.72 }}>{value}</p>
                 </div>
               ))}

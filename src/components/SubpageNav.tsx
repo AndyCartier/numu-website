@@ -34,7 +34,7 @@ export function SubpageNav({ currentPath }: { currentPath: string }) {
                 href={link.href}
                 className="font-sans uppercase tracking-[0.14em]"
                 style={{
-                  fontSize: '0.6875rem',
+                  fontSize: '0.75rem',
                   color: 'inherit',
                   opacity: active ? 0.92 : 0.58,
                   textDecoration: 'none',
@@ -48,7 +48,7 @@ export function SubpageNav({ currentPath }: { currentPath: string }) {
         <Link
           href="/#contact"
           className="font-sans uppercase tracking-[0.14em]"
-          style={{ fontSize: '0.6875rem', color: 'inherit', opacity: 0.72, textDecoration: 'none' }}
+          style={{ fontSize: '0.75rem', color: 'inherit', opacity: 0.72, textDecoration: 'none' }}
         >
           Contact
         </Link>

@@ -19,6 +19,8 @@ import CollectionFeatures, { HomeIntroduction } from '@/components/CollectionFea
 import MobileNav from '@/components/MobileNav'
 import ImageDialog from '@/components/ImageDialog'
 import { useModalFocus } from '@/components/useModalFocus'
+import { DESIGN } from '@/lib/design'
+import NumuName from '@/components/eggs/NumuName'
 
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
@@ -186,8 +188,8 @@ function DirectContactForm({
   const [errorMessage, setErrorMessage] = useState('Sending is temporarily unavailable. Please try again shortly.')
 
   const border = dark ? '1px solid rgba(245,241,232,0.22)' : BORDER
-  const buttonBorder = dark ? '1px solid rgba(245,241,232,0.22)' : '1px solid rgba(26,23,20,0.55)'
-  const buttonBg = dark ? 'rgba(245,241,232,0.1)' : 'rgba(26,23,20,0.07)'
+  const buttonBorder = dark ? '1px solid rgba(245,241,232,0.22)' : '1px solid #1a1714'
+  const buttonBg = dark ? 'rgba(245,241,232,0.1)' : '#1a1714'
   const inputColor = dark ? 'rgba(245,241,232,0.85)' : 'rgba(26,23,20,0.88)'
   const primaryTextOpacity = dark ? 0.76 : 0.68
   const secondaryTextOpacity = dark ? 0.68 : 0.7
@@ -281,10 +283,11 @@ function DirectContactForm({
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="font-sans uppercase tracking-[0.14em] px-7 py-4 flex-shrink-0"
+          className="font-sans uppercase tracking-[0.14em] px-7 py-4 flex-shrink-0 numu-form-submit"
           style={{
             border: buttonBorder,
             backgroundColor: buttonBg,
+            color: dark ? undefined : '#f5f1e8',
             fontSize: '0.75rem',
             cursor: status === 'loading' ? 'wait' : 'pointer',
             opacity: status === 'loading' ? 0.55 : 1,
@@ -402,6 +405,7 @@ function AutoplayVideoBlock({
         ref={videoRef}
         aria-label={altLabel || "NUMU material film"}
         controls={Boolean(reducedMotion)}
+        poster={poster}
         src={near ? src : undefined}
         preload={near ? preload : 'none'}
         autoPlay={!reducedMotion && near}
@@ -814,7 +818,7 @@ function HyphaeField() {
 
 function VSection({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER, scrollMarginTop: 'calc(var(--nav-h) + 16px)' }}>
+    <section id={id} className="px-6 md:px-12 py-20 md:py-[104px]" style={{ borderTop: BORDER, scrollMarginTop: 'calc(var(--nav-h) + 16px)' }}>
       <div className="max-w-[1440px] mx-auto">{children}</div>
     </section>
   )
@@ -822,7 +826,7 @@ function VSection({ id, children }: { id: string; children: React.ReactNode }) {
 
 function VSectionFullBleed({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="py-24 md:py-32" style={{ borderTop: BORDER }}>
+    <section id={id} className="py-20 md:py-[104px]" style={{ borderTop: BORDER }}>
       {children}
     </section>
   )
@@ -846,7 +850,7 @@ function VHeading({ text }: { text: string }) {
 
 function VBody({ text }: { text: string }) {
   return (
-    <p className="font-sans text-base md:text-[1.0625rem] leading-[1.75] mb-12 max-w-2xl" style={{ opacity: 0.7 }}>
+    <p className="font-sans text-base md:text-[1.0625rem] leading-[1.75] mb-12 max-w-2xl" style={{ opacity: 0.84 }}>
       {text}
     </p>
   )
@@ -891,7 +895,7 @@ function IBody({ text }: { text: string }) {
 
 function ProductionFeature() {
   return (
-    <section className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
+    <section className="px-6 md:px-12 py-20 md:py-[104px]" style={{ borderTop: BORDER }}>
       <div className="max-w-[1440px] mx-auto">
         <div className="mb-10">
           <p className="font-sans text-label uppercase tracking-[0.18em] mb-3" style={{ opacity: 0.68 }}>Production</p>
@@ -947,7 +951,7 @@ function ProcessCarousel() {
   }, [lightbox])
 
   return (
-    <section className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
+    <section className="px-6 md:px-12 py-20 md:py-[104px]" style={{ borderTop: BORDER }}>
       {lightbox && <ImageDialog item={lightbox} onClose={() => setLightbox(null)} />}
 
       <div className="max-w-[1440px] mx-auto mb-8">
@@ -1007,7 +1011,7 @@ function ProcessCarousel() {
                 background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)',
               }}
             >
-              <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: 11, opacity: 0.94, color: '#f5f1e8' }}>{item.label}</p>
+              <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: 12, opacity: 0.94, color: '#f5f1e8' }}>{item.label}</p>
             </div>
           </button>
         ))}
@@ -1062,19 +1066,19 @@ function CollectionBand() {
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,8,6,0.72) 0%, rgba(10,8,6,0.28) 55%, rgba(10,8,6,0.18) 100%)' }} />
       <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-12 pb-12 md:pb-16" style={{ zIndex: 2 }}>
         <div className="max-w-[1440px] w-full mx-auto">
-          <p className="font-sans uppercase tracking-[0.24em] mb-5" style={{ fontSize: '0.6875rem', opacity: 0.78, color: '#f5f1e8' }}>
+          <p className="font-sans uppercase tracking-[0.24em] mb-5" style={{ fontSize: '0.75rem', opacity: 0.78, color: '#f5f1e8' }}>
             The collection — Objects &amp; Surfaces
           </p>
           <h2 className="font-display max-w-4xl" style={{ fontSize: 'clamp(2.6rem, 7vw, 6.5rem)', lineHeight: 0.92, letterSpacing: '-0.045em', color: '#f5f1e8' }}>
             Surfaces, light and works, grown to order.
           </h2>
-          <p className="font-sans mt-6 max-w-xl leading-[1.7]" style={{ fontSize: '0.9375rem', color: '#f5f1e8', opacity: 0.78 }}>
+          <p className="font-sans mt-6 max-w-xl leading-[1.7]" style={{ fontSize: '1rem', color: '#f5f1e8', opacity: 0.78 }}>
             Acoustic surfaces, grown veneer furniture and cladding, Mushroomiya lighting, Fungal Art Series® works and bespoke commissions. Every piece is offered by inquiry, with price on request.
           </p>
           <Link
             href="/shop"
             className="font-sans uppercase tracking-[0.16em] inline-block mt-8 px-7 py-4"
-            style={{ fontSize: '0.6875rem', color: '#f5f1e8', border: '1px solid rgba(245,241,232,0.55)', textDecoration: 'none' }}
+            style={{ fontSize: '0.75rem', color: '#f5f1e8', border: '1px solid rgba(245,241,232,0.55)', textDecoration: 'none' }}
           >
             View the collection →
           </Link>
@@ -2235,7 +2239,7 @@ function MarketTAMDiagram() {
                 <motion.text
                   x={cx} y={CY + p.tamR + 20}
                   textAnchor="middle"
-                  fontFamily="'Playfair Display', Georgia, serif"
+                  fontFamily="var(--font-fraunces), Georgia, serif"
                   fontSize={isLast ? 11.5 : i === 0 ? 10 : 9.5}
                   fill={col.text}
                   initial={{ opacity: 0 }}
@@ -2604,7 +2608,7 @@ function TeamMemberCard({ member, i, large }: { member: InvestorContent['team'][
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
-          <p className="font-sans text-label" style={{ fontSize: 9, opacity: 0.68, letterSpacing: '0.16em' }}>Portrait — archival</p>
+          <p className="font-sans text-label" style={{ fontSize: 12, opacity: 0.68, letterSpacing: '0.16em' }}>Portrait — archival</p>
         </div>
       )}
     </div>
@@ -2622,7 +2626,7 @@ function TeamMemberCard({ member, i, large }: { member: InvestorContent['team'][
       <PhotoSlot />
       <p className="font-display mb-1" style={{ fontSize: large ? 'clamp(1.5rem, 2.5vw, 2rem)' : '1.25rem', fontWeight: 700 }}>{member.name}</p>
       <p className="font-sans text-label uppercase tracking-[0.14em] mb-5" style={{ opacity: 0.68 }}>{member.role}</p>
-      <p className="font-sans leading-[1.75]" style={{ fontSize: large ? '0.9375rem' : '0.875rem', opacity: 0.58 }}>{member.bio}</p>
+      <p className="font-sans leading-[1.75]" style={{ fontSize: large ? '0.9375rem' : '0.875rem', opacity: 0.84 }}>{member.bio}</p>
     </motion.div>
   )
 }
@@ -2668,10 +2672,10 @@ function PublicTeamCard({ member }: { member: PublicTeamMember }) {
         <p className="font-display mb-1" style={{ fontSize: '1.35rem', lineHeight: 1.05, letterSpacing: '-0.02em' }}>
           {member.name}
         </p>
-        <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.7rem', opacity: 0.68 }}>
+        <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.75rem', opacity: 0.68 }}>
           {member.role}
         </p>
-        <p className="font-sans leading-[1.7]" style={{ fontSize: '0.9rem', opacity: 0.62 }}>
+        <p className="font-sans leading-[1.7]" style={{ fontSize: '0.9rem', opacity: 0.84 }}>
           {member.bio || PUBLIC_TEAM_BLURBS[member.imageKey]}
         </p>
       </div>
@@ -2687,7 +2691,7 @@ function FounderEcosystem() {
       <p className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.68 }}>
         Founder ecosystem
       </p>
-      <p className="font-sans text-base leading-[1.8]" style={{ maxWidth: 680, opacity: 0.5 }}>
+      <p className="font-sans text-base leading-[1.8]" style={{ maxWidth: 680, opacity: 0.84 }}>
         Andy also holds cofounder positions in UFO (US, pressed mycelium composites) and Hyphen (US, bio-materials ecosystem). These relationships extend NUMU&apos;s long-term technology and IP pipeline without diverting operational focus. NUMU is the primary vehicle. Approximately 90% of operational time is dedicated to NUMU.
       </p>
     </div>
@@ -2813,7 +2817,7 @@ function LabVideo() {
       {/* Play hint — only when ready and not yet played */}
       {ready && !playing && !hovering && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <p className="font-sans uppercase tracking-[0.18em] px-4 py-2" style={{ fontSize: '0.6875rem', color: '#f5f1e8', backgroundColor: 'rgba(26,23,20,0.62)' }}>Play process film</p>
+          <p className="font-sans uppercase tracking-[0.18em] px-4 py-2" style={{ fontSize: '0.75rem', color: '#f5f1e8', backgroundColor: 'rgba(26,23,20,0.62)' }}>Play process film</p>
         </div>
       )}
 
@@ -2914,7 +2918,7 @@ function Moodboards() {
       <div className="mb-14 md:mb-20 max-w-2xl">
         <VLabel text="Spatial applications" />
         <VHeading text="Material with a point of view." />
-        <p className="font-sans leading-[1.75] mt-6" style={{ fontSize: '1rem', opacity: 0.6 }}>
+        <p className="font-sans leading-[1.75] mt-6" style={{ fontSize: '1rem', opacity: 0.84 }}>
           Three material-led directions for hospitality, workplace and furniture. Visualisations are indicative of application, not completed installations.
         </p>
       </div>
@@ -2924,11 +2928,11 @@ function Moodboards() {
             <div className="pb-6 md:pb-7" style={{ minHeight: '15rem' }}>
               <VLabel text={board.label} />
               <h3 className="font-display mb-4" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.7rem)', lineHeight: 1, letterSpacing: '-0.035em' }}>{board.heading}</h3>
-              <p className="font-sans leading-[1.7] max-w-lg" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>{board.copy}</p>
+              <p className="font-sans leading-[1.7] max-w-lg" style={{ fontSize: '1rem', opacity: 0.84 }}>{board.copy}</p>
               {'links' in board && board.links && (
                 <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
                   {board.links.map(link => (
-                    <Link key={link.href} href={link.href} className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.6875rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 4 }}>{link.label} →</Link>
+                    <Link key={link.href} href={link.href} className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.75rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 4 }}>{link.label} →</Link>
                   ))}
                 </div>
               )}
@@ -2962,7 +2966,7 @@ function ExploreCTA() {
       <h2 className="font-display mb-8" style={{ fontSize: 'clamp(2rem, 4vw, 5rem)', lineHeight: '0.96', letterSpacing: '-0.04em' }}>
         Bring PALMYCO™ into your project.
       </h2>
-      <p className="font-sans leading-[1.75] max-w-xl mb-14" style={{ fontSize: '1rem', opacity: 0.55 }}>
+      <p className="font-sans leading-[1.75] max-w-xl mb-14" style={{ fontSize: '1rem', opacity: 0.84 }}>
         Samples, specification sheets, and project conversations for architects, interior designers, and fit-out teams. Based in Dubai. Delivering regionally.
       </p>
       <DirectContactForm
@@ -2989,7 +2993,7 @@ const PARTNERS = [
 function PartnersStrip() {
   return (
     <div className="pt-14 mt-14" style={{ borderTop: BORDER }}>
-      <p className="font-sans uppercase tracking-[0.18em] mb-8" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
+      <p className="font-sans uppercase tracking-[0.18em] mb-8" style={{ fontSize: '0.75rem', opacity: 0.68 }}>
         Partners &amp; institutions
       </p>
       <div className="flex flex-wrap gap-x-10 gap-y-5">
@@ -3008,7 +3012,7 @@ function PartnersStrip() {
             ) : (
               <p className="font-sans" style={{ fontSize: '0.8125rem', opacity: 0.55 }}>{p.name}</p>
             )}
-            <p className="font-sans uppercase tracking-[0.14em] mt-0.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{p.note}</p>
+            <p className="font-sans uppercase tracking-[0.14em] mt-0.5" style={{ fontSize: '0.75rem', opacity: 0.68 }}>{p.note}</p>
           </div>
         ))}
       </div>
@@ -3046,27 +3050,27 @@ function PlatformWithoutBorders() {
         <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-14 lg:gap-20 items-start">
           <div>
             <VLabel text="ONE PLATFORM, MANY ENVIRONMENTS" />
-            <h2 className="font-display mb-9 max-w-4xl" style={{ fontSize: 'clamp(2.4rem, 5.6vw, 6.25rem)', lineHeight: '0.92', letterSpacing: '-0.04em', textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
+            <h2 className="font-display mb-9 max-w-4xl" style={{ fontSize: 'clamp(2.2rem, 4.4vw, 4.75rem)', lineHeight: '0.92', letterSpacing: '-0.04em', textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
               A material platform for the GCC, the world, and beyond.
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-10 max-w-4xl">
-              <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.65 }}>
+              <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.84 }}>
                 NUMU is built on a single principle. You make materials from what is around you, not what you ship in. In the Gulf that means turning regional agricultural waste into a local manufacturing base for acoustics, insulation, and composites. The same principle reaches much further.
               </p>
-              <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.58 }}>
+              <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.84 }}>
                 In resource-constrained and extreme environments, including space, the constraint is identical. You cannot ship everything in. You grow and build with what is local. Mycelium is one of the few material systems that works under both sets of conditions, which is why the NUMU platform extends naturally from regional industry to the hardest environments there are.
               </p>
             </div>
           </div>
 
           <div className="p-6 md:p-8" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.025)' }}>
-            <p className="font-sans uppercase tracking-[0.18em] mb-5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
+            <p className="font-sans uppercase tracking-[0.18em] mb-5" style={{ fontSize: '0.75rem', opacity: 0.68 }}>
               Strategic partnership
             </p>
             <h3 className="font-display mb-5" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.03em' }}>
               Titans Space Industries
             </h3>
-            <p className="font-sans leading-[1.75] mb-7" style={{ fontSize: '0.9375rem', opacity: 0.62 }}>
+            <p className="font-sans leading-[1.75] mb-7" style={{ fontSize: '1rem', opacity: 0.84 }}>
               NUMU has signed a Memorandum of Understanding with Titans Space Industries (TSI), the Orlando-based developer of reusable spaceplanes and orbital infrastructure. NUMU joins the consortium as its Bio-Materials and ISRU Composites Partner, exploring, as research, how mycelium biomanufacturing could produce composites and structures in extreme environments.
             </p>
             <Link
@@ -3094,10 +3098,10 @@ function PlatformWithoutBorders() {
               />
             </div>
             <div className="px-6 md:px-8 pt-4">
-              <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
+              <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.75rem', opacity: 0.68 }}>
                 {item.label}
               </p>
-              <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: 0.52 }}>
+              <p className="font-sans leading-snug" style={{ fontSize: '0.8125rem', opacity: 0.84 }}>
                 {item.note}
               </p>
             </div>
@@ -3123,20 +3127,28 @@ function VisitorView({
     <>
       {/* 01 Statement */}
       <VSection id="statement">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-14 lg:gap-20 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-14 lg:gap-20 items-start">
           <div className="lg:pt-2">
             <VLabel text={v.statement.label} />
-            <h2 className="font-display mb-8" style={{ fontSize: 'clamp(2rem, 3.5vw, 3.75rem)', lineHeight: '1.06', letterSpacing: '-0.03em', textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
+            <h2 className="font-display mb-8" style={{ fontSize: 'clamp(1.75rem, 2.6vw, 2.6rem)', lineHeight: '1.06', letterSpacing: '-0.03em', textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
               {v.statement.heading}
             </h2>
-            <p className="font-sans leading-[1.75] mb-5 max-w-md" style={{ fontSize: '1rem', opacity: 0.65 }}>
+            <p className="font-sans leading-[1.75] mb-5 max-w-md" style={{ fontSize: '1rem', opacity: 0.84 }}>
               NUMU is a Dubai material design and manufacturing studio. Our flagship material, <strong>PALMYCO™</strong>, is a grown mycelium foam — a proprietary bio-composite cultivated inside moulds from regional agricultural fibres, producing lightweight panels with distinctive three-dimensional texture.
             </p>
-            <p className="font-sans leading-[1.75] max-w-md" style={{ fontSize: '0.9375rem', opacity: 0.62 }}>
+            <p className="font-sans leading-[1.75] max-w-md" style={{ fontSize: '1rem', opacity: 0.84 }}>
               Alongside PALMYCO™, NUMU leverages spent mushroom substrate — a regional waste stream — to produce heat-pressed composite boards. Two material outputs, one production base in Dubai. Circular by design.
             </p>
           </div>
           <div>
+            {DESIGN.growthHero ? (
+            <figure className="numu-figure">
+              <div className="relative overflow-hidden" style={{ aspectRatio: '4/5', backgroundColor: '#d9d3c7' }}>
+                <Image src="/images/user/fold-panel-hand.jpg" alt="A grown PALMYCO™ FOLD panel prototype held in daylight, its surface showing the bound fibre" fill sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover numu-slow-zoom" data-lightbox-caption="A grown PALMYCO™ FOLD panel prototype. Photograph." />
+              </div>
+              <figcaption>A FOLD panel, grown in PALMYCO™. Real prototype, Dubai.</figcaption>
+            </figure>
+            ) : (
             <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
               <AutoplayVideoBlock
                 src="/videos/numu_timelapse.mp4"
@@ -3153,6 +3165,7 @@ function VisitorView({
                 }
               />
             </div>
+            )}
           </div>
         </div>
       </VSection>
@@ -3166,15 +3179,15 @@ function VisitorView({
               <h2 className="font-display mb-8" style={{ fontSize: 'clamp(2rem, 3.5vw, 3.5rem)', lineHeight: '1.08', letterSpacing: '-0.03em', textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
                 PALMYCO™ — the material.
               </h2>
-              <p className="font-sans leading-[1.75] mb-5" style={{ fontSize: '1rem', opacity: 0.65 }}>
+              <p className="font-sans leading-[1.75] mb-5" style={{ fontSize: '1rem', opacity: 0.84 }}>
                 PALMYCO™ is NUMU&apos;s proprietary grown mycelium foam — a bio-composite cultivated from regional agricultural fibres bound by a living mycelium network. Rigid, breathable, sound-absorbent, and home-compostable. No binders. No petroleum. No synthetic residue. Trademark pending. Grown in Dubai.
               </p>
-              <p className="font-sans leading-[1.75]" style={{ fontSize: '0.9375rem', opacity: 0.5 }}>
+              <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.84 }}>
                 PALMYCO™ properties are tuned through the growth cycle itself. Alongside it, NUMU presses composite boards from spent mushroom substrate — a separate material, a separate waste stream, a separate product line, made on the same Dubai production base.
               </p>
             </div>
             <div className="mt-auto pt-12" style={{ borderTop: '1px solid rgba(128,128,128,0.1)', marginTop: 'auto' }}>
-              <p className="font-sans uppercase tracking-[0.16em] mb-5" style={{ fontSize: 9, opacity: 0.68 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mb-5" style={{ fontSize: 12, opacity: 0.68 }}>
                 Substrate inputs — regional agricultural residues
               </p>
               <div className="grid grid-cols-2 gap-4 mb-12">
@@ -3183,28 +3196,28 @@ function VisitorView({
                   <div className="relative w-full mb-3" style={{ aspectRatio: '1/1' }}>
                     <Image src="/images/materials/palm_leaf_substrate.png" alt="Palm leaf agricultural substrate from UAE date palm pruning waste" fill unoptimized className="object-contain object-center" sizes="(max-width: 1024px) 50vw, 25vw" />
                   </div>
-                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.7, letterSpacing: '0.04em' }}>Palm leaf fibre</p>
-                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.5 }}>UAE date palm pruning waste, the region&apos;s largest agricultural residue stream.</p>
+                  <p className="font-sans mb-1" style={{ fontSize: 12, opacity: 0.7, letterSpacing: '0.04em' }}>Palm leaf fibre</p>
+                  <p className="font-sans leading-snug" style={{ fontSize: 12, opacity: 0.84 }}>UAE date palm pruning waste, the region&apos;s largest agricultural residue stream.</p>
                 </div>
                 <div>
                   <div className="relative w-full mb-3" style={{ aspectRatio: '1/1' }}>
                     <Image src="/images/materials/hemp_shivs.jpg" alt="Plant fibre blend — mixed agricultural by-products sourced regionally" fill unoptimized className="object-cover object-center" sizes="(max-width: 1024px) 50vw, 25vw" style={{ mixBlendMode: 'multiply' }} />
                   </div>
-                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.7, letterSpacing: '0.04em' }}>Plant fibre blend</p>
-                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.5 }}>Mixed agricultural by-products sourced regionally.</p>
+                  <p className="font-sans mb-1" style={{ fontSize: 12, opacity: 0.7, letterSpacing: '0.04em' }}>Plant fibre blend</p>
+                  <p className="font-sans leading-snug" style={{ fontSize: 12, opacity: 0.84 }}>Mixed agricultural by-products sourced regionally.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-4" style={{ border: '1px solid rgba(128,128,128,0.1)', backgroundColor: 'rgba(128,128,128,0.03)' }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'rgba(26,23,20,0.4)', flexShrink: 0, marginTop: 5 }} />
                 <div>
-                  <p className="font-sans mb-1" style={{ fontSize: 11, opacity: 0.7, letterSpacing: '0.04em' }}>Spent mushroom substrate (SMS)</p>
-                  <p className="font-sans leading-snug" style={{ fontSize: 10, opacity: 0.5 }}>A waste stream already generated by regional commercial mushroom farms, given a second life as pressed board.</p>
+                  <p className="font-sans mb-1" style={{ fontSize: 12, opacity: 0.7, letterSpacing: '0.04em' }}>Spent mushroom substrate (SMS)</p>
+                  <p className="font-sans leading-snug" style={{ fontSize: 12, opacity: 0.84 }}>A waste stream already generated by regional commercial mushroom farms, given a second life as pressed board.</p>
                 </div>
               </div>
             </div>
             {/* Production routes */}
             <div className="pt-12 mt-12" style={{ borderTop: '1px solid rgba(128,128,128,0.1)' }}>
-              <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: 9, opacity: 0.68 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mb-6" style={{ fontSize: 12, opacity: 0.68 }}>
                 Production routes
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3213,11 +3226,11 @@ function VisitorView({
                     <Image src="/images/products/Chair.jpg" alt="Grown mycelium chair — NUMU material formed into product application" fill unoptimized className="object-contain object-center" sizes="(max-width: 640px) 100vw, 50vw" style={{ mixBlendMode: 'multiply' }} />
                   </div>
                   <div className="p-5">
-                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.68 }}>Grown</p>
-                    <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
+                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 12, opacity: 0.68 }}>Grown</p>
+                    <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '1rem', opacity: 0.84 }}>
                       Mycelium cultivated inside proprietary moulds over a controlled growth cycle, then heat-stabilised into a finished form. Produces distinctive surface texture and complex three-dimensional form factors.
                     </p>
-                    <p className="font-sans" style={{ fontSize: 10, opacity: 0.35, letterSpacing: '0.04em' }}>Used in: Acoustic panels, architectural surface.</p>
+                    <p className="font-sans" style={{ fontSize: 12, opacity: 0.35, letterSpacing: '0.04em' }}>Used in: Acoustic panels, architectural surface.</p>
                   </div>
                 </div>
                 <div style={{ border: '1px solid rgba(128,128,128,0.14)' }}>
@@ -3225,11 +3238,11 @@ function VisitorView({
                     <Image src="/images/products/pressed_detail.jpg" alt="Pressed mycelium board close-up — surface texture and cross-section detail" fill unoptimized className="object-cover object-center" sizes="(max-width: 640px) 100vw, 50vw" />
                   </div>
                   <div className="p-5">
-                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 10, opacity: 0.68 }}>Pressed</p>
-                    <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '0.875rem', opacity: 0.6 }}>
+                    <p className="font-sans uppercase tracking-[0.14em] mb-3" style={{ fontSize: 12, opacity: 0.68 }}>Pressed</p>
+                    <p className="font-sans leading-[1.7] mb-4" style={{ fontSize: '1rem', opacity: 0.84 }}>
                       Spent mycelium biomass shredded and heat-pressed directly into flat board formats. Minutes of press time rather than weeks of cultivation.
                     </p>
-                    <p className="font-sans" style={{ fontSize: 10, opacity: 0.35, letterSpacing: '0.04em' }}>Used in: Event structures, temporary architecture, pressed board applications.</p>
+                    <p className="font-sans" style={{ fontSize: 12, opacity: 0.35, letterSpacing: '0.04em' }}>Used in: Event structures, temporary architecture, pressed board applications.</p>
                   </div>
                 </div>
               </div>
@@ -3247,18 +3260,18 @@ function VisitorView({
         <div className="mb-12 grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-8 lg:gap-14 items-end">
           <div>
             <h2 className="font-display" style={{ fontSize: 'clamp(3rem, 7vw, 7.5rem)', lineHeight: '0.9', letterSpacing: '-0.04em' }}>FOLD</h2>
-            <p className="font-sans uppercase tracking-[0.16em] mt-3" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
+            <p className="font-sans uppercase tracking-[0.16em] mt-3" style={{ fontSize: '0.75rem', opacity: 0.68 }}>
               Surface design in collaboration with NYXO Design Studio.
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 lg:pb-2">
-            <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.6 }}>
+            <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.84 }}>
               FOLD is NUMU&apos;s first product — a modular acoustic panel system grown from bio-based material and designed for interior architecture. It translates the material platform into a real, specification-ready object: tactile, scalable, and visually distinctive.
             </p>
-            <p className="font-sans leading-[1.75]" style={{ fontSize: '0.9375rem', opacity: 0.44 }}>
+            <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.44 }}>
               Fold takes its name from the forces that shape it — the movement of fabric, the softness of drapery, the way wind carves form into sand and dunes. Each panel surface carries that memory: a topography grown into material rather than cut from it.
             </p>
-            <p className="font-sans leading-[1.75]" style={{ fontSize: '0.875rem', opacity: 0.35 }}>
+            <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.35 }}>
               The material system, manufacturing process, and engineering are NUMU. The surface design pattern is co-developed with NYXO Design Studio.
             </p>
           </div>
@@ -3274,7 +3287,7 @@ function VisitorView({
             <div className="relative overflow-hidden w-full" style={{ aspectRatio: '4/3' }}>
               <Image src="/images/products/fold_context_scale.png" alt="Render — FOLD acoustic panel, urban concrete installation, 3x3 grid module" fill className="object-cover object-center" sizes="(max-width: 640px) 100vw, 55vw" />
             </div>
-            <p className="font-sans uppercase tracking-[0.14em] mt-2" style={{ fontSize: 9, opacity: 0.68 }}>
+            <p className="font-sans uppercase tracking-[0.14em] mt-2" style={{ fontSize: 12, opacity: 0.68 }}>
               Render — Urban concrete installation, 3×3 grid module
             </p>
           </div>
@@ -3289,7 +3302,7 @@ function VisitorView({
                   style={{ objectFit: 'cover' }}
                 />
             </div>
-            <p className="font-sans uppercase tracking-[0.14em] mt-2" style={{ fontSize: 9, opacity: 0.68 }}>
+            <p className="font-sans uppercase tracking-[0.14em] mt-2" style={{ fontSize: 12, opacity: 0.68 }}>
               Render — Urban concrete installation, variation
             </p>
           </div>
@@ -3297,7 +3310,7 @@ function VisitorView({
 
         {/* FOLD Technical Specifications */}
         <div className="mt-16 pt-14" style={{ borderTop: BORDER }}>
-          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
+          <p className="font-sans uppercase tracking-[0.18em] mb-10" style={{ fontSize: '0.75rem', opacity: 0.68 }}>
             Technical specifications
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.12)' }}>
@@ -3313,7 +3326,7 @@ function VisitorView({
               { field: 'End of life', value: 'Bio-based material; end-of-life route confirmed for the chosen finish' },
             ].map(spec => (
               <div key={spec.field} className="px-6 py-7" style={{ backgroundColor: 'rgba(26,23,20,0.03)' }}>
-                <p className="font-sans uppercase tracking-[0.12em] mb-2.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{spec.field}</p>
+                <p className="font-sans uppercase tracking-[0.12em] mb-2.5" style={{ fontSize: '0.75rem', opacity: 0.68 }}>{spec.field}</p>
                 <p className="font-sans" style={{ fontSize: '0.9375rem', opacity: 0.78 }}>{spec.value}</p>
               </div>
             ))}
@@ -3327,9 +3340,9 @@ function VisitorView({
 
       {/* Built work — proof of execution, right after FOLD. Only completed or physically existing work. */}
       <VSection id="installations">
-        <VLabel text="03 — Built work" />
+        <VLabel text="Built work" />
         <VHeading text="Built, grown, documented." />
-        <p className="font-sans leading-[1.75] max-w-2xl" style={{ fontSize: '0.9375rem', opacity: 0.58 }}>
+        <p className="font-sans leading-[1.75] max-w-2xl" style={{ fontSize: '1rem', opacity: 0.84 }}>
           A completed installation in the Netherlands, and full-scale material work grown in NUMU&apos;s Dubai lab. Prototypes are shown as prototypes; visualisations elsewhere on this site are labelled as such.
         </p>
         <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-start">
@@ -3337,7 +3350,7 @@ function VisitorView({
             <BeyondSlideshow />
             <VLabel text="Netherlands — 2022 · Completed" />
             <p className="font-display text-xl md:text-2xl mt-1">Beyond Chrysant</p>
-            <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.875rem', opacity: 0.56 }}>
+            <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '1rem', opacity: 0.84 }}>
               Prototype installation demonstrating the folded acoustic language in a built exhibition context.
             </p>
           </div>
@@ -3347,7 +3360,7 @@ function VisitorView({
             </div>
             <VLabel text="Dubai, UAE — 2026 · Prototype" />
             <p className="font-display text-xl md:text-2xl mt-1">FOLD panels</p>
-            <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.875rem', opacity: 0.56 }}>
+            <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '1rem', opacity: 0.84 }}>
               Full-scale FOLD panels grown and finished in the Dubai lab. Acoustic and fire testing is in progress; performance figures remain design targets until reports are issued.
             </p>
           </div>
@@ -3357,7 +3370,7 @@ function VisitorView({
             </div>
             <VLabel text="Dubai, UAE — Ongoing · Production" />
             <p className="font-display text-xl md:text-2xl mt-1">PALMYCO™ batches</p>
-            <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.875rem', opacity: 0.56 }}>
+            <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '1rem', opacity: 0.84 }}>
               Repeat growth cycles on regional palm fibre: the material base behind every panel, lamp and commission.
             </p>
           </div>
@@ -3387,17 +3400,17 @@ function VisitorView({
       <ProductionFeature />
 
       {/* Lab Process Feature */}
-      <section id="lab" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
+      <section id="lab" className="px-6 md:px-12 py-20 md:py-[104px]" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-12 lg:gap-20 items-start">
             <div>
               <h2 className="font-display mb-8" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', lineHeight: 1.05, letterSpacing: '-0.03em' }}>
                 The process, documented.
               </h2>
-              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
+              <p className="font-sans leading-[1.75] mb-4" style={{ fontSize: '1rem', opacity: 0.84 }}>
                 PALMYCO™ is produced in our active production lab. This footage documents the full process cycle — substrate preparation, mycelium inoculation, growth, heat-stabilisation, and finishing. No renders, no simulations. Real production conditions, repeatable process.
               </p>
-              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 10, opacity: 0.68 }}>
+              <p className="font-sans uppercase tracking-[0.16em] mt-8" style={{ fontSize: 12, opacity: 0.68 }}>
                 Duration — 1 min 34 sec
               </p>
             </div>
@@ -3413,12 +3426,12 @@ function VisitorView({
 
       {/* Applications — platform horizons */}
       <VSection id="applications">
-        <VLabel text="05 — Applications" />
+        <VLabel text="Applications" />
         <VHeading text="What the material does today, and what comes next." />
-        <p className="font-sans leading-[1.75] mb-3 max-w-2xl" style={{ fontSize: '1rem', opacity: 0.62 }}>
+        <p className="font-sans leading-[1.75] mb-3 max-w-2xl" style={{ fontSize: '1rem', opacity: 0.84 }}>
           Grown acoustic surfaces and pressed boards are in production today. Thermal insulation and protective packaging are in development on the same material system and the same Dubai production base.
         </p>
-        <p className="font-sans leading-[1.75] mb-14 max-w-2xl" style={{ fontSize: '0.9375rem', opacity: 0.55 }}>
+        <p className="font-sans leading-[1.75] mb-14 max-w-2xl" style={{ fontSize: '1rem', opacity: 0.84 }}>
           PALMYCO™, the grown material, is used for acoustic panels, wall surfaces, lighting and furniture. The pressed board, made from spent mushroom substrate, serves events, brand activations and non-structural interiors.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -3464,7 +3477,7 @@ function VisitorView({
               <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1/1' }}>
                 <Image src={app.image} alt={app.imageAlt} fill className="object-cover object-center" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw" />
                 <div className="absolute bottom-3 left-3">
-                  <span className="font-sans uppercase" style={{ fontSize: 9, letterSpacing: '0.14em', padding: '4px 8px', backgroundColor: app.active ? 'rgba(26,23,20,0.82)' : 'rgba(26,23,20,0.48)', color: '#f5f1e8' }}>
+                  <span className="font-sans uppercase" style={{ fontSize: 12, letterSpacing: '0.14em', padding: '4px 8px', backgroundColor: app.active ? 'rgba(26,23,20,0.82)' : 'rgba(26,23,20,0.48)', color: '#f5f1e8' }}>
                     {app.status}
                   </span>
                 </div>
@@ -3472,21 +3485,21 @@ function VisitorView({
               <div className="px-5 py-6">
                 <p className="font-display mb-2" style={{ fontSize: '1.25rem', letterSpacing: '-0.02em', opacity: app.active ? 1 : 0.55 }}>{app.title}</p>
                 <p className="font-sans leading-relaxed" style={{ fontSize: 13, opacity: app.active ? 0.6 : 0.42 }}>{app.tagline}</p>
-                <p className="font-sans uppercase tracking-[0.14em] mt-4" style={{ fontSize: 10, opacity: 0.6 }}>{app.active ? 'View' : 'Read more'} →</p>
+                <p className="font-sans uppercase tracking-[0.14em] mt-4" style={{ fontSize: 12, opacity: 0.6 }}>{app.active ? 'View' : 'Read more'} →</p>
               </div>
             </Link>
           ))}
         </div>
         <div id="surf-research" className="mt-12 grid grid-cols-1 md:grid-cols-[0.8fr_1.2fr] gap-6 md:gap-12 p-6 md:p-8 scroll-mt-24" style={{ border: BORDER, backgroundColor: 'rgba(26,23,20,0.025)' }}>
           <div>
-            <p className="font-sans uppercase tracking-[0.16em] mb-3" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>In research</p>
+            <p className="font-sans uppercase tracking-[0.16em] mb-3" style={{ fontSize: '0.75rem', opacity: 0.68 }}>In research</p>
             <p className="font-display" style={{ fontSize: 'clamp(1.6rem, 2.6vw, 2.4rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>Surf &amp; shaped products.</p>
           </div>
           <div>
-            <p className="font-sans leading-[1.75]" style={{ fontSize: '0.9375rem', opacity: 0.66 }}>
+            <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.84 }}>
               Research into bio-based foam and composite-core materials for surfboards and other shaped products, exploring where naturally grown alternatives could replace selected synthetic components. Research stage: no surf product is offered yet.
             </p>
-            <a href="#contact" className="font-sans uppercase tracking-[0.14em] inline-block mt-5" style={{ fontSize: '0.6875rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 4 }}>
+            <a href="#contact" className="font-sans uppercase tracking-[0.14em] inline-block mt-5" style={{ fontSize: '0.75rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 4 }}>
               Talk to us about surf research →
             </a>
           </div>
@@ -3494,10 +3507,10 @@ function VisitorView({
       </VSection>
 
       {/* Manifesto */}
-      <section id="manifesto" className="px-6 md:px-12 py-24 md:py-32" style={{ borderTop: BORDER }}>
+      <section id="manifesto" className="px-6 md:px-12 py-20 md:py-[104px]" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
-          <p className="font-sans uppercase tracking-[0.18em] mb-16" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Manifesto</p>
-          <h2 className="font-sans uppercase tracking-[0.14em] mb-14" style={{ fontSize: '0.6875rem', opacity: 0.6 }}>What we believe.</h2>
+          <p className="font-sans uppercase tracking-[0.18em] mb-16" style={{ fontSize: '0.75rem', opacity: 0.68 }}>Manifesto</p>
+          <h2 className="font-sans uppercase tracking-[0.14em] mb-14" style={{ fontSize: '0.75rem', opacity: 0.6 }}>What we believe.</h2>
           <div>
             {[
               'Performance before narrative.',
@@ -3528,7 +3541,7 @@ function VisitorView({
 
       {/* Team */}
       <VSection id="team">
-        <VLabel text="06 — Team" />
+        <VLabel text="Team" />
         <VHeading text="The people behind the material." />
         <VBody text="A Dubai team combining material design and industrialisation, construction finance, IP strategy and commercial growth, from the first sample to delivery." />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
@@ -3548,7 +3561,7 @@ function VisitorView({
         <h2 className="font-display mb-10" style={{ fontSize: 'clamp(2.5rem, 5.5vw, 6.5rem)', lineHeight: '0.92', letterSpacing: '-0.04em' }}>
           {v.contact.heading}
         </h2>
-        <p className="font-sans mb-12 max-w-md" style={{ fontSize: '0.9375rem', lineHeight: 1.75, opacity: 0.5 }}>
+        <p className="font-sans mb-12 max-w-md" style={{ fontSize: '0.9375rem', lineHeight: 1.75, opacity: 0.84 }}>
           Based in Dubai. Samples, project consultation, and specification support for architects, interior designers, and fit-out teams.
         </p>
         <div className="mb-14">
@@ -3576,15 +3589,15 @@ function VisitorView({
           <SocialLinks />
         </div>
         <div className="mt-5 flex flex-wrap gap-4">
-          <Link href="/privacy" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.65rem', opacity: 0.52, textDecoration: 'none' }}>
+          <Link href="/privacy" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.75rem', opacity: 0.52, textDecoration: 'none' }}>
             Privacy Policy
           </Link>
-          <Link href="/terms" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.65rem', opacity: 0.52, textDecoration: 'none' }}>
+          <Link href="/terms" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.75rem', opacity: 0.52, textDecoration: 'none' }}>
             Terms of Use
           </Link>
         </div>
         <div className="mt-8 pt-8" style={{ borderTop: BORDER }}>
-          <p className="font-sans uppercase tracking-[0.18em] mb-4" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
+          <p className="font-sans uppercase tracking-[0.18em] mb-4" style={{ fontSize: '0.75rem', opacity: 0.68 }}>
             Explore by application
           </p>
           <div className="flex flex-wrap gap-4">
@@ -3593,7 +3606,7 @@ function VisitorView({
                 key={link.href}
                 href={link.href}
                 className="font-sans uppercase tracking-[0.14em]"
-                style={{ fontSize: '0.65rem', opacity: 0.62, textDecoration: 'none' }}
+                style={{ fontSize: '0.75rem', opacity: 0.62, textDecoration: 'none' }}
               >
                 {link.label}
               </Link>
@@ -4507,7 +4520,7 @@ export default function PageClient({
                 href={link.href}
                 className="font-sans uppercase tracking-[0.14em]"
                 style={{
-                  fontSize: '0.6875rem',
+                  fontSize: '0.75rem',
                   color: investorMode ? 'rgba(245,241,232,0.72)' : 'rgba(26,23,20,0.72)',
                   textDecoration: 'none',
                 }}
@@ -4535,6 +4548,36 @@ export default function PageClient({
       </nav>
 
       <main id="main-content">
+      {DESIGN.growthHero && !investorMode ? (
+      /* Visitor first screen: the name, what NUMU is, and the material growing. */
+      <section className="numu-hero" aria-labelledby="hero-title">
+        <div className="numu-hero-copy">
+          <p className="numu-hero-word" aria-hidden="true">NUMU</p>
+          <NumuName />
+          <h1 id="hero-title" className="numu-hero-title">{visitor.hero.lines.join(' ')}</h1>
+          <p className="numu-hero-lead">
+            Mycelium and regional palm fibre, grown inside moulds over 5–7 days into acoustic panels, lighting and objects.
+          </p>
+          <div className="numu-hero-actions">
+            <a href={visitor.hero.cta.href} className="numu-button">{visitor.hero.cta.label} <span aria-hidden>↓</span></a>
+            <a href="#contact" className="numu-link">Specify NUMU <span aria-hidden>→</span></a>
+          </div>
+          <EventNotice />
+        </div>
+        <figure className="numu-hero-media">
+          <div className="numu-hero-frame">
+            <AutoplayVideoBlock
+              src="/videos/numu_timelapse.mp4"
+              poster="/images/hero/timelapse-poster.jpg"
+              altLabel="Timelapse: loose fibre poured into a mould, then bound into a white block by growing mycelium"
+              preload="auto"
+            />
+          </div>
+          <figcaption>From loose fibre to grown block. Timelapse, NUMU lab.</figcaption>
+        </figure>
+      </section>
+      ) : (
+      <>
       {/* Hero 1 — identity */}
       <section className="flex flex-col items-center justify-center text-center px-6" style={{ height: '100vh', minHeight: 600, position: 'relative' }}>
         <p className="font-display" style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em', margin: 0 }}>NUMU</p>
@@ -4566,7 +4609,7 @@ export default function PageClient({
           transition={{ delay: 1.4, duration: 1.0 }}
           style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
         >
-          <p className="font-sans uppercase tracking-[0.2em]" style={{ fontSize: 11 }}>Scroll</p>
+          <p className="font-sans uppercase tracking-[0.2em]" style={{ fontSize: 12 }}>Scroll</p>
           <motion.div
             animate={{ y: [0, 4, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.3 }}
@@ -4698,7 +4741,7 @@ export default function PageClient({
                 ].map(s => (
                   <div key={s.l} className="px-4 py-4 md:px-5 md:py-5" style={{ backgroundColor: 'rgba(14,14,14,0.86)' }}>
                     <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.35rem)', letterSpacing: '-0.02em', lineHeight: 1.1, color: ACCENT }}>{s.v}</p>
-                    <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{s.l}</p>
+                    <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.75rem', opacity: 0.68 }}>{s.l}</p>
                   </div>
                 ))}
               </div>
@@ -4706,6 +4749,9 @@ export default function PageClient({
           </div>
         </div>
       </section>
+
+      </>
+      )}
 
       {!investorMode && <HomeIntroduction />}
 

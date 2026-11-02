@@ -46,7 +46,7 @@ export default function PartnershipsPage() {
       <header className="px-6 md:px-12 py-16 md:py-24">
         <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-10 items-end">
           <div className="max-w-2xl">
-            <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.52 }}>
+            <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.75rem', opacity: 0.52 }}>
               Partnerships
             </p>
             <h1 className="font-display mt-5 mb-7" style={{ fontSize: 'clamp(3rem, 7vw, 7rem)', lineHeight: '1', letterSpacing: '-0.03em' }}>
@@ -73,7 +73,7 @@ export default function PartnershipsPage() {
         <div className="max-w-[1120px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-16">
             <div>
-              <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.52 }}>
+              <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.75rem', opacity: 0.52 }}>
                 Featured partnership
               </p>
               <h2 className="font-display mt-5" style={{ fontSize: 'clamp(2.2rem, 4vw, 4.5rem)', lineHeight: '1.02', letterSpacing: '-0.025em' }}>
@@ -90,7 +90,7 @@ export default function PartnershipsPage() {
               <Link
                 href="/partnerships/titans-space"
                 className="font-sans uppercase tracking-[0.14em] inline-block pt-2"
-                style={{ fontSize: '0.6875rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 6 }}
+                style={{ fontSize: '0.75rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 6 }}
               >
                 Read the TSI partnership page →
               </Link>

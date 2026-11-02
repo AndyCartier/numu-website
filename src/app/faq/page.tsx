@@ -25,7 +25,7 @@ export default function FaqPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <SubpageNav currentPath="/faq" />
       <div className="mx-auto px-6 py-16 md:px-12 md:py-24" style={{ maxWidth: 980 }}>
-        <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.5 }}>Frequently asked questions</p>
+        <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.75rem', opacity: 0.5 }}>Frequently asked questions</p>
         <h1 className="font-display mt-5 mb-14" style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', lineHeight: 1.02, letterSpacing: '-0.025em' }}>PALMYCO and FOLD, explained.</h1>
         <div style={{ borderTop: '1px solid rgba(26,23,20,0.16)' }}>
           {FAQ_ITEMS.map(({ question, answer }) => (

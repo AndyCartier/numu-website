@@ -111,7 +111,7 @@ const DIRECTIONS = [
 ]
 
 function PageLabel({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
-  return <p className="font-sans uppercase tracking-[0.18em] mb-5" style={{ fontSize: '0.6875rem', opacity: light ? 0.72 : 0.6 }}>{children}</p>
+  return <p className="font-sans uppercase tracking-[0.18em] mb-5" style={{ fontSize: '0.75rem', opacity: light ? 0.72 : 0.6 }}>{children}</p>
 }
 
 function PageSection({ id, label, title, children }: { id: string; label: string; title: string; children: React.ReactNode }) {
@@ -143,7 +143,7 @@ function LoopDiagram() {
           { label: 'Extreme environments · research', note: 'Which inputs exist, what growth needs, what the part must survive. Open questions.', solid: false },
         ].map(column => (
           <div key={column.label} className="p-6 md:p-7" style={{ backgroundColor: '#f5f1e8' }}>
-            <p className="font-sans uppercase tracking-[0.14em] mb-5" style={{ fontSize: '0.625rem', opacity: 0.66 }}>{column.label}</p>
+            <p className="font-sans uppercase tracking-[0.14em] mb-5" style={{ fontSize: '0.75rem', opacity: 0.66 }}>{column.label}</p>
             <ol style={{ borderLeft: `1px ${column.solid ? 'solid' : 'dashed'} rgba(26,23,20,0.38)`, marginLeft: 4 }}>
               {steps.map((step, index) => (
                 <li key={step} className="font-sans relative" style={{ listStyle: 'none', paddingLeft: 20, paddingBottom: index < steps.length - 1 ? 16 : 0, fontSize: '0.875rem', lineHeight: 1.3, opacity: column.solid ? 0.82 : 0.62 }}>
@@ -156,7 +156,7 @@ function LoopDiagram() {
           </div>
         ))}
       </div>
-      <figcaption className="font-sans mt-3" style={{ fontSize: '0.72rem', opacity: 0.55 }}>Solid: practised by NUMU today. Open: research questions explored under the MoU.</figcaption>
+      <figcaption className="font-sans mt-3" style={{ fontSize: '0.75rem', opacity: 0.55 }}>Solid: practised by NUMU today. Open: research questions explored under the MoU.</figcaption>
     </figure>
   )
 }
@@ -167,7 +167,7 @@ function ReadingList({ items }: { items: typeof READING.tsi }) {
       {items.map((item, index) => (
         <li key={item.href} className={items.length % 2 === 1 && index === items.length - 1 ? 'md:col-span-2' : ''} style={{ listStyle: 'none', backgroundColor: '#f5f1e8' }}>
           <a href={item.href} target="_blank" rel="noopener noreferrer" className="block h-full p-6 md:p-7 tsi-reading" style={{ color: 'inherit', textDecoration: 'none' }}>
-            <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.625rem', opacity: 0.6 }}>{item.source} · {item.date}</p>
+            <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.75rem', opacity: 0.6 }}>{item.source} · {item.date}</p>
             <p className="font-display mt-3" style={{ fontSize: '1.3rem', lineHeight: 1.2 }}>{item.title} <span aria-hidden style={{ opacity: 0.5 }}>↗</span></p>
             <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.86rem', opacity: 0.66 }}>{item.summary}</p>
             <span className="sr-only"> (opens an external site)</span>
@@ -207,14 +207,14 @@ export default function TitansSpacePartnershipPage() {
                 ['Stage', 'Exploratory research'],
               ].map(([label, value]) => (
                 <div key={label} className="px-4 py-5" style={{ backgroundColor: 'rgba(13,12,11,0.72)' }}>
-                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.5625rem', opacity: 0.6 }}>{label}</p>
+                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.75rem', opacity: 0.6 }}>{label}</p>
                   <p className="font-sans leading-snug" style={{ fontSize: '0.86rem', opacity: 0.9 }}>{value}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
-        <p className="relative px-6 md:px-12 pb-5 font-sans text-right" style={{ fontSize: '0.625rem', opacity: 0.55 }}>
+        <p className="relative px-6 md:px-12 pb-5 font-sans text-right" style={{ fontSize: '0.75rem', opacity: 0.55 }}>
           The Moon’s terminator, photographed by the Artemis II crew, 6 April 2026. Image: NASA.
         </p>
       </header>
@@ -242,7 +242,7 @@ export default function TitansSpacePartnershipPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(128,128,128,0.15)' }}>
             {DIRECTIONS.map(item => (
               <div key={item.n} className="p-6 md:p-7" style={{ backgroundColor: '#f5f1e8' }}>
-                <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.625rem', opacity: 0.55 }}>{item.n} · Exploratory</p>
+                <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.75rem', opacity: 0.55 }}>{item.n} · Exploratory</p>
                 <p className="font-display mt-3" style={{ fontSize: '1.4rem', lineHeight: 1.15 }}>{item.title}</p>
                 <p className="font-sans mt-3 leading-[1.7]" style={{ fontSize: '0.88rem', opacity: 0.66 }}>{item.text}</p>
               </div>
@@ -296,7 +296,7 @@ export default function TitansSpacePartnershipPage() {
         </Body>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-px pt-4" style={{ backgroundColor: 'rgba(128,128,128,0.15)' }}>
           <div className="p-6" style={{ backgroundColor: 'rgba(26,23,20,0.025)' }}>
-            <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.625rem', opacity: 0.6 }}>What NUMU contributes</p>
+            <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.75rem', opacity: 0.6 }}>What NUMU contributes</p>
             <ul className="space-y-2 font-sans" style={{ fontSize: '0.88rem', opacity: 0.74 }}>
               <li>Growing and stabilising mycelium composites at production scale</li>
               <li>Feedstock selection from agricultural residue</li>
@@ -304,7 +304,7 @@ export default function TitansSpacePartnershipPage() {
             </ul>
           </div>
           <div className="p-6" style={{ backgroundColor: 'rgba(26,23,20,0.025)' }}>
-            <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.625rem', opacity: 0.6 }}>What this is not</p>
+            <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.75rem', opacity: 0.6 }}>What this is not</p>
             <ul className="space-y-2 font-sans" style={{ fontSize: '0.88rem', opacity: 0.74 }}>
               <li>No NUMU material has been tested in space</li>
               <li>No flight-qualified or certified spacecraft components</li>

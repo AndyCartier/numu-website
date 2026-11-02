@@ -405,7 +405,7 @@ export default function ProcessDiagram({
         })}
 
         {/* Centre wordmark */}
-        <text x={CX} y={CY - 12} textAnchor="middle" fontFamily="'Playfair Display', Georgia, serif" fontSize={30} fontWeight={700} fill="#1a1714" fillOpacity={0.09} letterSpacing={5}>NUMU</text>
+        <text x={CX} y={CY - 12} textAnchor="middle" fontFamily="var(--font-fraunces), Georgia, serif" fontSize={30} fontWeight={700} fill="#1a1714" fillOpacity={0.09} letterSpacing={5}>NUMU</text>
         <text x={CX} y={CY + 13} textAnchor="middle" fontFamily="'Inter', sans-serif" fontSize={11} fill="#1a1714" fillOpacity={0.22} letterSpacing={3.5}>MATERIAL CYCLE</text>
 
         {animate && (

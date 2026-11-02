@@ -15,7 +15,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
       style={{ backgroundColor: '#f5f1e8', color: '#1a1714' }}
     >
       <div className="max-w-xl text-center">
-        <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ fontSize: '0.7rem', opacity: 0.5 }}>NUMU</p>
+        <p className="font-sans uppercase tracking-[0.18em] mb-6" style={{ fontSize: '0.75rem', opacity: 0.5 }}>NUMU</p>
         <h1 className="font-display mb-6" style={{ fontSize: 'clamp(2.5rem, 8vw, 5rem)', lineHeight: 0.95, letterSpacing: '-0.04em' }}>
           Refreshing the material system.
         </h1>

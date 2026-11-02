@@ -9,12 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Georgia', 'serif'],
-        sans: ['system-ui', 'sans-serif'],
+        display: ['var(--font-fraunces)', 'Georgia', 'serif'],
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         headline: ['2.5rem', { lineHeight: '1.1' }],
-        label: ['0.6875rem', { lineHeight: '1.5' }],
+        label: ['0.75rem', { lineHeight: '1.5' }],
       },
       colors: {
         cream: '#F5F1E8',

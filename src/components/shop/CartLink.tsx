@@ -18,5 +18,5 @@ export default function CartLink() {
     return () => { window.removeEventListener('storage', read); window.removeEventListener('numu-cart-change', read) }
   }, [])
 
-  return <Link href="/shop/cart" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.6875rem', color: 'inherit', opacity: 0.72, textDecoration: 'none' }}>Cart{count ? ` · ${count}` : ''}</Link>
+  return <Link href="/shop/cart" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.75rem', color: 'inherit', opacity: 0.72, textDecoration: 'none' }}>Cart{count ? ` · ${count}` : ''}</Link>
 }

@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.52 }}>
+    <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.75rem', opacity: 0.52 }}>
       {children}
     </p>
   )
@@ -119,7 +119,7 @@ export default function AboutPage() {
             ],
           ].map(([label, value]) => (
             <div key={label} className="px-6 md:px-8 py-8 md:py-10" style={{ backgroundColor: 'rgba(26,23,20,0.025)' }}>
-              <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.625rem', opacity: 0.38 }}>{label}</p>
+              <p className="font-sans uppercase tracking-[0.14em] mb-4" style={{ fontSize: '0.75rem', opacity: 0.38 }}>{label}</p>
               <p className="font-display mb-4" style={{ fontSize: '1.8rem', lineHeight: 0.98, letterSpacing: '-0.03em' }}>{label}</p>
               <p className="font-sans leading-[1.8]" style={{ fontSize: '0.98rem', opacity: 0.66 }}>{value}</p>
             </div>

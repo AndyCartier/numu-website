@@ -4,7 +4,7 @@ import { SubpageNav } from '@/components/SubpageNav'
 import { buildSeoJsonLd, type SeoPageData } from '@/lib/seo'
 
 const sectionLabelStyle = {
-  fontSize: '0.72rem',
+  fontSize: '0.75rem',
   letterSpacing: '0.18em',
   opacity: 0.52,
   textTransform: 'uppercase' as const,
@@ -118,7 +118,7 @@ export function SeoLandingPage({ page }: { page: SeoPageData }) {
             <div style={{ position: 'absolute', left: 24, right: 24, bottom: 22, color: '#f4efe8' }}>
               <p
                 style={{
-                  fontSize: '0.62rem',
+                  fontSize: '0.75rem',
                   textTransform: 'uppercase',
                   letterSpacing: '0.16em',
                   opacity: 0.64,
@@ -148,7 +148,7 @@ export function SeoLandingPage({ page }: { page: SeoPageData }) {
         >
           {page.highlights.map((item) => (
             <div key={item.label} style={{ backgroundColor: 'rgba(255,255,255,0.42)', padding: '1.15rem 1rem' }}>
-              <p style={{ ...sectionLabelStyle, fontSize: '0.62rem', marginBottom: 8 }}>{item.label}</p>
+              <p style={{ ...sectionLabelStyle, fontSize: '0.75rem', marginBottom: 8 }}>{item.label}</p>
               <p className="font-display" style={{ fontSize: '1.35rem', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
                 {item.value}
               </p>
@@ -176,7 +176,7 @@ export function SeoLandingPage({ page }: { page: SeoPageData }) {
               >
                 <p
                   style={{
-                    fontSize: '0.6rem',
+                    fontSize: '0.75rem',
                     textTransform: 'uppercase',
                     letterSpacing: '0.14em',
                     opacity: 0.5,

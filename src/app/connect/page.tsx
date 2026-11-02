@@ -84,7 +84,7 @@ export default function ConnectPage() {
               marginBottom: '2rem',
               color: '#807B70',
               textDecoration: 'none',
-              fontSize: '0.72rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
             }}
@@ -132,7 +132,7 @@ export default function ConnectPage() {
           <p
             style={{
               color: '#C66A3F',
-              fontSize: '0.72rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               marginBottom: '1rem',
@@ -164,7 +164,7 @@ export default function ConnectPage() {
                     style={{
                       display: 'block',
                       color: '#C66A3F',
-                      fontSize: '0.65rem',
+                      fontSize: '0.75rem',
                       letterSpacing: '0.16em',
                       textTransform: 'uppercase',
                       marginBottom: '0.25rem',
@@ -190,7 +190,7 @@ export default function ConnectPage() {
                     color: '#EFEAD8',
                     border: '1px solid rgba(239,234,216,0.24)',
                     padding: '0.65rem 0.75rem',
-                    fontSize: '0.68rem',
+                    fontSize: '0.75rem',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     whiteSpace: 'nowrap',
@@ -202,7 +202,7 @@ export default function ConnectPage() {
             ))}
           </div>
 
-          <p style={{ color: '#807B70', fontSize: '0.72rem', lineHeight: 1.7, marginTop: '2rem' }}>
+          <p style={{ color: '#807B70', fontSize: '0.75rem', lineHeight: 1.7, marginTop: '2rem' }}>
             QR destination: https://www.numu.bio/connect
           </p>
         </div>

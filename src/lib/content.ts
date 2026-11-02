@@ -133,24 +133,24 @@ export function loadVisitorContent(): VisitorContent {
       cta: { label: 'Explore the material system', href: '#statement' },
     },
     statement: {
-      label: '01 — Statement',
+      label: 'What NUMU is',
       heading: 'Bio-composites grown from biology, engineered for construction.',
     },
     material: {
-      label: '02 — The Material',
+      label: 'The material',
     },
     process: {
-      label: '04 — Process',
+      label: 'Process',
       heading: 'From palm fibre to finished piece.',
     },
     founder: {
-      label: '06 — Founder',
+      label: 'Founder',
       heading: 'Built by 7 years of hands-on industrialization.',
       body: "NUMU was founded by Andy Cartier — a mycelium industrialization specialist who has spent 7 years compressing the learning curve from lab to production across Europe and the Middle East. A completed installation in the Netherlands. An operational production lab in Dubai. This isn't research — it's execution.",
       role: 'Founder & CEO — Mycelium Industrialization',
     },
     contact: {
-      label: '07 — Contact',
+      label: 'Contact',
       heading: 'Specify NUMU.',
       ctas: [
         { label: 'Explore the material system', href: '#material' },
