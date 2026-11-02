@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import ChapterNav from '@/components/ChapterNav'
 import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
 import { SubpageNav } from '@/components/SubpageNav'
@@ -358,6 +359,7 @@ export default function MushroomiyaPage() {
           </div>
         </div>
       </section>
+      <ChapterNav current="mushroomiya" />
     </main>
   )
 }

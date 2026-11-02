@@ -45,3 +45,25 @@ Kept on purpose, for a decision by Andy:
 - The material-cycle diagram's "Moulding to specification" label sits 5 px from the edge on a phone.
 - Two backdrop-blur bars (main nav), the FOLD tile's letterbox gradient (matches the photo's wall).
 - Arabic falls back to the system Arabic face where Geeza Pro is absent (fine on Apple devices).
+
+---
+
+# Round 2: the site as chapters (2 November 2026, after Andy's review)
+
+Andy's feedback on round 1: keep the additions, but bring back the welcome page and its slow discovery, make the Arabic word bigger, and make the home page a clear glimpse of everything with the depth on each page.
+
+## Changes
+
+- **Welcome restored** (the split hero is gone): NUMU, then نُمُوّ at 3.4–8.6 rem (was 1.65–2.8 rem), then the line, then "Grown, not manufactured.", each fading in over ~3 s. The Arabic word is still the "means growth" button. The statement screen (h1 over the grown block) follows as before; its button now reads "Look inside NUMU ↓".
+- **One chapter list** (`src/lib/chapters.ts`) drives the home map, the glimpses, the main navigation, the footer and the chapter footers. Seven chapters: The material (/palmyco), FOLD, Mushroomiya, Objects & surfaces (/shop), Built work (/case-studies), Partnerships, The studio (/about). Every fact repeats published copy.
+- **Home = overview** (25,500 → 13,000 px): welcome → statement → three real pieces → **Inside NUMU** (all seven chapters in one list, picture preview on hover) → one glimpse per chapter (name, one sentence, three facts, picture, "Enter …" button) → Specify NUMU.
+- **Depth moved, nothing deleted**:
+  - /palmyco: material inputs and production routes, applications (+ surf research, still `#surf-research`), samples request
+  - /fold: full FOLD section, renders and specification table
+  - /case-studies: built work (Beyond Chrysant slideshow, FOLD prototypes, batches)
+  - /about: material cycle diagram, production lab photos, process film, lab carousel, manifesto, team
+  - /partnerships: "A material platform for the GCC, the world, and beyond" (TSI)
+  - /shop: spatial moodboards (`/shop#moodboards`, which the old "Spaces" link now points to)
+- **Pages connected**: every chapter page ends with the chapter track (current chapter underlined), "Next chapter" with its picture and glimpse, the previous chapter, and "All chapters, on the overview ↑". On the home page the nav underlines the chapter being read.
+- Contact section no longer repeats the footer (logo, privacy, terms); the "by application" search links moved to the footer.
+- Printed leaflets and catalogues only print `numu.bio`, so no printed QR target changed.

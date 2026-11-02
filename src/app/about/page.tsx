@@ -1,4 +1,7 @@
 import type { Metadata } from 'next'
+import { ProcessBlock, ProductionFeature, LabBlock, ProcessCarousel, ManifestoBlock, TeamBlock } from '@/app/PageClient'
+import { loadPublicTeamMembers } from '@/lib/content'
+import ChapterNav from '@/components/ChapterNav'
 import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
 import { SubpageNav } from '@/components/SubpageNav'
@@ -172,6 +175,13 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+      <ProcessBlock />
+      <ProductionFeature />
+      <LabBlock />
+      <ProcessCarousel />
+      <ManifestoBlock />
+      <TeamBlock teamMembers={loadPublicTeamMembers()} />
+      <ChapterNav current="studio" />
     </main>
   )
 }

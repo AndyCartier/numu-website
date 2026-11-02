@@ -2,16 +2,18 @@ import Link from 'next/link'
 import { NUMU_NAP } from '@/lib/siteFacts'
 import { DESIGN } from '@/lib/design'
 import GrowButton from '@/components/eggs/GrowButton'
+import { CHAPTERS } from '@/lib/chapters'
 
 const FOOTER_LINKS = [
-  ['/shop', 'Products'],
-  ['/fold', 'FOLD'],
-  ['/mushroomiya', 'Mushroomiya'],
-  ['/palmyco', 'PALMYCO™'],
-  ['/case-studies', 'Projects'],
-  ['/partnerships', 'Partnerships'],
-  ['/about', 'About'],
-  ['/faq', 'FAQ'],
+  ...CHAPTERS.map(c => [c.href, c.name] as const),
+  ['/faq', 'FAQ'] as const,
+]
+
+// Search paths by application, moved here from the home page's contact section.
+const APPLICATION_LINKS = [
+  ['/acoustic-panels-dubai', 'Acoustic panels, Dubai'],
+  ['/thermal-insulation-uae', 'Thermal insulation, UAE'],
+  ['/mycelium-packaging-uae', 'Mycelium packaging, UAE'],
 ] as const
 
 export default function SiteFooter() {
@@ -59,6 +61,7 @@ function FooterClose() {
           </div>
           <nav aria-label="Footer navigation" className="numu-footer-nav">
             {FOOTER_LINKS.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
+            {APPLICATION_LINKS.map(([href, label]) => <Link key={href} href={href} className="numu-footer-app">{label}</Link>)}
           </nav>
           <address className="numu-footer-address">
             <span>{NUMU_NAP.legalName}</span>

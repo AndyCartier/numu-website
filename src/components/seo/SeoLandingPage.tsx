@@ -10,7 +10,7 @@ const sectionLabelStyle = {
   textTransform: 'uppercase' as const,
 }
 
-export function SeoLandingPage({ page }: { page: SeoPageData }) {
+export function SeoLandingPage({ page, children }: { page: SeoPageData; children?: React.ReactNode }) {
   const jsonLd = buildSeoJsonLd(page)
 
   return (
@@ -300,6 +300,8 @@ export function SeoLandingPage({ page }: { page: SeoPageData }) {
           </div>
         </section>
       </div>
+
+      {children}
 
       {jsonLd.map((item, index) => (
         <script

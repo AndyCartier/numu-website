@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { FoldDetail } from '@/app/PageClient'
+import ChapterNav from '@/components/ChapterNav'
 import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
 import { SubpageNav } from '@/components/SubpageNav'
@@ -183,7 +185,7 @@ export default function FoldPage() {
                 Request a quote for FOLD →
               </Link>
               <Link
-                href="/#moodboards"
+                href="/shop#moodboards"
                 className="font-sans uppercase tracking-[0.14em] inline-block"
                 style={{ fontSize: '0.75rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 6 }}
               >
@@ -200,6 +202,8 @@ export default function FoldPage() {
           </div>
         </div>
       </section>
+      <FoldDetail />
+      <ChapterNav current="fold" />
     </main>
   )
 }

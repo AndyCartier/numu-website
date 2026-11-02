@@ -21,6 +21,7 @@ import ImageDialog from '@/components/ImageDialog'
 import { useModalFocus } from '@/components/useModalFocus'
 import { DESIGN } from '@/lib/design'
 import NumuName from '@/components/eggs/NumuName'
+import { CHAPTERS, type Chapter } from '@/lib/chapters'
 
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
@@ -118,15 +119,6 @@ const PUBLIC_TEAM_BLURBS: Record<string, string> = {
   matthew: 'Drives partnerships, pipeline development, and commercial growth for early deployments.',
 }
 
-const SEO_FOOTER_LINKS = [
-  { href: '/acoustic-panels-dubai', label: 'Acoustic Panels Dubai' },
-  { href: '/thermal-insulation-uae', label: 'Thermal Insulation UAE' },
-  { href: '/mycelium-packaging-uae', label: 'Mycelium Packaging UAE' },
-  { href: '/mushroomiya', label: 'Mushroomiya Lamp' },
-  { href: '/palmyco', label: 'PALMYCO Material Platform' },
-  { href: '/case-studies', label: 'Case Studies' },
-  { href: '/partnerships', label: 'Partnerships' },
-]
 
 type ContactRequestType = 'investor_deck' | 'project' | 'samples'
 
@@ -462,7 +454,7 @@ function BackgroundAssetWarmup() {
 const CURRENT_EVENT = {
   label: 'Taghazout Surf Festival · Morocco · 22–25 October',
   ends: '2026-10-26T00:00:00+01:00',
-  href: '#surf-research',
+  href: '/palmyco#surf-research',
 }
 
 function EventNotice() {
@@ -893,7 +885,7 @@ function IBody({ text }: { text: string }) {
 
 // ─── Production feature (image + placeholders) ───────────────────────────────
 
-function ProductionFeature() {
+export function ProductionFeature() {
   return (
     <section className="px-6 md:px-12 py-20 md:py-[104px]" style={{ borderTop: BORDER }}>
       <div className="max-w-[1440px] mx-auto">
@@ -939,7 +931,7 @@ const CAROUSEL_ITEMS = [
 const CAROUSEL_W = 400
 const CAROUSEL_H = 300
 
-function ProcessCarousel() {
+export function ProcessCarousel() {
   const carouselRef = useRef<HTMLDivElement>(null)
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
 
@@ -2912,7 +2904,7 @@ const MOODBOARDS = [
   },
 ]
 
-function Moodboards() {
+export function Moodboards() {
   return (
     <VSection id="moodboards">
       <div className="mb-14 md:mb-20 max-w-2xl">
@@ -2959,7 +2951,7 @@ function Moodboards() {
 
 // ─── Explore CTA ──────────────────────────────────────────────────────────────
 
-function ExploreCTA() {
+export function ExploreCTA() {
   return (
     <VSection id="specify">
       <VLabel text="Specify NUMU" />
@@ -3022,7 +3014,7 @@ function PartnersStrip() {
 
 // ─── Platform Without Borders ────────────────────────────────────────────────
 
-function PlatformWithoutBorders() {
+export function PlatformWithoutBorders() {
   const platformImages = [
     {
       src: '/images/talk/woodshow/waste-pile-palm-agricultural.jpg',
@@ -3114,68 +3106,15 @@ function PlatformWithoutBorders() {
 
 // ─── Visitor view ─────────────────────────────────────────────────────────────
 
-function VisitorView({
-  v,
-  teamMembers,
-  investorPreview,
-}: {
-  v: VisitorContent
-  teamMembers: PublicTeamMember[]
-  investorPreview: InvestorContent['revenue_engines']
-}) {
+export function MaterialDetail() {
   return (
     <>
-      {/* 01 Statement */}
-      <VSection id="statement">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-14 lg:gap-20 items-start">
-          <div className="lg:pt-2">
-            <VLabel text={v.statement.label} />
-            <h2 className="font-display mb-8" style={{ fontSize: 'clamp(1.75rem, 2.6vw, 2.6rem)', lineHeight: '1.06', letterSpacing: '-0.03em', textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
-              {v.statement.heading}
-            </h2>
-            <p className="font-sans leading-[1.75] mb-5 max-w-md" style={{ fontSize: '1rem', opacity: 0.84 }}>
-              NUMU is a Dubai material design and manufacturing studio. Our flagship material, <strong>PALMYCO™</strong>, is a grown mycelium foam — a proprietary bio-composite cultivated inside moulds from regional agricultural fibres, producing lightweight panels with distinctive three-dimensional texture.
-            </p>
-            <p className="font-sans leading-[1.75] max-w-md" style={{ fontSize: '1rem', opacity: 0.84 }}>
-              Alongside PALMYCO™, NUMU leverages spent mushroom substrate — a regional waste stream — to produce heat-pressed composite boards. Two material outputs, one production base in Dubai. Circular by design.
-            </p>
-          </div>
-          <div>
-            {DESIGN.growthHero ? (
-            <figure className="numu-figure">
-              <div className="relative overflow-hidden" style={{ aspectRatio: '4/5', backgroundColor: '#d9d3c7' }}>
-                <Image src="/images/user/fold-panel-hand.jpg" alt="A grown PALMYCO™ FOLD panel prototype held in daylight, its surface showing the bound fibre" fill sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover numu-slow-zoom" data-lightbox-caption="A grown PALMYCO™ FOLD panel prototype. Photograph." />
-              </div>
-              <figcaption>A FOLD panel, grown in PALMYCO™. Real prototype, Dubai.</figcaption>
-            </figure>
-            ) : (
-            <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
-              <AutoplayVideoBlock
-                src="/videos/numu_timelapse.mp4"
-                poster="/images/products/biofoam_detail.png"
-                altLabel="PALMYCO material growth process"
-                preload="auto"
-                overlay={
-                  <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-start px-6 md:px-8 pb-6 md:pb-8" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)', paddingTop: 100 }}>
-                    <p className="font-display text-white mb-2" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}>Material in motion</p>
-                    <p className="font-sans text-white" style={{ fontSize: 'clamp(0.875rem, 1.8vw, 0.95rem)', opacity: 0.72, lineHeight: 1.6, maxWidth: 340 }}>
-                      A material grown over time, not manufactured. From agricultural fibres to structural form, the process unfolds through controlled biological growth over 5–7 days.
-                    </p>
-                  </div>
-                }
-              />
-            </div>
-            )}
-          </div>
-        </div>
-      </VSection>
-
       {/* 02 Material */}
       <VSection id="material">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-16 lg:gap-20">
           <div className="flex flex-col">
             <div>
-              <VLabel text={v.material.label} />
+              <VLabel text="The material" />
               <h2 className="font-display mb-8" style={{ fontSize: 'clamp(2rem, 3.5vw, 3.5rem)', lineHeight: '1.08', letterSpacing: '-0.03em', textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
                 PALMYCO™ — the material.
               </h2>
@@ -3253,7 +3192,13 @@ function VisitorView({
           </div>
         </div>
       </VSection>
+    </>
+  )
+}
 
+export function FoldDetail() {
+  return (
+    <>
       {/* FOLD product */}
       <VSection id="fold">
         <VLabel text="Product — FOLD" />
@@ -3333,11 +3278,13 @@ function VisitorView({
           </div>
         </div>
       </VSection>
+    </>
+  )
+}
 
-      {/* Spatial moodboards — product rendered in hospitality and workplace settings */}
-      <CollectionFeatures />
-      <Moodboards />
-
+export function BuiltWorkDetail() {
+  return (
+    <>
       {/* Built work — proof of execution, right after FOLD. Only completed or physically existing work. */}
       <VSection id="installations">
         <VLabel text="Built work" />
@@ -3376,29 +3323,32 @@ function VisitorView({
           </div>
         </div>
       </VSection>
+    </>
+  )
+}
 
-      {/* Collection entry — full-bleed band into the inquiry catalogue */}
-      <CollectionBand />
-
-      {/* Specify NUMU CTA */}
-      <ExploreCTA />
-
+export function ProcessBlock() {
+  return (
+    <>
       {/* 04 Process */}
       <section id="process" style={{ borderTop: BORDER, paddingTop: '5rem', paddingBottom: '4rem' }}>
         {/* Title — compact, above the diagram */}
         <div className="px-6 md:px-12 mb-6 max-w-[1440px] mx-auto">
-          <VLabel text={v.process.label} />
-          <VHeading text={v.process.heading} />
+          <VLabel text="Process" />
+          <VHeading text="From palm fibre to finished piece." />
         </div>
         {/* Diagram — full bleed, no max-width constraint */}
         <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto' }}>
           <ProcessDiagram />
         </div>
       </section>
+    </>
+  )
+}
 
-      {/* Production feature */}
-      <ProductionFeature />
-
+export function LabBlock() {
+  return (
+    <>
       {/* Lab Process Feature */}
       <section id="lab" className="px-6 md:px-12 py-20 md:py-[104px]" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
@@ -3420,10 +3370,13 @@ function VisitorView({
           </div>
         </div>
       </section>
+    </>
+  )
+}
 
-      {/* Process carousel */}
-      <ProcessCarousel />
-
+export function ApplicationsDetail() {
+  return (
+    <>
       {/* Applications — platform horizons */}
       <VSection id="applications">
         <VLabel text="Applications" />
@@ -3499,13 +3452,19 @@ function VisitorView({
             <p className="font-sans leading-[1.75]" style={{ fontSize: '1rem', opacity: 0.84 }}>
               Research into bio-based foam and composite-core materials for surfboards and other shaped products, exploring where naturally grown alternatives could replace selected synthetic components. Research stage: no surf product is offered yet.
             </p>
-            <a href="#contact" className="font-sans uppercase tracking-[0.14em] inline-block mt-5" style={{ fontSize: '0.75rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 4 }}>
+            <a href="/#contact" className="font-sans uppercase tracking-[0.14em] inline-block mt-5" style={{ fontSize: '0.75rem', color: 'inherit', textDecoration: 'none', borderBottom: '1px solid rgba(26,23,20,0.34)', paddingBottom: 4 }}>
               Talk to us about surf research →
             </a>
           </div>
         </div>
       </VSection>
+    </>
+  )
+}
 
+export function ManifestoBlock() {
+  return (
+    <>
       {/* Manifesto */}
       <section id="manifesto" className="px-6 md:px-12 py-20 md:py-[104px]" style={{ borderTop: BORDER }}>
         <div className="max-w-[1440px] mx-auto">
@@ -3538,7 +3497,13 @@ function VisitorView({
           </div>
         </div>
       </section>
+    </>
+  )
+}
 
+export function TeamBlock({ teamMembers }: { teamMembers: PublicTeamMember[] }) {
+  return (
+    <>
       {/* Team */}
       <VSection id="team">
         <VLabel text="Team" />
@@ -3550,10 +3515,103 @@ function VisitorView({
           ))}
         </div>
       </VSection>
+    </>
+  )
+}
 
-      {/* Platform Without Borders */}
-      <PlatformWithoutBorders />
+// ─── Home as an overview: the map, then a glimpse of every chapter ──────────
 
+function InsideNumu() {
+  const [active, setActive] = useState(0)
+  const shown = CHAPTERS[active]
+  return (
+    <section id="inside" className="numu-inside" aria-labelledby="inside-title">
+      <div className="numu-inside-inner">
+        <div className="numu-inside-head" data-reveal>
+          <h2 id="inside-title" className="font-display">Inside NUMU.</h2>
+          <p>Seven chapters, one material. Here is a glimpse of each; every chapter has its own page to dive into.</p>
+        </div>
+        <div className="numu-inside-grid">
+          <ol className="numu-inside-list">
+            {CHAPTERS.map((c, i) => (
+              <li key={c.id}>
+                <Link
+                  href={c.href}
+                  className="numu-inside-row"
+                  data-active={i === active || undefined}
+                  onMouseEnter={() => setActive(i)}
+                  onFocus={() => setActive(i)}
+                >
+                  <span className="numu-inside-thumb" aria-hidden="true">
+                    <Image src={c.image} alt="" fill sizes="96px" className="object-cover" />
+                  </span>
+                  <span className="numu-inside-name font-display">{c.name}</span>
+                  <span className="numu-inside-glimpse">{c.glimpse}</span>
+                  <span className="numu-inside-go" aria-hidden="true">→</span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+          <figure className="numu-inside-preview" aria-hidden="true">
+            <div className="numu-inside-frame">
+              {CHAPTERS.map((c, i) => (
+                <Image key={c.id} src={c.image} alt="" fill sizes="(max-width: 1024px) 0px, 40vw" className="object-cover" style={{ opacity: i === active ? 1 : 0, transition: 'opacity .6s cubic-bezier(.2,.7,.2,1)' }} />
+              ))}
+            </div>
+            <figcaption>{shown.caption}</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function ChapterGlimpse({ chapter: c, index }: { chapter: Chapter; index: number }) {
+  const flip = index % 2 === 1
+  return (
+    <section id={`chapter-${c.id}`} data-chapter={c.id} className={`numu-glimpse${flip ? ' numu-glimpse--flip' : ''}`} aria-labelledby={`chapter-${c.id}-title`}>
+      <div className="numu-glimpse-inner">
+        <div className="numu-glimpse-copy">
+          <h2 id={`chapter-${c.id}-title`} className="font-display" data-reveal>{c.name}</h2>
+          <p className="numu-glimpse-lead" data-reveal>{c.glimpse}</p>
+          <ul className="numu-glimpse-facts" data-reveal>
+            {c.facts.map(f => <li key={f}>{f}</li>)}
+          </ul>
+          <Link href={c.href} className="numu-button" data-reveal>{c.enter} <span aria-hidden>→</span></Link>
+        </div>
+        <figure className="numu-glimpse-media" data-reveal>
+          {c.id === 'material' ? (
+            <div className="numu-glimpse-frame">
+              <AutoplayVideoBlock
+                src="/videos/numu_timelapse.mp4"
+                poster="/images/hero/timelapse-poster.jpg"
+                altLabel="Timelapse: loose fibre poured into a mould, then bound into a white block by growing mycelium"
+                preload="metadata"
+              />
+            </div>
+          ) : (
+            <Link href={c.href} className="numu-glimpse-frame" tabIndex={-1} aria-hidden="true">
+              <Image src={c.image} alt="" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover numu-slow-zoom" />
+            </Link>
+          )}
+          <figcaption>{c.id === 'material' ? 'From loose fibre to grown block in 5–7 days. Timelapse, NUMU lab.' : c.caption}</figcaption>
+        </figure>
+      </div>
+    </section>
+  )
+}
+
+function VisitorView({
+  v,
+}: {
+  v: VisitorContent
+  teamMembers: PublicTeamMember[]
+  investorPreview: InvestorContent['revenue_engines']
+}) {
+  return (
+    <>
+      <InsideNumu />
+      {CHAPTERS.map((chapter, i) => <ChapterGlimpse key={chapter.id} chapter={chapter} index={i} />)}
 
       {/* 07 Contact */}
       <VSection id="contact">
@@ -3571,47 +3629,8 @@ function VisitorView({
             submitLabel="Send project inquiry →"
           />
         </div>
-        <div className="flex flex-col sm:flex-row gap-4 mb-24">
-          {v.contact.ctas.map((cta, i) => (
-            <a
-              key={cta.label} href={cta.href}
-              className="font-sans text-label uppercase tracking-[0.14em] px-8 py-4 border inline-block"
-              style={{ borderColor: i === 0 ? 'rgba(26,23,20,0.65)' : 'rgba(128,128,128,0.28)', backgroundColor: i === 0 ? 'rgba(26,23,20,0.09)' : 'transparent', transition: 'border-color 0.2s, background-color 0.2s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = i === 0 ? 'rgba(26,23,20,0.9)' : 'rgba(128,128,128,0.55)'; (e.currentTarget as HTMLAnchorElement).style.backgroundColor = i === 0 ? 'rgba(26,23,20,0.16)' : 'rgba(128,128,128,0.06)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = i === 0 ? 'rgba(26,23,20,0.65)' : 'rgba(128,128,128,0.28)'; (e.currentTarget as HTMLAnchorElement).style.backgroundColor = i === 0 ? 'rgba(26,23,20,0.09)' : 'transparent' }}
-            >
-              {cta.label} →
-            </a>
-          ))}
-        </div>
-        <div className="pt-10 flex flex-col sm:flex-row sm:items-center gap-6" style={{ borderTop: BORDER }}>
-          <Image src="/branding/logo-black-numu.png" alt="NUMU" width={120} height={48} className="h-10 w-auto object-contain" style={{ opacity: 0.30 }} />
+        <div className="mb-4">
           <SocialLinks />
-        </div>
-        <div className="mt-5 flex flex-wrap gap-4">
-          <Link href="/privacy" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.75rem', opacity: 0.52, textDecoration: 'none' }}>
-            Privacy Policy
-          </Link>
-          <Link href="/terms" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.75rem', opacity: 0.52, textDecoration: 'none' }}>
-            Terms of Use
-          </Link>
-        </div>
-        <div className="mt-8 pt-8" style={{ borderTop: BORDER }}>
-          <p className="font-sans uppercase tracking-[0.18em] mb-4" style={{ fontSize: '0.75rem', opacity: 0.68 }}>
-            Explore by application
-          </p>
-          <div className="flex flex-wrap gap-4">
-            {SEO_FOOTER_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="font-sans uppercase tracking-[0.14em]"
-                style={{ fontSize: '0.75rem', opacity: 0.62, textDecoration: 'none' }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
         </div>
         <PartnersStrip />
       </VSection>
@@ -4412,6 +4431,20 @@ export default function PageClient({
   const investorMode = isInvestor && investor !== null
   const theme = investorMode ? INVESTOR : VISITOR
 
+  // On the home page, the navigation shows which chapter is being read.
+  const [activeChapter, setActiveChapter] = useState<string | null>(null)
+  useEffect(() => {
+    if (investorMode || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(entries => {
+      for (const e of entries) if (e.isIntersecting) setActiveChapter((e.target as HTMLElement).dataset.chapter ?? null)
+    }, { rootMargin: '-45% 0px -50% 0px' })
+    const sections = document.querySelectorAll('[data-chapter]')
+    sections.forEach(el => observer.observe(el))
+    const clear = () => { const first = sections[0] as HTMLElement | undefined; const last = sections[sections.length - 1] as HTMLElement | undefined; if (!first || !last) return; const y = window.innerHeight / 2; if (first.getBoundingClientRect().top > y || last.getBoundingClientRect().bottom < y) setActiveChapter(null) }
+    window.addEventListener('scroll', clear, { passive: true })
+    return () => { observer.disconnect(); window.removeEventListener('scroll', clear) }
+  }, [investorMode])
+
   // No silent preload — gate is always shown on fresh page load
 
   function switchToInvestor() {
@@ -4518,7 +4551,9 @@ export default function PageClient({
               <Link
                 key={link.href}
                 href={link.href}
-                className="font-sans uppercase tracking-[0.14em]"
+                className="font-sans uppercase tracking-[0.14em] numu-nav-link"
+                data-active={(!investorMode && activeChapter === link.id) || undefined}
+                aria-current={!investorMode && activeChapter === link.id ? 'location' : undefined}
                 style={{
                   fontSize: '0.75rem',
                   color: investorMode ? 'rgba(245,241,232,0.72)' : 'rgba(26,23,20,0.72)',
@@ -4548,65 +4583,35 @@ export default function PageClient({
       </nav>
 
       <main id="main-content">
-      {DESIGN.growthHero && !investorMode ? (
-      /* Visitor first screen: the name, what NUMU is, and the material growing. */
-      <section className="numu-hero" aria-labelledby="hero-title">
-        <div className="numu-hero-copy">
-          <p className="numu-hero-word" aria-hidden="true">NUMU</p>
-          <NumuName />
-          <h1 id="hero-title" className="numu-hero-title">{visitor.hero.lines.join(' ')}</h1>
-          <p className="numu-hero-lead">
-            Mycelium and regional palm fibre, grown inside moulds over 5–7 days into acoustic panels, lighting and objects.
-          </p>
-          <div className="numu-hero-actions">
-            <a href={visitor.hero.cta.href} className="numu-button">{visitor.hero.cta.label} <span aria-hidden>↓</span></a>
-            <a href="#contact" className="numu-link">Specify NUMU <span aria-hidden>→</span></a>
-          </div>
-          <EventNotice />
-        </div>
-        <figure className="numu-hero-media">
-          <div className="numu-hero-frame">
-            <AutoplayVideoBlock
-              src="/videos/numu_timelapse.mp4"
-              poster="/images/hero/timelapse-poster.jpg"
-              altLabel="Timelapse: loose fibre poured into a mould, then bound into a white block by growing mycelium"
-              preload="auto"
-            />
-          </div>
-          <figcaption>From loose fibre to grown block. Timelapse, NUMU lab.</figcaption>
-        </figure>
-      </section>
-      ) : (
-      <>
-      {/* Hero 1 — identity */}
+      {/* Hero 1 — identity. A slow welcome: the name, then its meaning, then what NUMU is. */}
       <section className="flex flex-col items-center justify-center text-center px-6" style={{ height: '100vh', minHeight: 600, position: 'relative' }}>
-        <p className="font-display" style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em', margin: 0 }}>NUMU</p>
-        <p
-          lang="ar"
-          dir="rtl"
-          className="mt-4"
-          style={{
-            fontFamily: '"Geeza Pro", "Noto Naskh Arabic", serif',
-            fontSize: 'clamp(1.65rem, 3.1vw, 2.8rem)',
-            lineHeight: 1.05,
-            opacity: 0.48,
-            letterSpacing: 0,
-            unicodeBidi: 'plaintext',
-          }}
+        <motion.p
+          className="font-display numu-welcome-word"
+          initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.4, ease: [0.2, 0.7, 0.2, 1] }}
+          style={{ fontSize: 'var(--hero-size)', lineHeight: 'var(--hero-lh)', letterSpacing: '-0.04em', margin: 0 }}
+        >NUMU</motion.p>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 1.6 }}>
+          <NumuName variant="welcome" />
+        </motion.div>
+        <motion.p
+          className="font-sans mt-6 uppercase tracking-[0.18em]"
+          initial={{ opacity: 0 }} animate={{ opacity: 0.68 }} transition={{ delay: 1.8, duration: 1.2 }}
+          style={{ fontSize: 'clamp(0.75rem, 1.1vw, 0.82rem)' }}
         >
-          نُمُوّ
-        </p>
-        <p className="font-sans mt-5 uppercase tracking-[0.18em]" style={{ fontSize: 'clamp(0.72rem, 1.1vw, 0.8rem)', opacity: 0.68 }}>
           UAE — Bio-composites platform
-        </p>
-        <p className="font-sans mt-6" style={{ fontSize: 'clamp(0.9rem, 1vw, 0.98rem)', opacity: 0.68, letterSpacing: '0.04em', lineHeight: 1.7 }}>
+        </motion.p>
+        <motion.p
+          className="font-sans mt-5"
+          initial={{ opacity: 0 }} animate={{ opacity: 0.78 }} transition={{ delay: 2.4, duration: 1.2 }}
+          style={{ fontSize: 'clamp(1rem, 1.2vw, 1.1rem)', letterSpacing: '0.02em', lineHeight: 1.7 }}
+        >
           Grown, not manufactured.
-        </p>
+        </motion.p>
         {/* Scroll indicator */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.34 }}
-          transition={{ delay: 1.4, duration: 1.0 }}
+          transition={{ delay: 3.2, duration: 1.0 }}
           style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
         >
           <p className="font-sans uppercase tracking-[0.2em]" style={{ fontSize: 12 }}>Scroll</p>
@@ -4749,9 +4754,6 @@ export default function PageClient({
           </div>
         </div>
       </section>
-
-      </>
-      )}
 
       {!investorMode && <HomeIntroduction />}
 

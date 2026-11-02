@@ -1,9 +1,4 @@
-export const PRIMARY_NAV_LINKS = [
-  { href: '/about', label: 'About' },
-  { href: '/palmyco', label: 'PALMYCO™' },
-  { href: '/shop', label: 'Products' },
-  { href: '/fold', label: 'FOLD' },
-  { href: '/mushroomiya', label: 'Mushroomiya' },
-  { href: '/#moodboards', label: 'Spaces' },
-  { href: '/partnerships', label: 'Partnerships' },
-] as const
+import { CHAPTERS } from './chapters'
+
+// The main navigation is the chapter list, in reading order (src/lib/chapters.ts).
+export const PRIMARY_NAV_LINKS = CHAPTERS.map(c => ({ href: c.href, label: c.nav, id: c.id }))

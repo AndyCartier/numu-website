@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { SubpageNav } from '@/components/SubpageNav'
 import ShopClient from '@/components/shop/ShopClient'
+import { Moodboards } from '@/app/PageClient'
+import ChapterNav from '@/components/ChapterNav'
 import { publicProducts } from '@/lib/commerce/catalogue'
 import { buildAbsoluteUrl } from '@/lib/site'
 
@@ -26,5 +28,7 @@ export default function ShopPage() {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
     <SubpageNav currentPath="/shop" />
     <ShopClient products={publicProducts} />
+    <Moodboards />
+    <ChapterNav current="objects" />
   </main>
 }

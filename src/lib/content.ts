@@ -130,7 +130,7 @@ export function loadVisitorContent(): VisitorContent {
       lines: ['Grown materials,', 'surfaces and objects.', 'Made in Dubai.'],
       sublabel: 'Material design & manufacturing — Dubai, UAE',
       meta: 'Est. 2025 — Dubai, UAE',
-      cta: { label: 'Explore the material system', href: '#statement' },
+      cta: { label: 'Look inside NUMU', href: '#inside' },
     },
     statement: {
       label: 'What NUMU is',
@@ -153,7 +153,7 @@ export function loadVisitorContent(): VisitorContent {
       label: 'Contact',
       heading: 'Specify NUMU.',
       ctas: [
-        { label: 'Explore the material system', href: '#material' },
+        { label: 'Explore the material system', href: '/palmyco' },
       ],
     },
   }
