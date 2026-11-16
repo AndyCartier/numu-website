@@ -6,6 +6,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Update only when site content changes, not on each rebuild.
   const lastModified = new Date('2026-10-10T00:00:00+04:00')
 
+  const updatedPages = new Set(['/fold', '/faq', '/'])
+
   const pages = [
     { path: '/', priority: 1, changeFrequency: 'weekly' as const },
     { path: '/about', priority: 0.8, changeFrequency: 'monthly' as const },
@@ -28,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return pages.map(({ path, priority, changeFrequency }) => ({
     url: buildAbsoluteUrl(path).toString(),
-    lastModified,
+    lastModified: updatedPages.has(path) ? new Date('2026-11-11T00:00:00+04:00') : lastModified,
     changeFrequency,
     priority,
   }))

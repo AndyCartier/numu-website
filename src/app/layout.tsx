@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { buildAbsoluteUrl, SITE_URL } from '@/lib/site'
-import { NUMU_NAP } from '@/lib/siteFacts'
+import { NUMU_NAP, NUMU_SUMMARY } from '@/lib/siteFacts'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import GlobalImageLightbox from '@/components/GlobalImageLightbox'
 import SiteFooter from '@/components/SiteFooter'
@@ -70,6 +70,7 @@ export const metadata: Metadata = {
 const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
+  publisher: { '@id': `${SITE_URL}/#organization` },
   name: 'NUMU',
   url: SITE_URL,
   description:
@@ -79,12 +80,19 @@ const websiteJsonLd = {
 const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
+  '@id': `${SITE_URL}/#organization`,
   name: NUMU_NAP.brandName,
   legalName: NUMU_NAP.legalName,
   url: SITE_URL,
+  email: NUMU_NAP.email,
   logo: buildAbsoluteUrl('/branding/logo-black-numu.png').toString(),
-  description:
-    'Dubai-based bio-composite materials company focused on mycelium acoustic panels, the Mushroomiya lamp, thermal insulation pathways, and regional material production.',
+  description: NUMU_SUMMARY,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: NUMU_NAP.address.split(', Dubai, United Arab Emirates')[0],
+    addressLocality: 'Dubai',
+    addressCountry: 'AE',
+  },
   sameAs: [
     'https://www.instagram.com/numu.bio',
     'https://www.linkedin.com/company/numu-bio',
@@ -92,33 +100,12 @@ const organizationJsonLd = {
   areaServed: ['Dubai', 'UAE', 'GCC'],
 }
 
-const localBusinessJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  name: NUMU_NAP.brandName,
-  legalName: NUMU_NAP.legalName,
-  url: SITE_URL,
-  email: NUMU_NAP.email,
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: 'IFZA Business Park, Building A1, Dubai Digital Park, Dubai Silicon Oasis',
-    addressLocality: 'Dubai',
-    addressCountry: 'AE',
-  },
-  identifier: [
-    { '@type': 'PropertyValue', name: 'Licence No.', value: NUMU_NAP.licenceNumber },
-    { '@type': 'PropertyValue', name: 'Premises', value: NUMU_NAP.premises },
-    { '@type': 'PropertyValue', name: 'Makani', value: NUMU_NAP.makani },
-  ],
-  sameAs: organizationJsonLd.sameAs,
-}
-
 const andyCartierJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Person',
   name: 'Andy Cartier',
   jobTitle: 'Founder & CEO',
-  worksFor: { '@type': 'Organization', name: NUMU_NAP.brandName, url: SITE_URL },
+  worksFor: { '@id': organizationJsonLd['@id'] },
 }
 
 
@@ -138,7 +125,6 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(andyCartierJsonLd) }} />
         {children}
         <SiteFooter />

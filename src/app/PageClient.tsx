@@ -4,7 +4,10 @@ import { useState, useRef, useEffect } from 'react'
 import Image from '@/components/SafariSafeImage'
 import Link from 'next/link'
 import { motion, AnimatePresence, useInView, useMotionValue, animate, MotionConfig, useReducedMotion } from 'framer-motion'
-import type { VisitorContent, InvestorContent, PublicTeamMember } from '@/lib/content'
+import { useModalFocus } from '@/components/useModalFocus'
+import type { InvestorStory } from '@/lib/investorStory'
+import InvestorView from './InvestorView'
+import type { VisitorContent, PublicTeamMember } from '@/lib/content'
 import { PRIMARY_NAV_LINKS } from '@/lib/navigation'
 import {
   cancelIdleTask,
@@ -18,49 +21,18 @@ import { framing, type ImageFraming } from '@/lib/commerce/imageFit'
 import CollectionFeatures, { HomeIntroduction } from '@/components/CollectionFeatures'
 import MobileNav from '@/components/MobileNav'
 import ImageDialog from '@/components/ImageDialog'
-import { useModalFocus } from '@/components/useModalFocus'
 import { DESIGN } from '@/lib/design'
 import NumuName from '@/components/eggs/NumuName'
 import { CHAPTERS, type Chapter } from '@/lib/chapters'
 
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
-const VISITOR = { bg: '#f5f1e8', fg: '#1a1714' }
 const INVESTOR = { bg: '#0e0e0e', fg: '#f5f1e8' }
+const VISITOR = { bg: '#f5f1e8', fg: '#1a1714' }
 const BORDER = '1px solid rgba(128,128,128,0.15)'
-const INV_BORDER = '1px solid rgba(245,241,232,0.1)'
-const INV_BORDER_SUBTLE = '1px solid rgba(245,241,232,0.06)'
 const ACCENT = '#B29B7F'  // warm-mid — accent for investor highlights
 
 // ─── CountUp ──────────────────────────────────────────────────────────────────
-
-function CountUp({ to, decimals = 0, suffix = '', prefix = '', duration = 1.4 }: {
-  to: number; decimals?: number; suffix?: string; prefix?: string; duration?: number
-}) {
-  const ref = useRef<HTMLSpanElement>(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-  const motionVal = useMotionValue(0)
-
-  useEffect(() => {
-    if (!inView) return
-    const controls = animate(motionVal, to, {
-      duration,
-      ease: [0.25, 0.1, 0, 1],
-      onUpdate: (v) => {
-        if (ref.current) {
-          ref.current.textContent = prefix + v.toFixed(decimals) + suffix
-        }
-      },
-    })
-    return controls.stop
-  }, [inView, to, duration, decimals, suffix, prefix, motionVal])
-
-  return <span ref={ref}>{prefix}0{suffix}</span>
-}
-
-// ─── HoverVideo ───────────────────────────────────────────────────────────────
-
-// ─── Social links ────────────────────────────────────────────────────────────
 
 const SOCIAL = [
   {
@@ -673,8 +645,6 @@ function SporeField() {
   )
 }
 
-// ─── Hyphae Field — investor hero: organic growth lines expanding from center ──
-
 function HyphaeField() {
   const ref = useRef<HTMLCanvasElement>(null)
   const reducedMotion = useReducedMotion()
@@ -806,8 +776,6 @@ function HyphaeField() {
   )
 }
 
-// ─── Visitor shared components ────────────────────────────────────────────────
-
 function VSection({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     <section id={id} className="px-6 md:px-12 py-20 md:py-[104px]" style={{ borderTop: BORDER, scrollMarginTop: 'calc(var(--nav-h) + 16px)' }}>
@@ -848,42 +816,6 @@ function VBody({ text }: { text: string }) {
   )
 }
 
-// ─── Investor shared components ───────────────────────────────────────────────
-
-function ISection({ id, children }: { id: string; children: React.ReactNode }) {
-  return (
-    <section id={id} className="px-6 md:px-12 py-16 md:py-28 scroll-mt-24 md:scroll-mt-28" style={{ borderTop: INV_BORDER }}>
-      <div className="max-w-[1440px] mx-auto">{children}</div>
-    </section>
-  )
-}
-
-function ILabel({ text }: { text: string }) {
-  return (
-    <p className="font-sans text-label uppercase tracking-[0.2em] mb-6" style={{ opacity: 0.72 }}>
-      {text}
-    </p>
-  )
-}
-
-function IHeading({ text }: { text: string }) {
-  return (
-    <h2 className="font-display mb-10 max-w-3xl" style={{ fontSize: 'clamp(2.25rem, 4.5vw, 3.75rem)', lineHeight: 1.08, letterSpacing: '-0.03em', fontWeight: 700, textWrap: 'balance' as React.CSSProperties['textWrap'] }}>
-      {text}
-    </h2>
-  )
-}
-
-function IBody({ text }: { text: string }) {
-  return (
-    <p className="font-sans text-base md:text-[1.0625rem] leading-[1.75] mb-10 max-w-2xl" style={{ opacity: 0.68 }}>
-      {text}
-    </p>
-  )
-}
-
-
-// ─── Production feature (image + placeholders) ───────────────────────────────
 
 export function ProductionFeature() {
   return (
@@ -916,8 +848,6 @@ export function ProductionFeature() {
     </section>
   )
 }
-
-// ─── Process & Test Carousel ─────────────────────────────────────────────────
 
 const CAROUSEL_ITEMS = [
   { src: '/images/catalogue/material/palmyco-samples-in-hand.jpg', alt: 'Two PALMYCO™ grown samples held in hand, showing the section', label: 'Grown samples' },
@@ -1080,1558 +1010,6 @@ function CollectionBand() {
   )
 }
 
-// ─── Investor contact form ────────────────────────────────────────────────────
-
-function InvestorContact({ iv }: { iv: InvestorContent }) {
-  return (
-    <div className="rounded-sm px-10 md:px-16 py-16 md:py-20" style={{ backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)' }}>
-      <ILabel text={iv.cta.label} />
-      <h2 className="font-display text-headline mb-6 max-w-2xl">{iv.cta.heading}</h2>
-      <p className="font-sans text-base leading-[1.75] mb-6 max-w-xl" style={{ opacity: 0.55 }}>{iv.cta.body}</p>
-      <div className="mt-6">
-        <DirectContactForm
-          requestType="investor_deck"
-          source="investor-contact"
-          submitLabel="Request Deck →"
-          dark
-        />
-      </div>
-      <div className="mt-10 pt-8 flex flex-col sm:flex-row sm:items-center gap-6" style={{ borderTop: '1px solid rgba(245,241,232,0.1)' }}>
-        <p className="font-sans text-label uppercase tracking-[0.16em]" style={{ opacity: 0.68 }}>Connect</p>
-        <SocialLinks dark />
-      </div>
-      <div className="mt-5 flex flex-wrap gap-4">
-        <Link href="/privacy" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.65rem', opacity: 0.42, textDecoration: 'none' }}>
-          Privacy Policy
-        </Link>
-        <Link href="/terms" className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.65rem', opacity: 0.42, textDecoration: 'none' }}>
-          Terms of Use
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-// ─── Three Forces ─────────────────────────────────────────────────────────────
-
-function ThreeForces({ forces }: { forces: InvestorContent['forces'] }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-
-  return (
-    <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.68 }}>
-        Why now — three converging forces
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)' }}>
-        {forces.items.map((force, i) => (
-          <motion.div
-            key={force.id}
-            initial={{ opacity: 0, y: 24 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: i * 0.15, ease: [0.25, 0, 0.2, 1] }}
-            className="p-10 md:p-12"
-            style={{ backgroundColor: '#0e0e0e', position: 'relative', overflow: 'hidden' }}
-          >
-            {/* Animated big stat */}
-            {force.statCountTo != null && (
-              <div style={{ marginBottom: 20 }}>
-                <p className="font-display" style={{ fontSize: 'clamp(3rem, 5vw, 4.5rem)', letterSpacing: '-0.04em', lineHeight: 1, color: ACCENT }}>
-                  {inView
-                    ? <><span style={{ fontSize: '0.6em', opacity: 0.75 }}>{force.statPrefix}</span><CountUp to={force.statCountTo} decimals={0} suffix={force.statSuffix ?? ''} duration={1.4 + i * 0.2} /></>
-                    : <span style={{ opacity: 0 }}>0</span>
-                  }
-                </p>
-              </div>
-            )}
-            <div className="mb-6 flex items-center gap-3">
-              <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: ACCENT, opacity: 0.9 }} />
-              <p className="font-sans text-label uppercase tracking-[0.2em]" style={{ opacity: 0.68 }}>Force {String(i + 1).padStart(2, '0')}</p>
-            </div>
-            <p className="font-display mb-5" style={{ fontSize: 'clamp(1.5rem, 2vw, 2rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>{force.title}</p>
-            <div style={{ width: 32, height: 1.5, backgroundColor: ACCENT, opacity: 0.6, marginBottom: 20 }} />
-            <p className="font-sans text-base leading-[1.85]" style={{ opacity: 0.58 }}>{force.body}</p>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Investor key metrics strip ──────────────────────────────────────────────
-
-function InvestorMetricsStrip() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-
-  const metrics = [
-    { value: 600, prefix: '$', suffix: 'K', unit: 'SAFE · AED 2.2M', decimals: 0 },
-    { value: 18, prefix: '', suffix: ' mo', unit: 'RUNWAY', decimals: 0 },
-    { value: 65, prefix: '', suffix: '%', unit: 'GROSS MARGIN', decimals: 0 },
-    { value: 2.5, prefix: '$', suffix: 'M', unit: 'SERIES A TARGET', decimals: 1 },
-  ]
-
-  return (
-    <div
-      ref={ref}
-      className="grid grid-cols-2 md:grid-cols-4"
-      style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.08)', borderTop: INV_BORDER, marginTop: 48 }}
-    >
-      {metrics.map((m, i) => (
-        <motion.div
-          key={m.unit}
-          initial={{ opacity: 0, y: 12 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 0, 0.2, 1] }}
-          className="px-8 py-8"
-          style={{ backgroundColor: '#0e0e0e' }}
-        >
-          <p className="font-display mb-1" style={{ fontSize: 'clamp(2rem, 3.5vw, 3rem)', letterSpacing: '-0.04em', lineHeight: 1, color: ACCENT }}>
-            {inView
-              ? <><span style={{ fontSize: '0.55em', opacity: 0.7 }}>{m.prefix}</span><CountUp to={m.value} decimals={m.decimals} suffix={m.suffix} duration={1.2 + i * 0.1} /></>
-              : <>{m.prefix}0{m.suffix}</>
-            }
-          </p>
-          <p className="font-sans text-label uppercase tracking-[0.16em] mt-2" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>{m.unit}</p>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
-// ─── Investor platform expansion ──────────────────────────────────────────────
-
-const PLATFORM_TIERS = [
-  {
-    index: '01', name: 'Acoustic + Pressed Boards', note: '2026 — Active', width: '32%', status: 'active',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
-        <rect x="2" y="4" width="16" height="12" rx="1.5" />
-        <path d="M6 9.5 Q8 7 10 9.5 Q12 12 14 9.5" />
-      </svg>
-    ),
-  },
-  {
-    index: '02', name: 'Certified Specification Channel', note: '2027 — Next', width: '55%', status: 'next',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
-        <circle cx="10" cy="10" r="7.5" />
-        <polyline points="6.5,10 9,12.5 13.5,7" />
-      </svg>
-    ),
-  },
-  {
-    index: '03', name: 'Packaging + Thermal', note: '2028 — Future', width: '75%', status: 'future',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
-        <path d="M3 7L10 3.5L17 7V13L10 16.5L3 13V7Z" />
-        <line x1="10" y1="3.5" x2="10" y2="10" />
-        <line x1="3" y1="7" x2="10" y2="10" />
-        <line x1="17" y1="7" x2="10" y2="10" />
-      </svg>
-    ),
-  },
-  {
-    index: '04', name: 'Licensing + Regional Expansion', note: '2028+ — Long-term', width: '100%', status: 'future',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" width={16} height={16}>
-        <circle cx="10" cy="10" r="2.5" />
-        <circle cx="4" cy="4.5" r="1.5" />
-        <circle cx="16" cy="4.5" r="1.5" />
-        <circle cx="4" cy="15.5" r="1.5" />
-        <circle cx="16" cy="15.5" r="1.5" />
-        <line x1="7.8" y1="8.2" x2="5.2" y2="6" />
-        <line x1="12.2" y1="8.2" x2="14.8" y2="6" />
-        <line x1="7.8" y1="11.8" x2="5.2" y2="14" />
-        <line x1="12.2" y1="11.8" x2="14.8" y2="14" />
-      </svg>
-    ),
-  },
-]
-
-function PlatformExpansion() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-
-  return (
-    <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.68 }}>
-        Platform expansion — 2026 to long-term
-      </p>
-      <div>
-        {PLATFORM_TIERS.map((tier, i) => {
-          const isActive = tier.status === 'active'
-          const isNext = tier.status === 'next'
-          const barColor = isActive ? ACCENT : isNext ? 'rgba(245,241,232,0.42)' : 'rgba(245,241,232,0.16)'
-          const nameOpacity = isActive ? 1 : isNext ? 0.65 : 0.42
-          return (
-            <motion.div
-              key={tier.index}
-              initial={{ opacity: 0, x: -16 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 0, 0.2, 1] }}
-              className="flex items-center gap-6 py-6"
-              style={{ borderBottom: i < PLATFORM_TIERS.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
-            >
-              {/* Index + icon */}
-              <div className="flex-shrink-0 flex flex-col items-center gap-1.5" style={{ width: 40 }}>
-                <span className="font-sans text-label uppercase tracking-[0.18em]" style={{ opacity: isActive ? 0.9 : 0.25, color: isActive ? ACCENT : undefined, fontSize: '0.5625rem' }}>{tier.index}</span>
-                <div style={{ opacity: isActive ? 0.9 : isNext ? 0.45 : 0.22, color: isActive ? ACCENT : 'rgba(245,241,232,1)' }}>
-                  {tier.icon}
-                </div>
-              </div>
-              {/* Bar + label */}
-              <div className="flex-1 min-w-0">
-                <motion.div
-                  initial={{ scaleX: 0 }}
-                  animate={inView ? { scaleX: 1 } : {}}
-                  transition={{ duration: 0.85, delay: i * 0.12 + 0.1, ease: [0.25, 0, 0.2, 1] }}
-                  style={{ width: tier.width, height: isActive ? 3 : 1.5, backgroundColor: barColor, marginBottom: 12, transformOrigin: 'left', boxShadow: isActive ? `0 0 10px ${ACCENT}55` : 'none' }}
-                />
-                <div className="flex flex-wrap items-baseline gap-3">
-                  <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.375rem)', letterSpacing: '-0.02em', opacity: nameOpacity, color: isActive ? undefined : undefined }}>{tier.name}</p>
-                  <span className="font-sans text-label uppercase tracking-[0.14em]" style={{ opacity: isActive ? 0.65 : isNext ? 0.35 : 0.22, color: isActive ? ACCENT : undefined }}>{tier.note}</span>
-                </div>
-              </div>
-              {/* Active pulse dot */}
-              {isActive && <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: ACCENT, flexShrink: 0, boxShadow: `0 0 8px ${ACCENT}88` }} />}
-            </motion.div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ─── Revenue Engines ──────────────────────────────────────────────────────────
-
-function RevenueEngines({ data }: { data: InvestorContent['revenue_engines'] }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-  const statusColor: Record<string, string> = { active: 'rgba(245,241,232,1)', next: 'rgba(245,241,232,0.5)', future: 'rgba(245,241,232,0.2)' }
-
-  return (
-    <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-12" style={{ opacity: 0.68 }}>
-        Four revenue engines — one platform
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)' }}>
-        {data.engines.map((engine, i) => (
-          <motion.div
-            key={engine.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 0, 0.2, 1] }}
-            className="p-6 md:p-10"
-            style={{ backgroundColor: '#0e0e0e' }}
-          >
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: statusColor[engine.status], flexShrink: 0, marginTop: 2 }} />
-                <p className="font-sans text-label uppercase tracking-[0.18em]" style={{ opacity: 0.68 }}>{engine.id}</p>
-              </div>
-              <span
-                className="font-sans text-label uppercase tracking-[0.12em] px-2 py-0.5"
-                style={{
-                  opacity: engine.status === 'active' ? 1 : 0.35,
-                  color: engine.status === 'active' ? ACCENT : undefined,
-                  border: engine.status === 'active' ? `1px solid ${ACCENT}55` : '1px solid rgba(245,241,232,0.15)',
-                  borderRadius: 2,
-                }}
-              >
-                {engine.status === 'active' ? 'Active' : engine.status === 'next' ? 'Phase 2' : 'Phase 3'}
-              </span>
-            </div>
-            <p className="font-display text-2xl md:text-3xl mb-3" style={{ letterSpacing: '-0.02em', fontWeight: 700 }}>{engine.name}</p>
-            <p className="font-sans text-base leading-[1.75] mb-8" style={{ opacity: 0.5 }}>{engine.desc}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6" style={{ borderTop: INV_BORDER_SUBTLE }}>
-              <div>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.68 }}>Price</p>
-                <p className="font-display text-base md:text-lg" style={{ letterSpacing: '-0.015em' }}>{engine.price}</p>
-              </div>
-              <div>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.68 }}>Margin</p>
-                <p className="font-display text-xl md:text-2xl" style={{ letterSpacing: '-0.025em', color: engine.status === 'active' ? ACCENT : undefined, opacity: engine.status === 'active' ? 1 : 0.85 }}>{engine.margin}</p>
-              </div>
-              <div>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.68 }}>Activation</p>
-                <p className="font-display text-base" style={{ opacity: 0.75, color: engine.status === 'active' ? ACCENT : undefined }}>{engine.activation}</p>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── 5-Year Financial Projection ─────────────────────────────────────────────
-
-const PROJECTION_YEARS = [
-  { year: 'Y1', sub: 'FOUNDER-LED' },
-  { year: 'Y2', sub: 'SAFE DEPLOYS' },
-  { year: 'Y3', sub: 'PHASE 2 LIVE' },
-  { year: 'Y4', sub: 'SERIES A' },
-  { year: 'Y5', sub: 'THERMAL SCALE' },
-]
-
-const PROJECTION_ROWS = [
-  { metric: 'Revenue',       values: ['$126K', '$701K', '$1.90M', '$3.41M', '$10.1M'], highlight: false, dim: false },
-  { metric: 'Gross margin',  values: ['65%',   '64%',   '63%',   '60%',   '49%'],      highlight: false, dim: true  },
-  { metric: 'EBITDA',        values: ['$35K',  '$187K', '$573K', '$743K', '$2.56M'],   highlight: true,  dim: false },
-  { metric: 'EBITDA margin', values: ['28%',   '27%',   '30%',   '22%',   '25%'],      highlight: false, dim: true  },
-]
-
-const CAPACITY_YEARS = [
-  { label: 'Y1', perMonth: 30,    note: 'Founder-led lab',                   raiseYear: false, phase: 'Artisanal',  total: 360,    segments: [{ key: 'E1', val: 324 }, { key: 'E2', val: 36 }] },
-  { label: 'Y2', perMonth: 600,   note: 'Post-SAFE · Module 1 Phase 1',      raiseYear: true,  phase: 'Artisanal',  total: 7200,   segments: [{ key: 'E1', val: 5774 }, { key: 'E2', val: 1426 }] },
-  { label: 'Y3', perMonth: 1200,  note: 'Module 1 full · certification',      raiseYear: false, phase: 'Artisanal',  total: 14400,  segments: [{ key: 'E1', val: 9331 }, { key: 'E2', val: 2995 }, { key: 'E3', val: 2074 }] },
-  { label: 'Y4', perMonth: 3000,  note: 'Series A · thermal + packaging',    raiseYear: true,  phase: 'Transition', total: 36000,  segments: [{ key: 'E1', val: 10648 }, { key: 'E2', val: 5070 }, { key: 'E3', val: 7606 }, { key: 'E4', val: 5070 }, { key: 'T', val: 7606 }] },
-  { label: 'Y5', perMonth: 12000, note: 'Full factory · two-line industrial', raiseYear: false, phase: 'Platform',   total: 144000, segments: [{ key: 'E1', val: 5128 }, { key: 'E2', val: 3205 }, { key: 'E3', val: 7487 }, { key: 'E4', val: 42757 }, { key: 'T', val: 85424 }] },
-]
-const ENGINE_COLORS: Record<string, string> = {
-  E1: '#B29B7F',
-  E2: 'rgba(178,155,127,0.7)',
-  E3: 'rgba(245,241,232,0.5)',
-  E4: 'rgba(198,106,63,0.5)',
-  T:  'rgba(198,106,63,0.82)',
-}
-const ENGINE_LABELS: Record<string, string> = {
-  E1: 'Acoustic', E2: 'Pressed', E3: 'Certified', E4: 'Packaging', T: 'Thermal',
-}
-const CAP_MAX_SQRT = Math.sqrt(144000)
-
-const formatCapacityTotal = (total: number) => (
-  total >= 10000
-    ? `${(total / 1000).toFixed(0)}K`
-    : total >= 1000
-    ? `${(total / 1000).toFixed(1)}K`
-    : String(total)
-)
-
-function FinancialProjection5yr() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-
-  return (
-    <div ref={ref} className="mt-20" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.68 }}>
-        Financial Model — 5-Year View
-      </p>
-      <h3 className="font-display mb-10" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)', letterSpacing: '-0.03em', lineHeight: 1.1, textWrap: 'balance' }}>
-        Profitable from Year 1. Platform scale by Year 5.
-      </h3>
-
-      {/* Mobile P&L cards */}
-      <div className="md:hidden mb-12 space-y-3">
-        {PROJECTION_YEARS.map((year, i) => {
-          const isRaise = i === 1 || i === 3
-          const revenue = PROJECTION_ROWS[0].values[i]
-          const grossMargin = PROJECTION_ROWS[1].values[i]
-          const ebitda = PROJECTION_ROWS[2].values[i]
-          const ebitdaMargin = PROJECTION_ROWS[3].values[i]
-
-          return (
-            <motion.div
-              key={year.year}
-              initial={{ opacity: 0, y: 12 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.42, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
-              className="px-5 py-5"
-              style={{
-                border: isRaise ? `1px solid ${ACCENT}55` : INV_BORDER_SUBTLE,
-                backgroundColor: isRaise ? `${ACCENT}0b` : 'rgba(245,241,232,0.025)',
-                boxShadow: isRaise ? `inset 3px 0 0 ${ACCENT}` : 'none',
-              }}
-            >
-              <div className="flex items-start justify-between gap-4 mb-5">
-                <div>
-                  <p className="font-display" style={{ fontSize: '1.75rem', lineHeight: 1, color: isRaise ? ACCENT : undefined }}>{year.year}</p>
-                  <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{year.sub}</p>
-                </div>
-                {isRaise && (
-                  <p className="font-sans uppercase tracking-[0.13em] px-3 py-1.5" style={{ fontSize: '0.6875rem', color: ACCENT, border: `1px solid ${ACCENT}44`, backgroundColor: `${ACCENT}0f` }}>
-                    raise year
-                  </p>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.09)' }}>
-                {[
-                  ['Revenue', revenue, false],
-                  ['Gross margin', grossMargin, false],
-                  ['EBITDA', ebitda, true],
-                  ['EBITDA margin', ebitdaMargin, false],
-                ].map(([label, value, hot]) => (
-                  <div key={label as string} className="px-4 py-3.5" style={{ backgroundColor: '#0e0e0e' }}>
-                    <p className="font-sans uppercase tracking-[0.12em] mb-1.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{label as string}</p>
-                    <p className="font-display" style={{ fontSize: hot ? '1.2rem' : '1.05rem', lineHeight: 1.1, color: hot ? ACCENT : undefined, opacity: hot ? 1 : 0.78 }}>{value as string}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
-
-      {/* Desktop P&L Table */}
-      <div className="hidden md:block overflow-x-auto mb-14">
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
-          <thead>
-            <tr style={{ borderBottom: INV_BORDER }}>
-              <th className="font-sans text-left py-4 pr-6 pl-2" style={{ fontSize: '0.5625rem', opacity: 0.25, letterSpacing: '0.14em', textTransform: 'uppercase' }}></th>
-              {PROJECTION_YEARS.map((y, i) => (
-                <th key={y.year} className="font-sans text-right py-4 px-4" style={{ backgroundColor: i === 3 ? `${ACCENT}0a` : 'transparent' }}>
-                  <p className="font-display" style={{ fontSize: '1.125rem', letterSpacing: '-0.02em', color: i === 3 ? ACCENT : undefined, opacity: i === 3 ? 1 : 0.82 }}>{y.year}</p>
-                  <p className="font-sans uppercase tracking-[0.1em] mt-0.5" style={{ fontSize: '0.6875rem', opacity: 0.68, color: i === 3 ? ACCENT : undefined }}>{y.sub}</p>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {PROJECTION_ROWS.map((row, ri) => (
-              <motion.tr
-                key={row.metric}
-                initial={{ opacity: 0, x: -8 }}
-                animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.4, delay: 0.1 + ri * 0.08, ease: [0.25, 0, 0.2, 1] }}
-                style={{ borderBottom: ri < PROJECTION_ROWS.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
-              >
-                <td className="py-4 pl-2 pr-6">
-                  <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.6875rem', opacity: row.highlight ? 0.9 : 0.35, color: row.highlight ? ACCENT : undefined }}>{row.metric}</p>
-                </td>
-                {row.values.map((val, vi) => (
-                  <td key={vi} className="py-4 px-4 text-right" style={{ backgroundColor: vi === 3 ? `${ACCENT}0a` : 'transparent' }}>
-                    <p className="font-display" style={{
-                      fontSize: row.highlight ? '1.125rem' : '0.9375rem',
-                      opacity: row.dim ? (vi === 3 ? 0.6 : 0.35) : (vi === 3 ? 1 : 0.7),
-                      color: (row.highlight || vi === 3) ? ACCENT : undefined,
-                      letterSpacing: '-0.02em',
-                    }}>{val}</p>
-                  </td>
-                ))}
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Production capacity ramp */}
-      <div style={{ borderTop: INV_BORDER_SUBTLE, paddingTop: 32 }}>
-        <div className="flex items-baseline justify-between mb-8">
-          <p className="font-sans text-label uppercase tracking-[0.18em]" style={{ opacity: 0.68 }}>
-            Capacity ramp · m² / year · by engine
-          </p>
-          <p className="font-sans text-label hidden md:block" style={{ opacity: 0.68, fontStyle: 'italic', fontSize: '0.6875rem' }}>
-            Not pre-revenue. Pre-leverage.
-          </p>
-        </div>
-
-        {/* Mobile vertical capacity story */}
-        <div className="md:hidden space-y-3">
-          {CAPACITY_YEARS.map((yr, i) => {
-            const isLast = i === CAPACITY_YEARS.length - 1
-            const widthPct = Math.max((yr.total / 144000) * 100, 4)
-
-            return (
-              <motion.div
-                key={yr.label}
-                initial={{ opacity: 0, y: 10 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.4, delay: 0.18 + i * 0.07, ease: [0.25, 0, 0.2, 1] }}
-                className="px-4 py-4"
-                style={{
-                  border: yr.raiseYear ? `1px solid ${ACCENT}44` : INV_BORDER_SUBTLE,
-                  backgroundColor: isLast ? `${ACCENT}0c` : 'rgba(245,241,232,0.025)',
-                }}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-display" style={{ fontSize: '1.3rem', color: isLast ? ACCENT : undefined }}>{yr.label}</p>
-                      {yr.raiseYear && (
-                        <span className="font-sans uppercase tracking-[0.12em] px-2 py-1" style={{ fontSize: '0.47rem', color: ACCENT, border: `1px solid ${ACCENT}3d` }}>
-                          raise
-                        </span>
-                      )}
-                    </div>
-                    <p className="font-sans mt-1" style={{ fontSize: '0.75rem', opacity: 0.46 }}>{yr.note}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-display" style={{ fontSize: '1.2rem', color: isLast ? ACCENT : undefined }}>{formatCapacityTotal(yr.total)}</p>
-                    <p className="font-sans uppercase tracking-[0.1em] mt-1" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>sq.m / yr</p>
-                    <p className="font-sans mt-1" style={{ fontSize: '0.68rem', opacity: 0.42 }}>{yr.perMonth.toLocaleString()} / mo</p>
-                  </div>
-                </div>
-
-                <div className="mt-4" style={{ height: 14, backgroundColor: 'rgba(245,241,232,0.08)', overflow: 'hidden' }}>
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={inView ? { width: `${widthPct}%` } : {}}
-                    transition={{ duration: 0.65, delay: 0.25 + i * 0.08, ease: [0.25, 0, 0.2, 1] }}
-                    style={{ height: '100%', display: 'flex', minWidth: 8 }}
-                  >
-                    {yr.segments.map((seg) => (
-                      <div
-                        key={seg.key}
-                        style={{
-                          width: `${(seg.val / yr.total) * 100}%`,
-                          backgroundColor: ENGINE_COLORS[seg.key],
-                        }}
-                      />
-                    ))}
-                  </motion.div>
-                </div>
-                <p className="font-sans uppercase tracking-[0.12em] mt-3" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{yr.phase}</p>
-              </motion.div>
-            )
-          })}
-        </div>
-
-        {/* Desktop stacked bar chart */}
-        <div className="hidden md:flex items-end gap-4" style={{ height: 220 }}>
-          {CAPACITY_YEARS.map((yr, i) => {
-            const sqrtH = Math.sqrt(yr.total)
-            const heightPct = Math.max((sqrtH / CAP_MAX_SQRT) * 100, 8)
-            const isLast = i === CAPACITY_YEARS.length - 1
-            const totalLabel = formatCapacityTotal(yr.total)
-
-            return (
-              <div key={yr.label} className="flex-1 flex flex-col" style={{ height: '100%' }}>
-                {/* Total label above bar */}
-                <div className="flex-1 flex flex-col justify-end" style={{ position: 'relative' }}>
-                  <motion.p
-                    className="font-sans text-center w-full absolute"
-                    initial={{ opacity: 0 }}
-                    animate={inView ? { opacity: isLast ? 1 : 0.55 } : {}}
-                    transition={{ duration: 0.4, delay: 0.55 + i * 0.12 }}
-                    style={{ fontSize: 10, bottom: `${heightPct + 2}%`, color: isLast ? ACCENT : undefined, letterSpacing: '0.04em' }}
-                  >
-                    {totalLabel}
-                  </motion.p>
-
-                  {/* Bar container — animates height, segments inside are proportional */}
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={inView ? { height: `${heightPct}%` } : {}}
-                    transition={{ duration: 0.75, delay: 0.15 + i * 0.12, ease: [0.25, 0, 0.2, 1] }}
-                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden' }}
-                  >
-                    {yr.segments.map((seg, si) => {
-                      const segPct = (seg.val / yr.total) * 100
-                      const bottomPct = yr.segments.slice(0, si).reduce((acc, e) => acc + (e.val / yr.total) * 100, 0)
-                      return (
-                        <div
-                          key={seg.key}
-                          style={{
-                            position: 'absolute',
-                            bottom: `${bottomPct}%`,
-                            height: `${segPct}%`,
-                            left: 0, right: 0,
-                            backgroundColor: ENGINE_COLORS[seg.key],
-                          }}
-                        />
-                      )
-                    })}
-                  </motion.div>
-                </div>
-
-                {/* Raise year badge */}
-                {yr.raiseYear && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={inView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ duration: 0.4, delay: 0.5 + i * 0.12 }}
-                    className="flex-shrink-0 text-center px-2 py-1 mb-1"
-                    style={{ border: `1px solid ${ACCENT}55`, backgroundColor: `${ACCENT}0a` }}
-                  >
-                    <p className="font-sans uppercase tracking-[0.1em]" style={{ fontSize: '0.6875rem', color: ACCENT, opacity: 0.8 }}>raise year</p>
-                  </motion.div>
-                )}
-
-                {/* Year + phase */}
-                <div className="text-center flex-shrink-0 mt-2">
-                  <p className="font-display" style={{ fontSize: '0.875rem', letterSpacing: '-0.01em', opacity: isLast ? 1 : 0.75, color: isLast ? ACCENT : undefined }}>{yr.label}</p>
-                  <p className="font-sans" style={{ fontSize: '0.5625rem', opacity: 0.42, marginTop: 2 }}>{yr.perMonth >= 1000 ? `${(yr.perMonth / 1000).toFixed(0)}K` : yr.perMonth} m²/mo</p>
-                  <p className="font-sans" style={{ fontSize: '0.5rem', opacity: 0.25, marginTop: 2, maxWidth: 70, margin: '4px auto 0' }}>{yr.note}</p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Engine legend */}
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8">
-          {(['E1', 'E2', 'E3', 'E4', 'T'] as const).map(key => (
-            <div key={key} className="flex items-center gap-2">
-              <div style={{ width: 10, height: 10, backgroundColor: ENGINE_COLORS[key], flexShrink: 0 }} />
-              <p className="font-sans text-label uppercase tracking-[0.1em]" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>{ENGINE_LABELS[key]}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Y4→Y5 callout */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.9, ease: [0.25, 0, 0.2, 1] }}
-          className="mt-8 px-6 py-5"
-          style={{ border: `1px solid ${ACCENT}30`, backgroundColor: `${ACCENT}06`, borderLeft: `3px solid ${ACCENT}` }}
-        >
-          <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', color: ACCENT, opacity: 0.7 }}>Y4 → Y5 — 9.5× volume jump</p>
-          <p className="font-sans text-sm leading-relaxed" style={{ opacity: 0.62 }}>
-            94% of Y5 volume is thermal and packaging at construction scale — a different operational reality from Y1–Y3. If this phase slides 12–18 months, the revenue trajectory is unaffected. It just arrives later.
-          </p>
-        </motion.div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Revenue Chart ────────────────────────────────────────────────────────────
-
-function RevenueChart({ data }: { data: InvestorContent['revenue_chart'] }) {
-  const ref = useRef(null)
-  const MAX_VAL = 14
-
-  return (
-    <div ref={ref} className="mt-20" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.68 }}>
-        {data.label}
-      </p>
-      <h3 className="font-display mb-14" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-        {data.heading}
-      </h3>
-
-      {/* Mobile revenue path — vertical scan instead of clipped chart labels */}
-      <div className="md:hidden rounded-sm px-4 py-5 space-y-4" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
-        {data.years.map((yr, i) => {
-          const highPct = Math.max((yr.high / MAX_VAL) * 100, yr.high > 0 ? 4 : 0)
-          const lowPct = yr.low > 0 ? Math.max((yr.low / MAX_VAL) * 100, 3) : 0
-          const isLast = i === data.years.length - 1
-          const isRaise = yr.year === 'Y1' || yr.year === 'Y5'
-
-          return (
-            <motion.div
-              key={yr.year}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '0px' }}
-              transition={{ duration: 0.42, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
-              className="py-4"
-              style={{ borderBottom: i < data.years.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
-            >
-              <div className="flex items-baseline justify-between gap-3 mb-3">
-                <div>
-                  <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{yr.year}</p>
-                  <p className="font-display mt-1" style={{ fontSize: '1.3rem', color: isLast ? ACCENT : undefined }}>{yr.label}</p>
-                </div>
-                {isRaise && (
-                  <span className="font-sans uppercase tracking-[0.12em] px-2.5 py-1.5" style={{ fontSize: '0.5rem', color: isLast ? ACCENT : 'rgba(245,241,232,0.72)', border: `1px solid ${isLast ? ACCENT : 'rgba(245,241,232,0.28)'}` }}>
-                    {yr.year === 'Y1' ? 'Seed AED 2.2M' : 'Series A $2.5M'}
-                  </span>
-                )}
-              </div>
-              <div style={{ height: 16, backgroundColor: 'rgba(245,241,232,0.08)', position: 'relative', overflow: 'hidden' }}>
-                <motion.div
-                  initial={{ width: 0 }}
-                  whileInView={{ width: `${highPct}%` }}
-                  viewport={{ once: true, margin: '0px' }}
-                  transition={{ duration: 0.6, delay: 0.12 + i * 0.07, ease: [0.25, 0, 0.2, 1] }}
-                  style={{ position: 'absolute', inset: 0, right: 'auto', backgroundColor: isLast ? `${ACCENT}55` : 'rgba(245,241,232,0.24)' }}
-                />
-                <motion.div
-                  initial={{ width: 0 }}
-                  whileInView={{ width: `${lowPct}%` }}
-                  viewport={{ once: true, margin: '0px' }}
-                  transition={{ duration: 0.6, delay: 0.2 + i * 0.07, ease: [0.25, 0, 0.2, 1] }}
-                  style={{ position: 'absolute', inset: 0, right: 'auto', backgroundColor: isLast ? ACCENT : 'rgba(245,241,232,0.72)' }}
-                />
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
-
-      <div className="hidden md:block rounded-sm px-8 py-10" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
-        <div className="flex items-stretch gap-8" style={{ height: 'clamp(380px, 42vw, 480px)' }}>
-          {data.years.map((yr, i) => {
-            const lowPct = (yr.low / MAX_VAL) * 100
-            const highPct = (yr.high / MAX_VAL) * 100
-            const displayLowPct = yr.low > 0 ? Math.max(lowPct, 6) : 0
-            const displayHighPct = Math.max(highPct, displayLowPct + (yr.high > yr.low ? 4.5 : 0))
-            const displayRangePct = Math.max(displayHighPct - displayLowPct, yr.high > yr.low ? 4.5 : 0)
-            const isLast = i === data.years.length - 1
-            const hasBadge = yr.year === 'Y1' || yr.year === 'Y5'
-
-            return (
-              <div key={yr.year} className="flex-1 flex flex-col" style={{ height: '100%' }}>
-                {/* Bar area */}
-                <div className="flex-1 w-full" style={{ position: 'relative', maxWidth: 240, margin: '0 auto', minHeight: 0 }}>
-                  <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, backgroundColor: 'rgba(245,241,232,0.10)' }} />
-
-                  {/* Top value label */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '0px' }}
-                    transition={{ duration: 0.4, delay: 0.8 + i * 0.15 }}
-                    style={{ position: 'absolute', bottom: `${displayHighPct + 3}%`, left: 0, right: 0, textAlign: 'center' }}
-                  >
-                    <span className="font-sans" style={{ fontSize: 11, opacity: 0.58, letterSpacing: '0.08em', color: isLast ? ACCENT : undefined }}>
-                      {yr.label}
-                    </span>
-                  </motion.div>
-
-                  {/* Upside range bar */}
-                  <motion.div
-                    initial={{ scaleY: 0 }}
-                    whileInView={{ scaleY: 1 }}
-                    viewport={{ once: true, margin: '0px' }}
-                    transition={{ duration: 0.75, delay: 0.25 + i * 0.15, ease: [0.25, 0, 0.2, 1] }}
-                    style={{
-                      position: 'absolute',
-                      bottom: `${displayLowPct}%`,
-                      left: 0,
-                      right: 0,
-                      height: `${displayRangePct}%`,
-                      backgroundColor: isLast ? `${ACCENT}4d` : 'rgba(245,241,232,0.22)',
-                      boxShadow: 'inset 0 0 0 1px rgba(245,241,232,0.07)',
-                      transformOrigin: 'bottom',
-                    }}
-                  />
-
-                  {/* Base case bar */}
-                  <motion.div
-                    initial={{ scaleY: 0 }}
-                    whileInView={{ scaleY: 1 }}
-                    viewport={{ once: true, margin: '0px' }}
-                    transition={{ duration: 0.75, delay: 0.15 + i * 0.15, ease: [0.25, 0, 0.2, 1] }}
-                    style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: `${displayLowPct}%`,
-                      backgroundColor: isLast ? ACCENT : i === 0 ? 'rgba(245,241,232,0.52)' : 'rgba(245,241,232,0.78)',
-                      boxShadow: 'inset 0 0 0 1px rgba(245,241,232,0.08)',
-                      transformOrigin: 'bottom',
-                    }}
-                  />
-                </div>
-
-                {/* Label zone */}
-                <div className="text-center flex-shrink-0" style={{ paddingTop: 14 }}>
-                  <p className="font-display text-base md:text-lg" style={{ letterSpacing: '-0.01em', opacity: isLast ? 1 : 0.8, color: isLast ? ACCENT : undefined }}>{yr.label}</p>
-                  <p className="font-sans text-label uppercase tracking-[0.16em] mt-1.5" style={{ opacity: 0.68 }}>{yr.year}</p>
-
-                  <div style={{ height: 80, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 14 }}>
-                    {yr.year === 'Y1' && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 6 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: '0px' }}
-                        transition={{ duration: 0.5, delay: 0.7 }}
-                        className="inline-block px-3.5 py-3"
-                        style={{ border: '1.5px solid rgba(245,241,232,0.32)', backgroundColor: 'rgba(245,241,232,0.06)', minWidth: 110 }}
-                      >
-                        <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: 'rgba(245,241,232,0.64)', whiteSpace: 'nowrap' }}>Seed Raise</p>
-                        <p className="font-display" style={{ fontSize: 16, color: 'rgba(245,241,232,0.84)', letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 4 }}>AED 2.2M</p>
-                      </motion.div>
-                    )}
-                    {yr.year === 'Y5' && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 6 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: '0px' }}
-                        transition={{ duration: 0.5, delay: 1.0 }}
-                        className="inline-block px-3.5 py-3"
-                        style={{ border: `1.5px solid ${ACCENT}88`, backgroundColor: `${ACCENT}18`, minWidth: 110 }}
-                      >
-                        <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: 7, color: ACCENT, opacity: 0.76, whiteSpace: 'nowrap' }}>Series A</p>
-                        <p className="font-display" style={{ fontSize: 18, color: ACCENT, letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 4 }}>$2.5M</p>
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-      <div className="mt-8 flex flex-wrap items-center gap-6" style={{ opacity: 0.46 }}>
-        <div className="flex items-center gap-2">
-          <div style={{ width: 12, height: 12, backgroundColor: 'rgba(245,241,232,0.7)' }} />
-          <p className="font-sans text-label uppercase tracking-[0.12em]">Base case</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div style={{ width: 12, height: 12, backgroundColor: 'rgba(245,241,232,0.25)' }} />
-          <p className="font-sans text-label uppercase tracking-[0.12em]">Upside range</p>
-        </div>
-      </div>
-      <p className="font-sans text-label mt-5" style={{ opacity: 0.68 }}>
-        * Projections assume successful certification by month 18 and activation of E3 specification channel. USD denominated. Base case excludes licensing revenue.
-      </p>
-    </div>
-  )
-}
-
-// ─── Competitive Grid ─────────────────────────────────────────────────────────
-
-function CompetitiveGrid({ data }: { data: InvestorContent['competitive'] }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-
-  const CheckIcon = ({ val, partial, highlight }: { val: boolean; partial?: boolean; highlight?: boolean }) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: 36 }}>
-      {partial ? (
-        <svg viewBox="0 0 16 16" fill="none" width={15} height={15}>
-          <circle cx="8" cy="8" r="6" stroke={highlight ? ACCENT : 'rgba(245,241,232,0.55)'} strokeWidth={1.6} />
-          <path d="M8 2 A6 6 0 0 1 14 8 L8 8 Z" fill={highlight ? ACCENT : 'rgba(245,241,232,0.55)'} />
-        </svg>
-      ) : val ? (
-        <svg viewBox="0 0 16 16" fill="none" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={15} height={15}
-          stroke={highlight ? ACCENT : 'rgba(245,241,232,0.75)'}>
-          <polyline points="2,8 6,12 14,4" />
-        </svg>
-      ) : (
-        <svg viewBox="0 0 16 16" fill="none" strokeWidth={1.8} strokeLinecap="round" width={13} height={13}
-          stroke="rgba(245,241,232,0.22)">
-          <line x1="4" y1="4" x2="12" y2="12" /><line x1="12" y1="4" x2="4" y2="12" />
-        </svg>
-      )}
-    </div>
-  )
-
-  const COL_W = 80
-  const mobileCapability = (label: string, active: boolean, partial?: boolean) => ({
-    label,
-    state: partial ? 'In progress' : active ? 'Yes' : 'No',
-    active,
-    partial,
-  })
-
-  return (
-    <div ref={ref} className="mt-20" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-4" style={{ opacity: 0.68 }}>
-        {data.label}
-      </p>
-      <h3 className="font-display mb-12" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.75rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-        {data.heading}
-      </h3>
-
-      <div className="md:hidden space-y-3">
-        {data.players.map((player, i) => {
-          const capabilities = [
-            mobileCapability('Bio', player.bio),
-            mobileCapability('GCC', player.local),
-            mobileCapability('Certified', player.certified, player.certifiedPartial),
-            mobileCapability('Feedstock', player.feedstock),
-            mobileCapability('Design', player.design),
-          ]
-
-          return (
-            <motion.div
-              key={player.name}
-              initial={{ opacity: 0, y: 10 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.4, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
-              className="px-5 py-5"
-              style={{
-                border: player.numu ? `1px solid ${ACCENT}55` : INV_BORDER_SUBTLE,
-                backgroundColor: player.numu ? `${ACCENT}0d` : 'rgba(245,241,232,0.025)',
-                boxShadow: player.numu ? `inset 3px 0 0 ${ACCENT}` : 'none',
-              }}
-            >
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
-                  <p className="font-display" style={{ fontSize: '1.25rem', lineHeight: 1.1, color: player.numu ? ACCENT : undefined, opacity: player.numu ? 1 : 0.72 }}>{player.name}</p>
-                  <p className="font-sans mt-1" style={{ fontSize: '0.72rem', opacity: 0.32 }}>{player.origin}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Price / m²</p>
-                  <p className="font-sans mt-1" style={{ fontSize: '0.82rem', color: player.numu ? ACCENT : undefined, opacity: player.numu ? 1 : 0.5 }}>{player.price}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {capabilities.map((cap) => (
-                  <div key={cap.label} className="px-3 py-2.5" style={{ backgroundColor: 'rgba(245,241,232,0.035)', border: '1px solid rgba(245,241,232,0.055)' }}>
-                    <p className="font-sans uppercase tracking-[0.12em]" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{cap.label}</p>
-                    <p className="font-sans mt-1" style={{ fontSize: '0.72rem', color: player.numu && (cap.active || cap.partial) ? ACCENT : undefined, opacity: cap.partial ? 0.62 : cap.active ? 0.72 : 0.24 }}>
-                      {cap.state}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
-
-      <div className="hidden md:block overflow-x-auto">
-        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: 620 }}>
-          <colgroup>
-            <col style={{ width: 'auto' }} />
-            {(['Bio-based', 'GCC Local', 'Certified', 'UAE Feedstock', 'Design-Led'] as const).map(c => (
-              <col key={c} style={{ width: COL_W }} />
-            ))}
-            <col style={{ width: 110 }} />
-          </colgroup>
-          <thead>
-            <tr style={{ borderBottom: INV_BORDER }}>
-              <th className="font-sans text-label uppercase tracking-[0.14em] text-left py-4 pr-6 pl-2" style={{ opacity: 0.35, fontSize: '0.5625rem' }}>Player</th>
-              {['Bio-based', 'GCC Local', 'Certified', 'UAE Feedstock', 'Design-Led'].map(col => (
-                <th key={col} className="font-sans text-label uppercase tracking-[0.1em] text-center py-4" style={{ opacity: 0.35, fontSize: '0.5625rem' }}>{col}</th>
-              ))}
-              <th className="font-sans text-label uppercase tracking-[0.1em] text-center py-4 pr-2" style={{ opacity: 0.35, fontSize: '0.5625rem' }}>Price / m²</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.players.map((player, i) => (
-              <motion.tr
-                key={player.name}
-                initial={{ opacity: 0, x: -10 }}
-                animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.4, delay: i * 0.09, ease: [0.25, 0, 0.2, 1] }}
-                style={{
-                  borderBottom: i < data.players.length - 1 ? INV_BORDER_SUBTLE : 'none',
-                  backgroundColor: player.numu ? `${ACCENT}10` : 'transparent',
-                  boxShadow: player.numu ? `inset 3px 0 0 ${ACCENT}` : 'none',
-                }}
-              >
-                <td className="py-4 pr-4 pl-4">
-                  <div className="flex items-center gap-3">
-                    {player.numu && (
-                      <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: ACCENT, flexShrink: 0, boxShadow: `0 0 7px ${ACCENT}88` }} />
-                    )}
-                    <div>
-                      <p className="font-display" style={{ fontSize: '1rem', opacity: player.numu ? 1 : 0.6, color: player.numu ? ACCENT : undefined }}>{player.name}</p>
-                      <p className="font-sans" style={{ fontSize: '0.6875rem', opacity: 0.28, marginTop: 1 }}>{player.origin}</p>
-                    </div>
-                  </div>
-                </td>
-                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.bio} highlight={player.numu} /></td>
-                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.local} highlight={player.numu} /></td>
-                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.certified} partial={player.certifiedPartial} highlight={player.numu} /></td>
-                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.feedstock} highlight={player.numu} /></td>
-                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><CheckIcon val={player.design} highlight={player.numu} /></td>
-                <td style={{ textAlign: 'center', verticalAlign: 'middle', paddingRight: 8 }}>
-                  <p className="font-sans text-sm" style={{ opacity: player.numu ? 1 : 0.45, color: player.numu ? ACCENT : undefined }}>{player.price}</p>
-                </td>
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="hidden md:flex mt-4 flex-wrap items-center gap-x-6 gap-y-1 mb-6">
-        <div className="flex items-center gap-2">
-          <svg viewBox="0 0 16 16" fill="none" width={12} height={12}>
-            <circle cx="8" cy="8" r="6" stroke="rgba(245,241,232,0.35)" strokeWidth={1.4} />
-            <path d="M8 2 A6 6 0 0 1 14 8 L8 8 Z" fill="rgba(245,241,232,0.35)" />
-          </svg>
-          <p className="font-sans text-label uppercase tracking-[0.1em]" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>In progress</p>
-        </div>
-        <p className="font-sans text-label" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>● Present &nbsp; ○ Absent &nbsp; ◐ In progress &nbsp; — NUMU: only player with bio-based + GCC local + local feedstock + design freedom. Certification initiated 2026.</p>
-      </div>
-
-      {/* Mykor market signal */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.5, delay: 0.5, ease: [0.25, 0, 0.2, 1] }}
-        className="px-6 py-5"
-        style={{ border: `1px solid ${ACCENT}30`, backgroundColor: `${ACCENT}06`, borderLeft: `3px solid ${ACCENT}` }}
-      >
-        <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', color: ACCENT, opacity: 0.7 }}>Market signal — Europe · May 2026</p>
-        <p className="font-sans text-sm leading-relaxed" style={{ opacity: 0.72 }}>
-          Mykor (UK) announced a £4M funding round with over <strong style={{ color: ACCENT, fontWeight: 500 }}>£338M in commercial agreements</strong> across the UK and Europe. The category is taking off in Europe. NUMU is the regional execution play.
-        </p>
-      </motion.div>
-    </div>
-  )
-}
-
-// ─── Market TAM/SAM/SOM diagram ──────────────────────────────────────────────
-
-const MARKET_TAM_DATA = [
-  {
-    phase: '01', label: 'UAE Acoustic', period: '2026 — Beachhead',
-    tam: 'AED 200–300M', sam: 'AED 60M', som: 'AED 15M',
-    tamR: 60, samR: 38, somR: 21, active: true,
-  },
-  {
-    phase: '02', label: 'GCC Acoustic Spec', period: '2027 — Certification',
-    tam: 'AED 1.5B', sam: 'AED 350M', som: 'AED 50M',
-    tamR: 78, samR: 48, somR: 25, active: false,
-  },
-  {
-    phase: '03', label: 'GCC Multi-material', period: '2028 — Platform',
-    tam: 'AED 6B+', sam: 'AED 1.2B', som: 'AED 150M',
-    tamR: 97, samR: 59, somR: 29, active: false,
-  },
-  {
-    phase: '04', label: 'Regional Licensing', period: '2029+ — Full Scale',
-    tam: 'AED 20B+', sam: 'AED 4B', som: 'AED 400M',
-    tamR: 120, samR: 74, somR: 37, active: false,
-  },
-]
-
-// Grey-to-gold gradient: phase 01 = muted grey, phase 04 = warm ACCENT gold
-const PHASE_COLORS = [
-  { tamStroke: 'rgba(245,241,232,0.22)', samStroke: 'rgba(245,241,232,0.34)', somStroke: 'rgba(245,241,232,0.46)', somFill: 'rgba(245,241,232,0.06)', tamFill: 'rgba(245,241,232,0.02)', text: 'rgba(245,241,232,0.42)' },
-  { tamStroke: 'rgba(215,200,174,0.40)', samStroke: 'rgba(215,200,174,0.55)', somStroke: 'rgba(215,200,174,0.68)', somFill: 'rgba(215,200,174,0.09)', tamFill: 'rgba(215,200,174,0.03)', text: 'rgba(215,200,174,0.60)' },
-  { tamStroke: 'rgba(192,168,134,0.62)', samStroke: 'rgba(192,168,134,0.78)', somStroke: 'rgba(192,168,134,0.90)', somFill: 'rgba(192,168,134,0.12)', tamFill: 'rgba(192,168,134,0.05)', text: 'rgba(192,168,134,0.80)' },
-  { tamStroke: ACCENT, samStroke: ACCENT, somStroke: ACCENT, somFill: `${ACCENT}30`, tamFill: `${ACCENT}0e`, text: ACCENT },
-]
-
-function MarketTAMDiagram() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-  const SVG_W = 900
-  const SVG_H = 380
-  const CY = 162
-  const centers = [108, 310, 530, 762]
-
-  return (
-    <div ref={ref} className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mt-10 mb-10" style={{ opacity: 0.68 }}>
-        Market phases — addressable opportunity expands as platform activates
-      </p>
-
-      <div className="md:hidden space-y-3">
-        {MARKET_TAM_DATA.map((p, i) => {
-          const rowCol = PHASE_COLORS[i]
-          const isEdge = i === 0 || i === MARKET_TAM_DATA.length - 1
-
-          return (
-            <motion.div
-              key={p.phase}
-              initial={{ opacity: 0, y: 10 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.42, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
-              className="px-5 py-5"
-              style={{
-                border: isEdge ? `1px solid ${ACCENT}44` : INV_BORDER_SUBTLE,
-                backgroundColor: isEdge ? `${ACCENT}08` : 'rgba(245,241,232,0.025)',
-              }}
-            >
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
-                  <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.6875rem', color: rowCol.text, opacity: 0.82 }}>{p.phase} · {p.period}</p>
-                  <p className="font-display mt-2" style={{ fontSize: '1.35rem', lineHeight: 1.1, color: rowCol.text }}>{p.label}</p>
-                </div>
-                {isEdge && (
-                  <p className="font-sans uppercase tracking-[0.12em] px-2 py-1.5" style={{ fontSize: '0.6875rem', color: ACCENT, border: `1px solid ${ACCENT}38` }}>
-                    {i === 0 ? 'start' : 'scale'}
-                  </p>
-                )}
-              </div>
-              <div className="grid grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
-                {[
-                  ['TAM', p.tam],
-                  ['SAM', p.sam],
-                  ['SOM', p.som],
-                ].map(([label, value], vi) => (
-                  <div key={label} className="px-3 py-3" style={{ backgroundColor: vi === 2 ? `${ACCENT}0d` : '#0e0e0e' }}>
-                    <p className="font-sans uppercase tracking-[0.12em] mb-1.5" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{label}</p>
-                    <p className="font-display" style={{ fontSize: '0.95rem', lineHeight: 1, color: vi === 2 ? ACCENT : rowCol.text, opacity: vi === 2 ? 1 : 0.78 }}>{value}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
-
-      <div className="hidden md:block" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
-        <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: '100%', maxWidth: SVG_W, display: 'block', minWidth: 420, margin: '0 auto' }}>
-          {MARKET_TAM_DATA.map((p, i) => {
-            const cx = centers[i]
-            const isLast = i === MARKET_TAM_DATA.length - 1
-            const tamCirc = 2 * Math.PI * p.tamR
-            const samCirc = 2 * Math.PI * p.samR
-            const somCirc = 2 * Math.PI * p.somR
-            const col = PHASE_COLORS[i]
-            return (
-              <g key={p.phase}>
-                {/* TAM — outer fill */}
-                <motion.circle
-                  cx={cx} cy={CY} r={p.tamR}
-                  fill={col.tamFill}
-                  initial={{ opacity: 0 }}
-                  animate={inView ? { opacity: 1 } : {}}
-                  transition={{ duration: 0.6, delay: i * 0.18 + 0.1 }}
-                />
-                {/* TAM — outer stroke */}
-                <motion.circle
-                  cx={cx} cy={CY} r={p.tamR}
-                  fill="none"
-                  stroke={col.tamStroke}
-                  strokeWidth={isLast ? 1.4 : 0.8}
-                  strokeDasharray={tamCirc}
-                  initial={{ strokeDashoffset: tamCirc }}
-                  animate={inView ? { strokeDashoffset: 0 } : {}}
-                  transition={{ duration: 1.0, delay: i * 0.18 + 0.1, ease: [0.25, 0, 0.2, 1] }}
-                  transform={`rotate(-90 ${cx} ${CY})`}
-                />
-                {/* SAM — middle stroke */}
-                <motion.circle
-                  cx={cx} cy={CY} r={p.samR}
-                  fill="none"
-                  stroke={col.samStroke}
-                  strokeWidth={isLast ? 1.6 : 1.0}
-                  strokeDasharray={samCirc}
-                  initial={{ strokeDashoffset: samCirc }}
-                  animate={inView ? { strokeDashoffset: 0 } : {}}
-                  transition={{ duration: 0.85, delay: i * 0.18 + 0.35, ease: [0.25, 0, 0.2, 1] }}
-                  transform={`rotate(-90 ${cx} ${CY})`}
-                />
-                {/* SOM — inner fill + stroke */}
-                <motion.circle
-                  cx={cx} cy={CY} r={p.somR}
-                  fill={col.somFill}
-                  stroke={col.somStroke}
-                  strokeWidth={isLast ? 2 : 1.2}
-                  strokeDasharray={somCirc}
-                  initial={{ strokeDashoffset: somCirc }}
-                  animate={inView ? { strokeDashoffset: 0 } : {}}
-                  transition={{ duration: 0.65, delay: i * 0.18 + 0.55, ease: [0.25, 0, 0.2, 1] }}
-                  transform={`rotate(-90 ${cx} ${CY})`}
-                />
-                {/* Beachhead / end-market badges */}
-                {(p.active || isLast) && (
-                  <motion.text
-                    x={cx} y={CY - p.tamR - 20}
-                    textAnchor="middle"
-                    fontFamily="'Inter', sans-serif"
-                    fontSize={7}
-                    fill={ACCENT}
-                    letterSpacing={1.4}
-                    initial={{ opacity: 0 }}
-                    animate={inView ? { opacity: 1 } : {}}
-                    transition={{ duration: 0.4, delay: i * 0.18 + 0.65 }}
-                  >
-                    {p.active ? '← START HERE' : 'FULL SCALE →'}
-                  </motion.text>
-                )}
-                {/* Phase number */}
-                <motion.text
-                  x={cx} y={CY - p.tamR - 8}
-                  textAnchor="middle"
-                  fontFamily="'Inter', sans-serif"
-                  fontSize={7.5}
-                  fill={col.text}
-                  letterSpacing={1.8}
-                  initial={{ opacity: 0 }}
-                  animate={inView ? { opacity: 1 } : {}}
-                  transition={{ duration: 0.4, delay: i * 0.18 + 0.7 }}
-                >
-                  {p.phase}
-                </motion.text>
-                {/* TAM value below */}
-                <motion.text
-                  x={cx} y={CY + p.tamR + 20}
-                  textAnchor="middle"
-                  fontFamily="var(--font-fraunces), Georgia, serif"
-                  fontSize={isLast ? 11.5 : i === 0 ? 10 : 9.5}
-                  fill={col.text}
-                  initial={{ opacity: 0 }}
-                  animate={inView ? { opacity: 1 } : {}}
-                  transition={{ duration: 0.4, delay: i * 0.18 + 0.8 }}
-                >
-                  {p.tam}
-                </motion.text>
-                {/* Category label */}
-                <motion.text
-                  x={cx} y={CY + p.tamR + 36}
-                  textAnchor="middle"
-                  fontFamily="'Inter', sans-serif"
-                  fontSize={7}
-                  fill={col.text}
-                  letterSpacing={1.2}
-                  initial={{ opacity: 0 }}
-                  animate={inView ? { opacity: 1 } : {}}
-                  transition={{ duration: 0.4, delay: i * 0.18 + 0.9 }}
-                >
-                  {p.label.toUpperCase()}
-                </motion.text>
-              </g>
-            )
-          })}
-        </svg>
-      </div>
-      {/* Legend */}
-      <div className="hidden md:flex mt-8 items-center gap-8" style={{ opacity: 0.38 }}>
-        {[
-          { label: 'TAM', w: 14, h: 14, bg: 'transparent', border: '1px solid rgba(245,241,232,0.45)', radius: '50%' },
-          { label: 'SAM', w: 11, h: 11, bg: 'transparent', border: '1px solid rgba(245,241,232,0.45)', radius: '50%' },
-          { label: 'SOM', w: 7, h: 7, bg: 'rgba(245,241,232,0.45)', border: 'none', radius: '50%' },
-        ].map(item => (
-          <div key={item.label} className="flex items-center gap-2">
-            <div style={{ width: item.w, height: item.h, backgroundColor: item.bg, border: item.border, borderRadius: item.radius, flexShrink: 0 }} />
-            <p className="font-sans text-label uppercase tracking-[0.12em]">{item.label}</p>
-          </div>
-        ))}
-      </div>
-      {/* Phase detail rows */}
-      <div className="hidden md:block mt-12">
-        {MARKET_TAM_DATA.map((p, i) => {
-          const rowCol = PHASE_COLORS[i]
-          return (
-            <motion.div
-              key={p.phase}
-              className="flex items-start gap-6 py-5"
-              initial={{ opacity: 0, x: 16 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.12 + 0.6, ease: [0.25, 0, 0.2, 1] }}
-              style={{ borderBottom: i < MARKET_TAM_DATA.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
-            >
-              <p className="font-sans text-label uppercase tracking-[0.14em] flex-shrink-0 w-8" style={{ color: rowCol.text }}>{p.phase}</p>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-1">
-                  <p className="font-display" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.75rem)', letterSpacing: '-0.025em', lineHeight: 1, color: rowCol.text }}>{p.tam}</p>
-                  <p className="font-sans text-label uppercase tracking-[0.12em]" style={{ color: rowCol.text, opacity: 0.68 }}>{p.period}</p>
-                </div>
-                <p className="font-sans text-sm" style={{ opacity: 0.38 }}>{p.label}</p>
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ─── Investor roadmap ─────────────────────────────────────────────────────────
-
-function Roadmap({ phases }: { phases: InvestorContent['roadmap']['phases'] }) {
-  return (
-    <div className="mt-16">
-      {/* Horizontal timeline */}
-      <div className="hidden xl:flex items-center mb-0 px-0 relative" style={{ height: 48 }}>
-        {/* Background track */}
-        <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, backgroundColor: 'rgba(245,241,232,0.1)' }} />
-        {/* Animated fill line */}
-        <motion.div
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true, margin: '0px' }}
-          transition={{ duration: 1.2, delay: 0.2, ease: [0.25, 0, 0.2, 1] }}
-          style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 2, backgroundColor: ACCENT, transformOrigin: 'left', marginTop: -1 }}
-        />
-        {/* Phase nodes */}
-        {phases.map((phase, i) => (
-          <div key={phase.year} style={{ position: 'absolute', left: `${(i / (phases.length - 1)) * 100}%`, top: '50%', transform: 'translate(-50%, -50%)' }}>
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true, margin: '0px' }}
-              transition={{ duration: 0.4, delay: 0.3 + i * 0.35, ease: [0.25, 0, 0.2, 1] }}
-              style={{
-                width: i === 0 ? 14 : 10, height: i === 0 ? 14 : 10,
-                borderRadius: '50%',
-                backgroundColor: i === 0 ? ACCENT : 'rgba(245,241,232,0.4)',
-                border: i === 0 ? `2px solid ${ACCENT}` : '1px solid rgba(245,241,232,0.3)',
-                boxShadow: i === 0 ? `0 0 12px ${ACCENT}55` : 'none',
-              }}
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Mobile timeline */}
-      <div className="xl:hidden space-y-3">
-        {phases.map((phase, i) => (
-          <motion.div
-            key={phase.year}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '0px' }}
-            transition={{ duration: 0.45, delay: i * 0.08, ease: [0.25, 0, 0.2, 1] }}
-            className="px-5 py-5"
-            style={{
-              border: i === 0 ? `1px solid ${ACCENT}44` : INV_BORDER_SUBTLE,
-              backgroundColor: i === 0 ? `${ACCENT}0a` : 'rgba(245,241,232,0.03)',
-              boxShadow: i === 0 ? `inset 3px 0 0 ${ACCENT}` : 'none',
-            }}
-          >
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div>
-                <p className="font-sans uppercase tracking-[0.16em]" style={{ fontSize: '0.6875rem', opacity: 0.68, color: i === 0 ? ACCENT : undefined }}>{phase.year}</p>
-                <p className="font-display mt-2" style={{ fontSize: '1.65rem', lineHeight: 1.08, color: i === 0 ? ACCENT : undefined }}>{phase.label}</p>
-              </div>
-              {i === 0 && (
-                <p className="font-sans uppercase tracking-[0.12em] px-2.5 py-1.5" style={{ fontSize: '0.6875rem', color: ACCENT, border: `1px solid ${ACCENT}3d` }}>
-                  active
-                </p>
-              )}
-            </div>
-            <div>
-              {phase.items.map((item, j) => (
-                <div
-                  key={item}
-                  className="flex items-start gap-3 py-3"
-                  style={{ borderBottom: j < phase.items.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
-                >
-                  <span style={{ opacity: i === 0 ? 0.68 : 0.4, flexShrink: 0, marginTop: 2, color: i === 0 ? ACCENT : undefined }}>—</span>
-                  <p className="font-sans text-base leading-snug" style={{ opacity: i === 0 ? 0.82 : 0.68 }}>{item}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Phase columns */}
-      <div className="hidden xl:grid xl:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.12)' }}>
-        {phases.map((phase, i) => (
-          <motion.div
-            key={phase.year}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '0px' }}
-            transition={{ duration: 0.6, delay: i * 0.2, ease: [0.25, 0, 0.2, 1] }}
-            className="p-6 md:p-10"
-            style={{ backgroundColor: '#0e0e0e' }}
-          >
-            <p className="font-sans text-label uppercase tracking-[0.16em] mb-2" style={{ opacity: 0.68, color: i === 0 ? ACCENT : undefined }}>{phase.year}</p>
-            <p className="font-display text-2xl md:text-3xl mb-8" style={{ letterSpacing: '-0.025em', fontWeight: 700, opacity: i === 0 ? 1 : 0.65 }}>{phase.label}</p>
-            <div>
-              {phase.items.map((item, j) => (
-                <motion.div
-                  key={item}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: '0px' }}
-                  transition={{ duration: 0.4, delay: i * 0.1 + j * 0.06, ease: [0.25, 0, 0.2, 1] }}
-                  className="flex items-start gap-4 py-3.5"
-                  style={{ borderBottom: j < phase.items.length - 1 ? INV_BORDER_SUBTLE : 'none' }}
-                >
-                  <span style={{ opacity: i === 0 ? 0.6 : 0.25, flexShrink: 0, marginTop: 3, color: i === 0 ? ACCENT : undefined }}>—</span>
-                  <p className="font-sans text-base leading-snug" style={{ opacity: i === 0 ? 0.85 : 0.55 }}>{item}</p>
-                </motion.div>
-              ))}
-            </div>
-            {i === 0 && (
-              <div className="mt-8 pt-5" style={{ borderTop: INV_BORDER_SUBTLE }}>
-                <div className="flex items-center gap-2">
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: ACCENT, animation: 'process-pulse 2s ease-out infinite' }} />
-                  <p className="font-sans text-label uppercase tracking-[0.14em]" style={{ opacity: 0.68, color: ACCENT }}>Active phase</p>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Investor business model ──────────────────────────────────────────────────
-
-function BusinessModelStreams() {
-  return (
-    <div className="mt-16" style={{ borderTop: INV_BORDER }}>
-      <div className="mt-10 mb-12 flex justify-center">
-        <div className="w-full max-w-[920px] rounded-sm px-6 py-8 md:px-10 md:py-10" style={{ border: INV_BORDER_SUBTLE, backgroundColor: 'rgba(245,241,232,0.03)' }}>
-          <p className="font-sans text-label uppercase tracking-[0.18em] mb-6 text-center" style={{ opacity: 0.68 }}>
-            Platform monetization structure
-          </p>
-          <div className="md:hidden">
-            <div
-              className="rounded-sm px-4 py-5"
-              style={{ border: '1px solid rgba(245,241,232,0.08)', backgroundColor: 'rgba(245,241,232,0.02)' }}
-            >
-              <div className="flex justify-center">
-                <div
-                  className="px-4 py-3"
-                  style={{ border: `1px solid ${ACCENT}`, backgroundColor: `${ACCENT}14`, borderRadius: 4 }}
-                >
-                  <p className="font-sans uppercase tracking-[0.16em] text-center" style={{ fontSize: '0.6875rem', color: ACCENT }}>
-                    Mycelium Platform
-                  </p>
-                </div>
-              </div>
-              <div className="mx-auto" style={{ width: 1, height: 18, backgroundColor: 'rgba(245,241,232,0.22)' }} />
-              <div className="grid grid-cols-1 gap-3">
-                <div
-                  className="px-4 py-4"
-                  style={{ border: `1px solid ${ACCENT}88`, backgroundColor: `${ACCENT}12`, borderRadius: 4 }}
-                >
-                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', color: ACCENT, opacity: 0.82 }}>
-                    Design Products
-                  </p>
-                  <p className="font-sans" style={{ fontSize: '0.875rem', lineHeight: 1.6, opacity: 0.72 }}>
-                    High-margin direct products sold into near-term architecture and design demand.
-                  </p>
-                </div>
-                <div
-                  className="px-4 py-4"
-                  style={{ border: '1px solid rgba(245,241,232,0.16)', backgroundColor: 'rgba(245,241,232,0.03)', borderRadius: 4 }}
-                >
-                  <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>
-                    Material Licensing
-                  </p>
-                  <p className="font-sans" style={{ fontSize: '0.875rem', lineHeight: 1.6, opacity: 0.58 }}>
-                    Scalable platform licensing to regional manufacturers without proportional capex.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <svg className="hidden md:block" viewBox="0 0 760 180" style={{ width: '100%', maxWidth: 760, margin: '0 auto' }}>
-            <motion.rect x={290} y={18} width={180} height={40} rx={3}
-              fill={`${ACCENT}14`} stroke={ACCENT} strokeWidth={1.25}
-              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-              viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
-            />
-            <text x={380} y={43} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={11} fill={ACCENT} fillOpacity={0.9} letterSpacing={1.5}>MYCELIUM PLATFORM</text>
-
-            <motion.line x1={380} y1={58} x2={380} y2={84}
-              stroke={ACCENT} strokeWidth={1.3}
-              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.3 }}
-            />
-            <motion.line x1={190} y1={84} x2={570} y2={84}
-              stroke="rgba(245,241,232,0.2)" strokeWidth={1}
-              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-              viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }}
-            />
-            <motion.line x1={190} y1={84} x2={190} y2={108}
-              stroke={ACCENT} strokeWidth={1.3}
-              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.55 }}
-            />
-            <motion.line x1={570} y1={84} x2={570} y2={108}
-              stroke="rgba(245,241,232,0.34)" strokeWidth={1.05}
-              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.6 }}
-            />
-
-            <motion.rect x={54} y={108} width={272} height={34} rx={2.5}
-              fill={`${ACCENT}12`} stroke={ACCENT} strokeWidth={1.05}
-              initial={{ opacity: 0, y: 5 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.7 }}
-            />
-            <text x={190} y={130} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={10.5} fill={ACCENT} fillOpacity={0.88} letterSpacing={1.1}>DESIGN PRODUCTS — HIGH MARGIN</text>
-
-            <motion.rect x={434} y={108} width={272} height={34} rx={2.5}
-              fill="rgba(245,241,232,0.04)" stroke="rgba(245,241,232,0.28)" strokeWidth={0.95}
-              initial={{ opacity: 0, y: 5 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.75 }}
-            />
-            <text x={570} y={130} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={10.5} fill="rgba(245,241,232,0.62)" letterSpacing={1.1}>MATERIAL LICENSING — SCALABLE</text>
-          </svg>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.12)' }}>
-        {[
-          { stream: 'Stream 01', title: 'Design Products', desc: 'Grown acoustic panels and pressed composite boards sold direct to interior designers, architects, and events clients. Two production routes, one material system. High margin. Immediate market. Brand-establishing.', bullets: ['Direct sale', 'High margin', 'Near-term revenue'], accent: true },
-          { stream: 'Stream 02', title: 'Material Licensing', desc: 'Licensing the material platform to regional manufacturers. Scalable without proportional capex. Compounds proprietary IP.', bullets: ['Platform fee', 'Scalable', 'Long-term compounding'], accent: false },
-        ].map(s => (
-          <div key={s.stream} className="p-10 md:p-16" style={{ backgroundColor: '#0f0f0d' }}>
-            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.68, color: s.accent ? ACCENT : undefined }}>{s.stream}</p>
-            <p className="font-display text-[2rem] md:text-[2.6rem] mb-6" style={{ letterSpacing: '-0.03em', opacity: s.accent ? 1 : 0.8 }}>{s.title}</p>
-            <p className="font-sans text-base md:text-[1.0625rem] leading-[1.85] mb-10" style={{ opacity: 0.68 }}>{s.desc}</p>
-            <div style={{ borderTop: INV_BORDER_SUBTLE, paddingTop: 24 }}>
-              {s.bullets.map(b => (
-                <div key={b} className="flex items-center gap-3 mb-3">
-                  <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: s.accent ? ACCENT : 'rgba(245,241,232,1)', opacity: s.accent ? 0.8 : 0.35 }} />
-                  <p className="font-sans text-sm md:text-[0.9375rem]" style={{ opacity: 0.62 }}>{b}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Use of Funds Bars ────────────────────────────────────────────────────────
-
-function UseOfFundsChart({ items }: { items: InvestorContent['use_of_funds']['items'] }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-  return (
-    <div ref={ref} className="mt-12">
-      {items.map((item, i) => (
-        <div key={item.label} className="flex items-center gap-5 py-4" style={{ borderBottom: i < items.length - 1 ? INV_BORDER_SUBTLE : 'none' }}>
-          <p className="font-sans text-sm flex-shrink-0" style={{ width: 160, opacity: 0.65 }}>{item.label}</p>
-          <div className="flex-1 relative" style={{ height: 4, backgroundColor: 'rgba(245,241,232,0.08)' }}>
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={inView ? { scaleX: 1 } : { scaleX: 0 }}
-              transition={{ duration: 0.9, delay: i * 0.1, ease: [0.25, 0, 0.2, 1] }}
-              style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${item.pct}%`, backgroundColor: 'rgba(245,241,232,0.8)', transformOrigin: 'left' }}
-            />
-          </div>
-          <div className="flex-shrink-0 text-right" style={{ minWidth: 110 }}>
-            <p className="font-display text-xl" style={{ letterSpacing: '-0.025em' }}>{item.pct}%</p>
-            <p className="font-sans text-xs mt-0.5" style={{ opacity: 0.35 }}>{item.amount}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ─── Team Grid ────────────────────────────────────────────────────────────────
-
-function TeamMemberCard({ member, i, large }: { member: InvestorContent['team']['members'][0]; i: number; large?: boolean }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px' })
-  const photoSrc = TEAM_PHOTO_MAP[member.imageKey]
-
-  const PhotoSlot = () => (
-    <div className="relative mb-8 overflow-hidden" style={{ aspectRatio: '4/5', backgroundColor: '#1e1b17', border: '1px solid rgba(245,241,232,0.08)' }}>
-      {photoSrc ? (
-        <Image
-          src={photoSrc}
-          alt={member.name}
-          fill
-          className="object-cover object-top"
-          sizes="(max-width: 768px) 50vw, 25vw"
-          style={{ filter: 'grayscale(100%) contrast(1.05)' }}
-        />
-      ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" width={20} height={20} style={{ opacity: 0.15 }}>
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-          <p className="font-sans text-label" style={{ fontSize: 12, opacity: 0.68, letterSpacing: '0.16em' }}>Portrait — archival</p>
-        </div>
-      )}
-    </div>
-  )
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 0, 0.2, 1] }}
-      className="p-8 md:p-10"
-      style={{ backgroundColor: '#0e0e0e' }}
-    >
-      <PhotoSlot />
-      <p className="font-display mb-1" style={{ fontSize: large ? 'clamp(1.5rem, 2.5vw, 2rem)' : '1.25rem', fontWeight: 700 }}>{member.name}</p>
-      <p className="font-sans text-label uppercase tracking-[0.14em] mb-5" style={{ opacity: 0.68 }}>{member.role}</p>
-      <p className="font-sans leading-[1.75]" style={{ fontSize: large ? '0.9375rem' : '0.875rem', opacity: 0.84 }}>{member.bio}</p>
-    </motion.div>
-  )
-}
-
-function TeamGrid({ members }: { members: InvestorContent['team']['members'] }) {
-  return (
-    <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" style={{ gap: 1, backgroundColor: 'rgba(245,241,232,0.1)', borderTop: INV_BORDER }}>
-      {members.map((m, i) => (
-        <TeamMemberCard key={m.name} member={m} i={i} />
-      ))}
-    </div>
-  )
-}
 
 function PublicTeamCard({ member }: { member: PublicTeamMember }) {
   const photoSrc = PUBLIC_TEAM_PHOTO_MAP[member.imageKey] ?? TEAM_PHOTO_MAP[member.imageKey]
@@ -2677,20 +1055,6 @@ function PublicTeamCard({ member }: { member: PublicTeamMember }) {
 
 // ─── Founder Ecosystem ───────────────────────────────────────────────────────
 
-function FounderEcosystem() {
-  return (
-    <div className="mt-14 pt-12" style={{ borderTop: INV_BORDER }}>
-      <p className="font-sans text-label uppercase tracking-[0.18em] mb-6" style={{ opacity: 0.68 }}>
-        Founder ecosystem
-      </p>
-      <p className="font-sans text-base leading-[1.8]" style={{ maxWidth: 680, opacity: 0.84 }}>
-        Andy also holds cofounder positions in UFO (US, pressed mycelium composites) and Hyphen (US, bio-materials ecosystem). These relationships extend NUMU&apos;s long-term technology and IP pipeline without diverting operational focus. NUMU is the primary vehicle. Approximately 90% of operational time is dedicated to NUMU.
-      </p>
-    </div>
-  )
-}
-
-// ─── Lab video (hover-to-play desktop, tap-to-play mobile) ───────────────────
 const MAX_VIDEO_TIME = 90  // seconds — trim point
 
 function LabVideo() {
@@ -3605,8 +1969,6 @@ function VisitorView({
   v,
 }: {
   v: VisitorContent
-  teamMembers: PublicTeamMember[]
-  investorPreview: InvestorContent['revenue_engines']
 }) {
   return (
     <>
@@ -3633,625 +1995,28 @@ function VisitorView({
           <SocialLinks />
         </div>
         <PartnersStrip />
+        <section id="investor-request" className="mt-14 scroll-mt-28 border-t border-black/15 pt-8" aria-labelledby="investor-request-heading">
+          <h3 id="investor-request-heading" className="font-display text-3xl mb-4">Investor inquiries</h3>
+          <DirectContactForm requestType="investor_deck" source="public-investor-request" submitLabel="Request investor deck →" />
+        </section>
       </VSection>
     </>
   )
 }
 
-// ─── Investor view ────────────────────────────────────────────────────────────
 
-function InvestorView({ iv }: { iv: InvestorContent }) {
-  return (
-    <>
-      {/* 02 — What Exists Today (Traction) */}
-      <ISection id="traction">
-        <ILabel text="02 — What Exists Today" />
-        <IHeading text={iv.traction.heading} />
-        {/* Centered content container — stats + list + photos */}
-        <div style={{ maxWidth: 880, marginLeft: 'auto', marginRight: 'auto' }}>
-          {/* Traction stats */}
-          <div className="grid grid-cols-3 gap-px mt-8 mb-2" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
-            {[
-              { to: 184, prefix: 'AED ', suffix: 'K', label: 'Founder capital deployed' },
-              { to: 2, prefix: '', suffix: '', label: 'International installations' },
-              { to: 2, prefix: '', suffix: '', label: 'Belgian patent families' },
-            ].map((s, i) => (
-              <div key={s.label} className="px-6 py-6" style={{ backgroundColor: '#0e0e0e' }}>
-                <p className="font-display mb-1" style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', letterSpacing: '-0.04em', lineHeight: 1, color: ACCENT }}>
-                  <span style={{ fontSize: '0.5em', opacity: 0.7 }}>{s.prefix}</span>
-                  <CountUp to={s.to} suffix={s.suffix} duration={1.1 + i * 0.1} />
-                </p>
-                <p className="font-sans text-label uppercase tracking-[0.14em] mt-1" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-14 pl-5" style={{ borderTop: INV_BORDER, borderLeft: '2px solid rgba(245,241,232,0.18)' }}>
-            {iv.traction.items.map((item, i) => (
-              <div key={item} className="flex items-start gap-5 py-5" style={{ borderBottom: i < iv.traction.items.length - 1 ? INV_BORDER_SUBTLE : 'none', lineHeight: 2 }}>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} className="flex-shrink-0 mt-2" style={{ opacity: 0.6 }}>
-                  <polyline points="2,8 6,12 14,4" />
-                </svg>
-                <p className="font-sans text-base md:text-lg leading-snug" style={{ opacity: 0.82 }}>{item}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
-            {[
-              {
-                project: 'Beyond Chrysant',
-                location: 'Netherlands — 2022',
-                caption: 'Beyond Chrysant — Netherlands, 2022',
-                brief: 'Beyond Chrysant — mycelium acoustic installation, Netherlands 2022.',
-                image: '/images/projects/Beyond01.jpg',
-                tint: 'grayscale(40%) brightness(0.92)',
-              },
-              {
-                project: 'FOLD prototypes',
-                location: 'Dubai, UAE — 2026 · Prototype',
-                caption: 'FOLD prototypes — Dubai, UAE 2026',
-                brief: 'Full-scale FOLD acoustic panel prototype grown in the NUMU Dubai lab, 2026.',
-                image: '/images/user/fold-panel-studio.jpg',
-                tint: 'grayscale(40%) brightness(0.92)',
-              },
-            ].map(inst => (
-              <div key={inst.project}>
-                <div className="relative mb-3 overflow-hidden" style={{ aspectRatio: '16/9', backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)' }}>
-                  <Image src={inst.image} alt={inst.brief} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" style={{ filter: inst.tint ?? 'none' }} />
-                </div>
-                <ILabel text={inst.location} />
-                <p className="font-display text-lg md:text-xl">{inst.project}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-16 grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-8 items-start" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
-            <div className="relative overflow-hidden" style={{ aspectRatio: '16/10', backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)' }}>
-              <Image
-                src="/images/partnerships/tsi-official-orbitalport.jpg"
-                alt="Titans Space Industries orbital transport concept image"
-                fill
-                className="object-cover object-center"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-            </div>
-            <div>
-              <ILabel text="Strategic partnership — 28 May 2026" />
-              <p className="font-display text-[clamp(1.5rem,2.6vw,2.4rem)] leading-[1.08]" style={{ letterSpacing: '-0.03em', marginBottom: 16 }}>
-                TSI MOU signed, extending NUMU into ISRU composites and extreme-environment materials.
-              </p>
-              <p className="font-sans text-base leading-[1.8] mb-6" style={{ opacity: 0.68 }}>
-                NUMU signed a Memorandum of Understanding with Titans Space Industries, designating NUMU as Bio-Materials and ISRU Composites Partner within the Space & Lunar Economy Consortium. For investors, this matters as an external validation of platform relevance beyond interiors and construction.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
-                {[
-                  ['Status', 'MOU signed'],
-                  ['Designation', 'Bio-Materials & ISRU Composites Partner'],
-                  ['Frame', 'Exploratory, non-binding, strategic'],
-                ].map(([label, value]) => (
-                  <div key={label} className="px-5 py-5" style={{ backgroundColor: '#0e0e0e' }}>
-                    <p className="font-sans uppercase tracking-[0.14em] mb-2" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{label}</p>
-                    <p className="font-sans leading-snug" style={{ fontSize: '0.875rem', opacity: 0.74 }}>{value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="pt-5">
-                <Link
-                  href="/partnerships/titans-space"
-                  className="font-sans uppercase tracking-[0.14em] inline-block"
-                  style={{ fontSize: '0.6875rem', color: ACCENT, textDecoration: 'none', borderBottom: `1px solid ${ACCENT}66`, paddingBottom: 6, opacity: 0.88 }}
-                >
-                  Read the full partnership page →
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Featured In */}
-        <div className="mt-16" style={{ borderTop: INV_BORDER, paddingTop: 40 }}>
-          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Featured In</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.08)' }}>
-            {[
-              { pub: 'Wallpaper*', headline: 'Postcard from Dubai Design Week 2024: the highlights', url: 'https://www.wallpaper.com/design-interiors/design-events/dubai-design-week-highlights', date: 'Nov 2024' },
-              { pub: 'The National', headline: 'How coral stones, reefs and mycelium inspired the winning Abwab projects', url: 'https://www.thenationalnews.com/arts-culture/art-design/2024/10/03/abwab-dubai-design-week-coral-stones-reefs-mycelium/', date: 'Oct 2024' },
-              { pub: 'STIRworld', headline: 'A decade on, Dubai Design Week is still growing alongside the MENA culture scene', url: 'https://www.stirworld.com/inspire-visits-a-decade-on-dubai-design-week-is-still-growing-alongside-the-mena-culture-scene', date: 'Nov 2024' },
-              { pub: 'Design Anthology', headline: 'Dubai Design Week Celebrates its Tenth Edition', url: 'https://design-anthology.com/story/dubai-design-week-2024', date: 'Jul 2025' },
-            ].map((item, i) => (
-              <motion.a
-                key={i}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '0px' }}
-                transition={{ duration: 0.4, delay: i * 0.08, ease: [0.25, 0, 0.2, 1] }}
-                className="flex flex-col gap-3 p-6"
-                style={{
-                  backgroundColor: '#0e0e0e',
-                  textDecoration: 'none',
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(245,241,232,0.04)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#0e0e0e' }}
-              >
-                <p className="font-sans uppercase tracking-[0.14em]" style={{ fontSize: '0.6875rem', opacity: 0.68, letterSpacing: '0.16em' }}>{item.pub}</p>
-                <p className="font-sans leading-[1.55] flex-1" style={{ fontSize: '0.8125rem', opacity: 0.76 }}>{item.headline}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="font-sans" style={{ fontSize: '0.625rem', opacity: 0.42, letterSpacing: '0.08em' }}>{item.date}</p>
-                  <span style={{ fontSize: '0.625rem', opacity: 0.42 }}>↗</span>
-                </div>
-              </motion.a>
-            ))}
-          </div>
-        </div>
-      </ISection>
-
-      {/* 03 — Why Now (Market Forces) */}
-      <ISection id="forces">
-        <ILabel text="03 — Why Now" />
-        <IHeading text={iv.forces.heading} />
-        <ThreeForces forces={iv.forces} />
-        <InvestorMetricsStrip />
-      </ISection>
-
-      {/* 02 Platform */}
-      <ISection id="platform">
-        <ILabel text={iv.platform.label} />
-        <IHeading text={iv.platform.heading} />
-        {/* Strategic thesis: PALMYCO™ platform → multiple applications */}
-        <div className="mt-2 mb-16 grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-8 lg:gap-14 items-center">
-          <div>
-            <p className="font-sans text-base md:text-[1.0625rem] leading-[1.8] mb-10" style={{ opacity: 0.68 }}>
-              {iv.platform.body}
-            </p>
-            <div style={{ border: INV_BORDER, padding: '28px', backgroundColor: `${ACCENT}06` }}>
-              <p className="font-sans uppercase tracking-[0.2em] mb-6" style={{ fontSize: '0.6875rem', opacity: 0.68, letterSpacing: '0.22em' }}>Material system → Applications</p>
-              <div>
-                <div className="flex items-center gap-3 pb-4" style={{ borderBottom: INV_BORDER_SUBTLE }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: ACCENT, flexShrink: 0, boxShadow: `0 0 10px ${ACCENT}55` }} />
-                  <p className="font-sans" style={{ fontSize: '0.875rem', opacity: 0.88, letterSpacing: '-0.01em' }}>Grown PALMYCO™ — bio-composite substrate</p>
-                </div>
-                <div className="pt-4 grid grid-cols-2 gap-x-4 gap-y-3">
-                  {[
-                    { app: 'Acoustic panels', status: 'Active', active: true },
-                    { app: 'Pressed boards', status: 'Active', active: true },
-                    { app: 'Thermal insulation', status: 'Phase 2', active: false },
-                    { app: 'Regional licensing', status: 'Phase 3', active: false },
-                  ].map(a => (
-                    <div key={a.app} className="flex items-center gap-2.5">
-                      <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: a.active ? ACCENT : 'rgba(245,241,232,0.28)', flexShrink: 0 }} />
-                      <div>
-                        <p className="font-sans" style={{ fontSize: '0.8125rem', opacity: a.active ? 0.82 : 0.44 }}>{a.app}</p>
-                        <p className="font-sans uppercase tracking-[0.1em]" style={{ fontSize: '0.6875rem', opacity: 0.68, color: a.active ? ACCENT : undefined }}>{a.status}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: '0px' }}
-            transition={{ duration: 0.8, ease: [0.25, 0, 0.2, 1] }}
-            className="relative overflow-hidden"
-            style={{ aspectRatio: '3/4', maxHeight: 560 }}
-          >
-            <Image
-              src="/images/products/biofoam_detail.png"
-              alt="NUMU PALMYCO™ — material platform"
-              fill
-              className="object-cover object-center"
-              sizes="(max-width: 1024px) 100vw, 45vw"
-            />
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to bottom, rgba(14,14,14,0.08) 0%, transparent 25%, transparent 52%, rgba(14,14,14,0.92) 100%)',
-            }} />
-            <div style={{ position: 'absolute', bottom: 28, left: 28, right: 28 }}>
-              <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.6875rem', opacity: 0.68, color: '#f5f1e8', marginBottom: 8 }}>
-                Grown PALMYCO™ · UAE production · 2025
-              </p>
-              <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.375rem)', lineHeight: 1.25, letterSpacing: '-0.02em', color: '#f5f1e8', opacity: 0.95 }}>
-                One substrate. Multiple product engines.
-              </p>
-            </div>
-          </motion.div>
-        </div>
-        <PlatformExpansion />
-      </ISection>
-
-      {/* 03 Revenue Engines */}
-      <ISection id="revenue-engines">
-        <ILabel text={iv.revenue_engines.label} />
-        <IHeading text={iv.revenue_engines.heading} />
-        <IBody text={iv.revenue_engines.body} />
-        <RevenueEngines data={iv.revenue_engines} />
-        <FinancialProjection5yr />
-        <RevenueChart data={iv.revenue_chart} />
-        <CompetitiveGrid data={iv.competitive} />
-      </ISection>
-
-      {/* 06 Why NUMU Endures */}
-      <ISection id="why-it-survives">
-        <ILabel text="06 — Why It Endures" />
-        <IHeading text="Built around the pattern that has held." />
-        {/* Pull-quote thesis */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '0px' }}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0, 0.2, 1] }}
-          className="my-10 px-8 py-8"
-          style={{ borderLeft: `3px solid ${ACCENT}`, backgroundColor: `${ACCENT}0a`, maxWidth: 680 }}
-        >
-          <p className="font-display" style={{ fontSize: 'clamp(1.125rem, 2vw, 1.5rem)', lineHeight: 1.55, letterSpacing: '-0.02em', color: ACCENT, opacity: 0.92 }}>
-            &ldquo;Specialty first. Margin first. Licensing scale later. The inverse of the heavy-capex playbook.&rdquo;
-          </p>
-        </motion.div>
-
-        {/* Text + platform resilience diagram */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-12 lg:gap-16 items-start">
-          <div className="space-y-0">
-            <p className="font-sans text-base md:text-lg leading-[1.85] pb-8" style={{ opacity: 0.72, borderBottom: INV_BORDER_SUBTLE }}>
-              The mycelium materials sector has shown two distinct patterns. Several heavily venture-funded entrants — including Bolt Threads (Mylo) and MycoWorks — scaled back commercial operations after pursuing industrial-scale vertical integration tied to a single end-market. A separate cohort — Ecovative, Mogu, Grown.bio — has continued operating through specialty production, diversified revenue, and partner-led scale rather than owned industrial capex.
-            </p>
-            <p className="font-sans text-base md:text-lg leading-[1.85] py-8" style={{ opacity: 0.72, borderBottom: INV_BORDER_SUBTLE }}>
-              NUMU is <em style={{ fontStyle: 'italic', color: ACCENT }}>structured around the pattern that has endured</em>. Specialty-scale production, not industrial vertical integration. Performance-led pricing, not sustainability premium. Four revenue engines on shared infrastructure, not a single-product bet. A licensing pathway to Year 3+ scale, not proportional capex.
-            </p>
-            <p className="font-sans text-base md:text-lg leading-[1.85] pt-8" style={{ opacity: 0.7 }}>
-              The AED 2.2M raise funds an 18-month path to certified specification revenue and the operational foundation for regional licensing. It does not depend on building a heavy industrial facility on seed capital — the failure mode NUMU is designed to avoid.
-            </p>
-          </div>
-
-          {/* Platform resilience diagram — each branch is an independent growth path */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '0px' }}
-            transition={{ duration: 0.7, delay: 0.2, ease: [0.25, 0, 0.2, 1] }}
-            className="lg:sticky lg:top-24"
-            style={{ border: INV_BORDER, backgroundColor: 'rgba(245,241,232,0.03)', padding: '40px 34px' }}
-          >
-            <p className="font-sans text-label uppercase tracking-[0.18em] mb-8 text-center" style={{ opacity: 0.68, fontSize: '0.6875rem' }}>Platform structure — resilience diagram</p>
-            <svg viewBox="0 0 460 360" style={{ width: '100%', maxWidth: 460, display: 'block', margin: '0 auto' }}>
-              <motion.rect
-                x={160}
-                y={18}
-                width={140}
-                height={56}
-                rx={28}
-                fill={`${ACCENT}14`}
-                stroke={ACCENT}
-                strokeWidth={1.5}
-                initial={{ opacity: 0, y: 6 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: 0.24 }}
-              />
-              <text x={230} y={42} textAnchor="middle" fontFamily="'Playfair Display',serif" fontSize={15} fill={ACCENT} fillOpacity={0.94} letterSpacing={0.4}>NUMU</text>
-              <text x={230} y={59} textAnchor="middle" fontFamily="'Inter',sans-serif" fontSize={9} fill={ACCENT} fillOpacity={0.66} letterSpacing={1.4}>PLATFORM</text>
-
-              <motion.line x1={230} y1={74} x2={230} y2={104}
-                stroke={ACCENT} strokeWidth={1.35}
-                initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-                viewport={{ once: true }} transition={{ duration: 0.42, delay: 0.38 }}
-              />
-              <motion.line x1={80} y1={104} x2={380} y2={104}
-                stroke="rgba(245,241,232,0.18)" strokeWidth={1}
-                initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-                viewport={{ once: true }} transition={{ duration: 0.52, delay: 0.46 }}
-              />
-
-              {[
-                { x: 28, y: 120, w: 112, h: 54, title: 'Acoustics', sub: 'E1 + E3', active: true },
-                { x: 174, y: 120, w: 112, h: 54, title: 'Packaging', sub: 'E2 + E4', active: false },
-                { x: 320, y: 120, w: 112, h: 54, title: 'Thermal', sub: 'E4 future', active: false },
-              ].map((branch, bi) => {
-                const cx = branch.x + branch.w / 2
-
-                return (
-                  <g key={branch.title}>
-                    <motion.line
-                      x1={cx}
-                      y1={104}
-                      x2={cx}
-                      y2={120}
-                      stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.22)'}
-                      strokeWidth={branch.active ? 1.35 : 1}
-                      initial={{ pathLength: 0, opacity: 0 }}
-                      whileInView={{ pathLength: 1, opacity: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.38, delay: 0.58 + bi * 0.08 }}
-                    />
-                    <motion.rect
-                      x={branch.x}
-                      y={branch.y}
-                      width={branch.w}
-                      height={branch.h}
-                      rx={27}
-                      fill={branch.active ? `${ACCENT}12` : 'rgba(245,241,232,0.03)'}
-                      stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.2)'}
-                      strokeWidth={branch.active ? 1.35 : 1}
-                      initial={{ opacity: 0, y: 5 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: 0.66 + bi * 0.08 }}
-                    />
-                    <text
-                      x={cx}
-                      y={151}
-                      textAnchor="middle"
-                      fontFamily="'Inter',sans-serif"
-                      fontSize={10.5}
-                      fill={branch.active ? ACCENT : 'rgba(245,241,232,0.76)'}
-                      letterSpacing={0.25}
-                    >
-                      {branch.title}
-                    </text>
-                    <text
-                      x={cx}
-                      y={166}
-                      textAnchor="middle"
-                      fontFamily="'Inter',sans-serif"
-                      fontSize={8.5}
-                      fill={branch.active ? ACCENT : 'rgba(245,241,232,0.46)'}
-                      letterSpacing={1}
-                    >
-                      {branch.sub}
-                    </text>
-                    <motion.line
-                      x1={cx}
-                      y1={174}
-                      x2={cx}
-                      y2={234}
-                      stroke={branch.active ? ACCENT : 'rgba(245,241,232,0.16)'}
-                      strokeWidth={branch.active ? 1.2 : 0.85}
-                      initial={{ pathLength: 0, opacity: 0 }}
-                      whileInView={{ pathLength: 1, opacity: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.38, delay: 0.76 + bi * 0.08 }}
-                    />
-                    <text
-                      x={cx}
-                      y={260}
-                      textAnchor="middle"
-                      fontFamily="'Inter',sans-serif"
-                      fontSize={8.5}
-                      fill={branch.active ? 'rgba(178,155,127,0.72)' : 'rgba(245,241,232,0.36)'}
-                      letterSpacing={0.7}
-                    >
-                      Independent revenue
-                    </text>
-                    <text
-                      x={cx}
-                      y={275}
-                      textAnchor="middle"
-                      fontFamily="'Inter',sans-serif"
-                      fontSize={8.5}
-                      fill={branch.active ? 'rgba(178,155,127,0.72)' : 'rgba(245,241,232,0.36)'}
-                      letterSpacing={0.7}
-                    >
-                      path
-                    </text>
-                  </g>
-                )
-              })}
-
-              <motion.rect
-                x={134}
-                y={300}
-                width={192}
-                height={28}
-                rx={14}
-                fill="rgba(245,241,232,0.03)"
-                stroke="rgba(245,241,232,0.12)"
-                strokeWidth={0.9}
-                initial={{ opacity: 0, y: 4 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 1.05 }}
-              />
-              <text
-                x={230}
-                y={318}
-                textAnchor="middle"
-                fontFamily="'Inter',sans-serif"
-                fontSize={9}
-                fill="rgba(245,241,232,0.48)"
-                letterSpacing={1}
-              >
-                If one path is delayed, others continue
-              </text>
-            </svg>
-            <p className="font-sans text-label mt-6 text-center" style={{ opacity: 0.68, fontSize: '0.6875rem', letterSpacing: '0.06em' }}>
-              Shared production infrastructure — each branch activates independently
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Failure vs survival comparison */}
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.1)' }}>
-          {[
-            {
-              label: 'Failed pattern',
-              color: 'rgba(180,60,60,0.7)',
-              items: ['Industrial-scale vertical integration', 'Single-product bet', 'Sustainability premium pricing', 'Proportional capex scaling'],
-            },
-            {
-              label: 'NUMU strategy',
-              color: ACCENT,
-              items: ['Specialty-scale modular production', 'Four engines on shared infrastructure', 'Performance-led pricing', 'Licensing scale without capex'],
-            },
-          ].map(col => (
-            <div key={col.label} className="px-10 py-10" style={{ backgroundColor: '#0e0e0e' }}>
-              <p className="font-sans text-label uppercase tracking-[0.18em] mb-8" style={{ opacity: 0.68, color: col.color }}>{col.label}</p>
-              {col.items.map(item => (
-                <div key={item} className="flex items-start gap-3 mb-4">
-                  <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: col.color, flexShrink: 0, marginTop: 7 }} />
-                  <p className="font-sans text-base leading-snug" style={{ opacity: 0.65 }}>{item}</p>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </ISection>
-
-      {/* 07 Market — positioned after the resilience thesis */}
-      <ISection id="market">
-        <ILabel text="07 — Market" />
-        <IHeading text={iv.market.heading} />
-        <IBody text={iv.market.body} />
-        <MarketTAMDiagram />
-      </ISection>
-
-      {/* 08 Founder Credibility */}
-      <ISection id="founder-credibility">
-        <ILabel text="08 — Founder" />
-        <IHeading text="Not a research project. An operator." />
-        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: 'rgba(245,241,232,0.1)' }}>
-          {[
-            { num: '7', unit: 'YEARS', label: 'Operational mycelium industrialization, Europe and Middle East' },
-            { num: '2', unit: 'PATENTS', label: 'Process-level IP (Belgium)' },
-            { num: '1', unit: 'BOOK', label: 'Designing Mycelium, Routledge 2024' },
-            { num: '1', unit: 'INSTALLATION', label: 'Built and documented in real conditions (Beyond Chrysant, Netherlands 2022)' },
-          ].map((stat, i) => (
-            <motion.div
-              key={stat.unit}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '0px' }}
-              transition={{ duration: 0.5, delay: i * 0.1, ease: [0.25, 0, 0.2, 1] }}
-              className="p-8 flex flex-col"
-              style={{ backgroundColor: '#0e0e0e', minHeight: 160 }}
-            >
-              <p className="font-display mb-0.5" style={{ fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', letterSpacing: '-0.04em', lineHeight: 1, color: ACCENT }}>
-                {stat.num}
-              </p>
-              <p className="font-sans uppercase tracking-[0.12em] mb-3" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>{stat.unit}</p>
-              <p className="font-sans text-sm leading-[1.65] mt-auto" style={{ opacity: 0.4 }}>{stat.label}</p>
-            </motion.div>
-          ))}
-        </div>
-        <div className="mt-14 grid grid-cols-1 lg:grid-cols-[1fr_3fr] gap-10 items-start" style={{ borderTop: INV_BORDER, paddingTop: 48 }}>
-          <div className="relative overflow-hidden" style={{ aspectRatio: '1/1', backgroundColor: 'rgba(245,241,232,0.04)', border: '1px solid rgba(245,241,232,0.08)', maxWidth: 240 }}>
-            <Image
-              src="/images/founder/Portrait.PNG"
-              alt="Andy Cartier — NUMU founder"
-              fill
-              className="object-cover object-top"
-              sizes="240px"
-              style={{ filter: 'grayscale(100%)' }}
-            />
-          </div>
-          <div>
-            <p className="font-sans text-base md:text-lg leading-[1.85] mb-6" style={{ opacity: 0.68 }}>
-              Andy dropped out of university to open his own design studio. He built a practice around material experimentation, product development, and applied design — working with manufacturers and clients across Europe and the Middle East. That path led to mycelium, not through academia, but through the practical problem of industrializing a biological process at production scale.
-            </p>
-            <p className="font-sans text-base leading-[1.85] mb-6" style={{ opacity: 0.55 }}>
-              He has set up labs, run growth cycles, failed batches, fixed processes, and built a documented installation in real conditions (Beyond Chrysant, Netherlands 2022). He holds process-level patents in Belgium and published in the Routledge reference volume for bio-based material design. He is not a researcher who started a company. He is a builder who learned through real-world evidence what works in production and what does not.
-            </p>
-            <p className="font-sans text-base leading-[1.85]" style={{ opacity: 0.48 }}>
-              Andy also holds co-founder positions in UFO (US, pressed mycelium composites) and Hyphen (US, bio-materials ecosystem) — relationships that extend NUMU&apos;s long-term technology and IP pipeline without diverting operational focus. Approximately 90% of his time is dedicated to NUMU. The point is not the credentials. The point is that he has already paid the tuition, on two continents, in real production conditions. NUMU is built on that foundation.
-            </p>
-          </div>
-        </div>
-
-        {/* Selected Recognition */}
-        <div className="mt-16" style={{ borderTop: INV_BORDER, paddingTop: 40 }}>
-          <p className="font-sans uppercase tracking-[0.2em] mb-10" style={{ fontSize: '0.6875rem', opacity: 0.68 }}>Selected Recognition</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-0" style={{ borderTop: INV_BORDER_SUBTLE }}>
-            {[
-              { year: '2024', text: 'Chapter author — Designing with Mycelium, Routledge (global reference volume for bio-based material design)' },
-              { year: '2022–23', text: '2 process-level patents filed — Belgium (mycelium composite formation and no-mold growth technique)' },
-              { year: '2026', text: 'BASE39 Creative Accelerator — winning finalist, Mushroomiya grown lighting concept' },
-              { year: '2022', text: 'Beyond Chrysant installation — Netherlands (multi-panel grown acoustic system, public documentation)' },
-              { year: 'Ongoing', text: 'Academic partnerships — De Montfort University, American University of Sharjah, Heriot-Watt Dubai, DIDI' },
-              { year: 'Ongoing', text: '7+ years applied industrialization — mycelium composites, EU and GCC production environments' },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -8 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: '0px' }}
-                transition={{ duration: 0.4, delay: i * 0.07, ease: [0.25, 0, 0.2, 1] }}
-                className="flex items-baseline gap-6 py-4 px-0"
-                style={{ borderBottom: INV_BORDER_SUBTLE }}
-              >
-                <span className="font-sans flex-shrink-0 w-16 text-right" style={{ fontSize: '0.6875rem', opacity: 0.32, letterSpacing: '0.06em' }}>{item.year}</span>
-                <p className="font-sans leading-[1.65]" style={{ fontSize: '0.875rem', opacity: 0.62 }}>{item.text}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </ISection>
-
-      {/* 10 Roadmap */}
-      <ISection id="roadmap">
-        <ILabel text={iv.roadmap.label} />
-        <IHeading text={iv.roadmap.heading} />
-        <Roadmap phases={iv.roadmap.phases} />
-      </ISection>
-
-      {/* 07 Business Model */}
-      <ISection id="business-model">
-        <ILabel text={iv.business_model.label} />
-        <IHeading text={iv.business_model.heading} />
-        <IBody text={iv.business_model.body} />
-        <BusinessModelStreams />
-      </ISection>
-
-      {/* 08 Team */}
-      <ISection id="team">
-        <ILabel text={iv.team.label} />
-        <IHeading text={iv.team.heading} />
-        <IBody text={iv.team.body} />
-        <TeamGrid members={iv.team.members} />
-        <FounderEcosystem />
-      </ISection>
-
-      {/* 09 Use of Funds */}
-      <ISection id="use-of-funds">
-        <ILabel text={iv.use_of_funds.label} />
-        <IHeading text={iv.use_of_funds.heading} />
-        {/* Deal terms strip */}
-        <div className="flex flex-wrap gap-6 mt-2 mb-10">
-          {[
-            { label: 'Instrument', value: 'Post-money SAFE' },
-            { label: 'Amount', value: 'AED 2.2M' },
-            { label: 'Runway', value: '18 months' },
-            { label: 'Stage', value: 'Pre-seed / Seed' },
-          ].map(t => (
-            <div key={t.label} className="px-5 py-3" style={{ border: INV_BORDER, backgroundColor: 'rgba(245,241,232,0.03)' }}>
-              <p className="font-sans text-label uppercase tracking-[0.14em] mb-1" style={{ opacity: 0.68 }}>{t.label}</p>
-              <p className="font-sans text-sm" style={{ opacity: 0.75 }}>{t.value}</p>
-            </div>
-          ))}
-        </div>
-        <UseOfFundsChart items={iv.use_of_funds.items} />
-      </ISection>
-
-      {/* 10 CTA */}
-      <ISection id="contact">
-        <InvestorContact iv={iv} />
-      </ISection>
-    </>
-  )
-}
-
-// ─── Investor gate ────────────────────────────────────────────────────────────
+// ─── Main component ───────────────────────────────────────────────────────────
 
 function InvestorGate({
   onUnlock,
   onCancel,
 }: {
-  onUnlock: (code: string) => Promise<boolean>
+  onUnlock: (code: string) => Promise<string | null>
   onCancel: () => void
 }) {
   const [code, setCode] = useState('')
   const [shaking, setShaking] = useState(false)
+  const [error, setError] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const inputRef = useRef<HTMLInputElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -4264,14 +2029,15 @@ function InvestorGate({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!code.trim() || status === 'loading') return
+    if (!code || status === 'loading') return
     setStatus('loading')
-    const success = await onUnlock(code.trim()).catch(() => false)
-    if (success) return
+    const message = await onUnlock(code).catch(() => 'Could not connect. Please try again.')
+    if (!message) return
+    setError(message)
     setStatus('error')
     setShaking(true)
     setCode('')
-    setTimeout(() => { setShaking(false); setStatus('idle') }, 700)
+    setTimeout(() => setShaking(false), 700)
   }
 
   const fillPct = Math.min((code.length / 8) * 100, 100)
@@ -4288,7 +2054,6 @@ function InvestorGate({
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
       }}
-      onClick={() => inputRef.current?.focus()}
     >
       {/* Grain */}
       <div aria-hidden style={{
@@ -4333,17 +2098,17 @@ function InvestorGate({
           >
             <input
               ref={inputRef}
-              type="text"
+              type="password"
               aria-label="Investor access code"
               value={code}
               onChange={e => {
-                const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 14)
-                setCode(v)
+                setCode(e.target.value)
                 if (status === 'error') setStatus('idle')
               }}
-              autoComplete="off"
+              autoComplete="current-password"
+              maxLength={256}
               autoCorrect="off"
-              autoCapitalize="characters"
+              autoCapitalize="off"
               spellCheck={false}
               placeholder="— — — — — —"
               className="font-mono"
@@ -4382,7 +2147,7 @@ function InvestorGate({
           </div>
 
           {/* Status hint */}
-          <p className="font-sans uppercase tracking-[0.22em]" style={{
+          <p aria-live="polite" className="font-sans uppercase tracking-[0.22em]" style={{
             fontSize: '0.6875rem',
             color: status === 'error' ? 'rgba(210,65,50,0.8)' : ACCENT,
             opacity: status === 'loading' ? 0.4 : code.length > 0 ? 0.85 : 0.28,
@@ -4390,17 +2155,21 @@ function InvestorGate({
             marginBottom: 0,
             letterSpacing: '0.24em',
           }}>
-            {status === 'loading' ? 'Verifying…' : status === 'error' ? 'Code not recognised' : code.length > 0 ? 'Press ↵ Enter' : 'Type your access code'}
+            {status === 'loading' ? 'Verifying…' : status === 'error' ? error : code.length > 0 ? 'Press ↵ Enter' : 'Type your access code'}
           </p>
 
-          <button type="submit" style={{ position: 'absolute', opacity: 0, width: 0, height: 0, overflow: 'hidden' }} tabIndex={-1} aria-hidden />
+          <button type="submit" disabled={status === 'loading' || !code} className="mt-5 px-6 py-3 border border-white/25 font-sans text-sm disabled:opacity-40">Unlock overview</button>
         </form>
+
+        <a href="#investor-request" onClick={onCancel} className="block mt-6 font-sans text-sm underline underline-offset-4">
+          Request access
+        </a>
 
         {/* Back */}
         <button
           onClick={onCancel}
           className="font-sans uppercase tracking-[0.2em]"
-          style={{ marginTop: 60, fontSize: '0.5625rem', color: '#f5f1e8', opacity: 0.72, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s', letterSpacing: '0.22em' }}
+          style={{ marginTop: 18, fontSize: '0.5625rem', color: '#f5f1e8', opacity: 0.72, minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s', letterSpacing: '0.22em' }}
           onMouseEnter={e => (e.currentTarget.style.opacity = '0.5')}
           onMouseLeave={e => (e.currentTarget.style.opacity = '0.18')}
         >
@@ -4411,22 +2180,17 @@ function InvestorGate({
   )
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
 export default function PageClient({
   visitor,
-  publicTeamMembers,
-  investorPreview,
 }: {
   visitor: VisitorContent
-  publicTeamMembers: PublicTeamMember[]
-  investorPreview: InvestorContent['revenue_engines']
 }) {
-  const [investor, setInvestor] = useState<InvestorContent | null>(null)
+  const [investor, setInvestor] = useState<InvestorStory | null>(null)
   const [isInvestor, setIsInvestor] = useState(false)
   const [showGate, setShowGate] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
   const [investorStatus, setInvestorStatus] = useState<'idle' | 'loading'>('idle')
+  const unlockRequest = useRef<AbortController | null>(null)
 
   const investorMode = isInvestor && investor !== null
   const theme = investorMode ? INVESTOR : VISITOR
@@ -4454,45 +2218,58 @@ export default function PageClient({
   }
 
   function switchToVisitor() {
+    void fetch('/api/investor-content', { method: 'DELETE' }).catch(() => {})
     setTransitioning(true)
     window.scrollTo({ top: 0, behavior: 'instant' })
-    setTimeout(() => { setIsInvestor(false); setTransitioning(false) }, 320)
+    setTimeout(() => { setIsInvestor(false); setInvestor(null); setTransitioning(false) }, 320)
   }
 
-  async function fetchInvestorContent() {
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('mode') === 'investor') setShowGate(true)
+  }, [])
+
+  async function handleInvestorUnlock(code: string) {
+    const request = new AbortController()
+    unlockRequest.current = request
     setInvestorStatus('loading')
     try {
-      const res = await fetch('/api/investor-content', { cache: 'no-store' })
-      if (!res.ok) return null
-      const payload = await res.json().catch(() => null)
-      if (!payload) return null
-      setInvestor(payload)
-      return payload as InvestorContent
-    } catch {
+      const access = await fetch('/api/investor-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+        signal: request.signal,
+      })
+      if (!access.ok) {
+        if (access.status === 401) return 'Code not recognised.'
+        if (access.status === 429) return 'Too many attempts. Please try again shortly.'
+        return 'Investor access is temporarily unavailable.'
+      }
+
+      const response = await fetch('/api/investor-content', { cache: 'no-store', signal: request.signal })
+      if (!response.ok) return 'The investor overview is temporarily unavailable.'
+      const story = await response.json() as InvestorStory
+      if (request.signal.aborted) return null
+      setInvestor(story)
+      setShowGate(false)
+      switchToInvestor()
       return null
+    } catch {
+      return 'Could not connect. Please try again.'
     } finally {
-      setInvestorStatus('idle')
+      if (unlockRequest.current === request) {
+        unlockRequest.current = null
+        setInvestorStatus('idle')
+      }
     }
   }
 
-  async function handleInvestorUnlock(code: string) {
-    const res = await fetch('/api/investor-access', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    }).catch(() => null)
-    if (!res?.ok) return false
-    const payload = await fetchInvestorContent()
-    if (!payload) return false
+  function closeInvestorGate() {
+    unlockRequest.current?.abort()
     setShowGate(false)
-    switchToInvestor()
-    return true
   }
 
   function handleInvestorClick() {
-    if (investorMode || investorStatus === 'loading') return
-    if (investor) { switchToInvestor(); return } // already unlocked this session
-    setShowGate(true)
+    if (!investorMode && investorStatus !== 'loading') setShowGate(true)
   }
 
   return (
@@ -4517,7 +2294,7 @@ export default function PageClient({
         {showGate && (
           <InvestorGate
             onUnlock={handleInvestorUnlock}
-            onCancel={() => setShowGate(false)}
+            onCancel={closeInvestorGate}
           />
         )}
       </AnimatePresence>
@@ -4545,9 +2322,11 @@ export default function PageClient({
         />
         </Link>
         <div className="flex items-center gap-2 md:gap-4">
-          <MobileNav dark={investorMode} />
+          {!investorMode && <MobileNav />}
           <div className="hidden xl:flex items-center gap-4">
-            {PRIMARY_NAV_LINKS.map(link => (
+            {(investorMode
+              ? [{ id: 'traction', href: '#traction', label: 'Traction' }, { id: 'roadmap', href: '#roadmap', label: 'Operating plan' }, { id: 'ask', href: '#ask', label: 'Seed round' }]
+              : PRIMARY_NAV_LINKS).map(link => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -4584,7 +2363,7 @@ export default function PageClient({
 
       <main id="main-content">
       {/* Hero 1 — identity. A slow welcome: the name, then its meaning, then what NUMU is. */}
-      <section className="flex flex-col items-center justify-center text-center px-6" style={{ height: '100vh', minHeight: 600, position: 'relative' }}>
+      {!investorMode && <section className="flex flex-col items-center justify-center text-center px-6" style={{ height: '100vh', minHeight: 600, position: 'relative' }}>
         <motion.p
           className="font-display numu-welcome-word"
           initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.4, ease: [0.2, 0.7, 0.2, 1] }}
@@ -4624,7 +2403,7 @@ export default function PageClient({
             </svg>
           </motion.div>
         </motion.div>
-      </section>
+      </section>}
 
       {/* Hero 2 — product visual */}
       <section
@@ -4728,25 +2507,21 @@ export default function PageClient({
               {investorMode && investor ? investor.hero.meta : visitor.hero.meta}
             </p>
             <a
-              href={investorMode && investor ? investor.hero.cta.href : visitor.hero.cta.href}
+              href={investorMode && investor ? '#opportunity' : visitor.hero.cta.href}
               className="font-sans text-label uppercase tracking-[0.14em] px-7 py-4 border inline-block"
               style={{ borderColor: 'rgba(128,128,128,0.4)', transition: 'border-color 0.2s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = investorMode ? 'rgba(245,241,232,0.7)' : 'rgba(26,23,20,0.6)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(128,128,128,0.4)' }}
             >
-              {investorMode && investor ? investor.hero.cta.label : visitor.hero.cta.label} ↓
+              {investorMode && investor ? 'View opportunity' : visitor.hero.cta.label} ↓
             </a>
             {!investorMode && <EventNotice />}
             {investorMode && (
               <div className="mt-10 grid grid-cols-3 gap-px overflow-hidden rounded-sm" style={{ backgroundColor: 'rgba(245,241,232,0.2)', maxWidth: 700, width: '100%' }}>
-                {[
-                  { v: 'AED 2.2M', l: 'Raise' },
-                  { v: '18 mo', l: 'Runway to certified spec' },
-                  { v: 'UAE', l: 'Production + first market' },
-                ].map(s => (
-                  <div key={s.l} className="px-4 py-4 md:px-5 md:py-5" style={{ backgroundColor: 'rgba(14,14,14,0.86)' }}>
-                    <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.35rem)', letterSpacing: '-0.02em', lineHeight: 1.1, color: ACCENT }}>{s.v}</p>
-                    <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.75rem', opacity: 0.68 }}>{s.l}</p>
+                {investor?.hero.stats.map(stat => (
+                  <div key={stat.label} className="px-4 py-4 md:px-5 md:py-5" style={{ backgroundColor: 'rgba(14,14,14,0.86)' }}>
+                    <p className="font-display" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.35rem)', letterSpacing: '-0.02em', lineHeight: 1.1, color: ACCENT }}>{stat.value}</p>
+                    <p className="font-sans uppercase tracking-[0.14em] mt-1.5" style={{ fontSize: '0.75rem', opacity: 0.68 }}>{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -4759,7 +2534,7 @@ export default function PageClient({
 
       {/* Page content */}
       <div style={{ opacity: transitioning ? 0 : 1, transition: 'opacity 0.35s cubic-bezier(0.25,0,0.2,1)' }}>
-        {investorMode && investor ? <InvestorView iv={investor} /> : <VisitorView v={visitor} teamMembers={publicTeamMembers} investorPreview={investorPreview} />}
+        {investorMode && investor ? <InvestorView story={investor} /> : <VisitorView v={visitor} />}
       </div>
 
       </main>

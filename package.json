@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export:deck": "node scripts/export-investor-deck.mjs",
     "export:woodshow:pdf": "node scripts/export-woodshow-pdf.mjs",
     "export:woodshow": "node scripts/export-woodshow-deck.mjs"
   },

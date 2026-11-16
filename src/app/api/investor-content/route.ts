@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadInvestorContent } from '@/lib/content'
-import { hasValidInvestorAccessToken, INVESTOR_ACCESS_COOKIE } from '@/lib/investorAccess'
+import { hasValidInvestorAccessToken, investorPrivateHeaders, INVESTOR_ACCESS_COOKIE } from '@/lib/investorAccess'
+import { loadInvestorStory } from '@/lib/loadInvestorStory'
 
-export async function GET(req: NextRequest) {
-  const token = req.cookies.get(INVESTOR_ACCESS_COOKIE)?.value
+export const dynamic = 'force-dynamic'
 
-  if (!hasValidInvestorAccessToken(token)) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      {
-        status: 401,
-        headers: {
-          'Cache-Control': 'no-store',
-          'X-Robots-Tag': 'noindex, nofollow',
-        },
-      },
-    )
+export async function GET(request: NextRequest) {
+  if (!hasValidInvestorAccessToken(request.cookies.get(INVESTOR_ACCESS_COOKIE)?.value)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: investorPrivateHeaders })
   }
 
-  return NextResponse.json(loadInvestorContent(), {
-    headers: {
-      'Cache-Control': 'no-store',
-      'X-Robots-Tag': 'noindex, nofollow',
-    },
+  const story = await loadInvestorStory()
+  return NextResponse.json(story ?? { error: 'The investor overview is temporarily unavailable.' }, {
+    status: story ? 200 : 503,
+    headers: investorPrivateHeaders,
   })
+}
+
+export function DELETE() {
+  const response = new NextResponse(null, { status: 204, headers: investorPrivateHeaders })
+  response.cookies.set({
+    name: INVESTOR_ACCESS_COOKIE,
+    value: '',
+    path: '/api/investor-content',
+    maxAge: 0,
+  })
+  return response
 }

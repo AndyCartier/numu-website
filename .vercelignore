@@ -9,8 +9,8 @@ docs
 .venv-portraits
 NUMU_WoodShow_2026.pptx
 scripts/__pycache__
-exports/**
-!exports/NUMU_Investor_Deck_FINAL.pdf
+exports/
+public/exports/
 .quarantine
 numu-website
 mushroomiya_parametric
@@ -18,7 +18,9 @@ output
 pipeline
 workspace
 # Local-only files that must never be uploaded (Oct 2026)
-.env*.local
+.env
+.env.*
+!.env.example
 .venv*
 renders
 scripts/reference_photos

@@ -51,7 +51,7 @@ const foldProductJsonLd = {
   image: buildAbsoluteUrl(heroImage).toString(),
   material: 'PALMYCO',
   brand: { '@type': 'Brand', name: 'NUMU' },
-  manufacturer: { '@type': 'Organization', name: 'NUMU', url: SITE_URL },
+  manufacturer: { '@id': `${SITE_URL}/#organization` },
   additionalProperty: [
     { '@type': 'PropertyValue', name: 'Module', value: '400mm x 400mm, 60mm nominal thickness (provisional)' },
     { '@type': 'PropertyValue', name: 'Acoustic performance', value: 'NRC 0.72-0.80 (target, certification in progress)' },
@@ -204,6 +204,9 @@ export default function FoldPage() {
       </section>
       <FoldDetail />
       <ChapterNav current="fold" />
+      <div className="mx-auto max-w-[1440px] px-6 md:px-12 pb-16">
+        <Link href="/faq" className="font-sans underline underline-offset-4">FOLD testing, lead times and pricing FAQ</Link>
+      </div>
     </main>
   )
 }

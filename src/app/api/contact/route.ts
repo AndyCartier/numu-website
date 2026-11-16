@@ -1,6 +1,4 @@
 import { randomUUID } from 'crypto'
-import { readFileSync } from 'fs'
-import { join } from 'path'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getAllowedOriginHosts, isLocalDevelopmentHost } from '@/lib/site'
@@ -8,17 +6,15 @@ import { NOTIFY_FROM, logEmailError } from '@/lib/email'
 
 const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL || 'andy@numu.bio'
 const CONTACT_BCC_EMAIL = process.env.CONTACT_BCC_EMAIL || ''
-// Notifications to NUMU come from a dedicated sender (see src/lib/email.ts); the deck goes out from Andy.
+// Notifications to NUMU come from the dedicated sender.
 const RESEND_FROM_EMAIL = NOTIFY_FROM
-const FOUNDER_FROM_EMAIL = process.env.FOUNDER_FROM_EMAIL || 'Andy Cartier — NUMU <andy@numu.bio>'
 
-const DECK_FILENAME = 'NUMU_Investor_Deck_FINAL.pdf'
 
 const REQUEST_META = {
   investor_deck: {
     subject: 'New deck request — NUMU',
     heading: 'New deck request',
-    followUp: 'Deck sent automatically. Reply directly to continue the conversation.',
+    followUp: 'Review this request before sharing investor materials.',
   },
   project: {
     subject: 'New project inquiry — NUMU',
@@ -111,50 +107,6 @@ function sanitizeSourceTag(source?: string) {
   return cleaned || fallback
 }
 
-function loadDeckAttachment(): { content: string; filename: string } | null {
-  try {
-    const filePath = join(process.cwd(), 'exports', DECK_FILENAME)
-    const content = readFileSync(filePath).toString('base64')
-    return { content, filename: DECK_FILENAME }
-  } catch {
-    return null
-  }
-}
-
-function deckEmailHtml(recipientEmail: string) {
-  return `
-    <div style="font-family:Georgia,serif;color:#1a1714;max-width:520px;line-height:1.7;">
-      <p style="margin:0 0 20px;">Thank you for your interest in NUMU.</p>
-      <p style="margin:0 0 20px;">Please find our investor deck attached. It covers the material platform, current traction, and the raise we are running — a $600K SAFE to build the first certified bio-composite manufacturing system in the GCC.</p>
-      <p style="margin:0 0 20px;">If the opportunity is relevant to you, I would be glad to schedule a 30-minute call to walk through the details and answer any questions directly.</p>
-      <p style="margin:0 0 4px;">Looking forward to connecting.</p>
-      <p style="margin:0 0 32px;">Andy</p>
-      <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#6f6458;border-top:1px solid #e8e4da;padding-top:16px;">
-        Andy Cartier — Founder &amp; CEO<br>
-        NUMU · Bio-composites platform · Dubai, UAE<br>
-        <a href="mailto:andy@numu.bio" style="color:#6f6458;">andy@numu.bio</a>
-      </p>
-    </div>
-  `
-}
-
-function deckEmailText(recipientEmail: string) {
-  return `Thank you for your interest in NUMU.
-
-Please find our investor deck attached. It covers the material platform, current traction, and the raise we are running — a $600K SAFE to build the first certified bio-composite manufacturing system in the GCC.
-
-If the opportunity is relevant to you, I would be glad to schedule a 30-minute call to walk through the details and answer any questions directly.
-
-Looking forward to connecting.
-
-Andy
-
-—
-Andy Cartier — Founder & CEO
-NUMU · Bio-composites platform · Dubai, UAE
-andy@numu.bio`
-}
-
 export async function POST(req: Request) {
   if (!isAllowedSubmissionOrigin(req)) return json({ error: 'Forbidden' }, 403)
 
@@ -199,8 +151,8 @@ export async function POST(req: Request) {
 
   if (source.length > 120) return json({ error: 'Invalid source' }, 400)
 
+  if (!Object.hasOwn(REQUEST_META, requestType)) return json({ error: 'Invalid request type' }, 400)
   const meta = REQUEST_META[requestType as keyof typeof REQUEST_META]
-  if (!meta) return json({ error: 'Invalid request type' }, 400)
 
   if (!process.env.RESEND_API_KEY) return json({ error: 'Email service unavailable' }, 503)
 
@@ -212,73 +164,29 @@ export async function POST(req: Request) {
   }
   const messageId = randomUUID()
   const sourceTag = sanitizeSourceTag(source)
+  const htmlEmail = email.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
   const timestamp = new Date().toUTCString()
 
   try {
-    if (requestType === 'investor_deck') {
-      const attachment = loadDeckAttachment()
-
-      if (!attachment) return json({ error: 'The deck is temporarily unavailable. Please try again shortly.' }, 503)
-
-      // Notification to Andy
-      await sendEmail({
-        from: RESEND_FROM_EMAIL,
-        to: [CONTACT_TO_EMAIL],
-        ...(CONTACT_BCC_EMAIL ? { bcc: [CONTACT_BCC_EMAIL] } : {}),
-        replyTo: email,
-        subject: `Deck requested — ${email}`,
-        text: `Deck request\n\nFrom: ${email}\nSource: ${source || 'direct'}\nTime: ${timestamp}\n\nDeck ${attachment ? 'automatic delivery requested' : 'FAILED TO ATTACH — send manually'}.`,
-        html: `
-          <div style="font-family:Arial,sans-serif;color:#1a1714;">
-            <p style="margin:0 0 16px;font-size:15px;"><strong>Deck requested</strong></p>
-            <table style="border-collapse:collapse;font-size:13px;">
-              <tr><td style="padding:4px 16px 4px 0;opacity:0.5;">From</td><td><a href="mailto:${email}">${email}</a></td></tr>
-              <tr><td style="padding:4px 16px 4px 0;opacity:0.5;">Source</td><td>${source || 'direct'}</td></tr>
-              <tr><td style="padding:4px 16px 4px 0;opacity:0.5;">Time</td><td>${timestamp}</td></tr>
-              <tr><td style="padding:4px 16px 4px 0;opacity:0.5;">Deck</td><td style="color:${attachment ? '#2a7a2a' : '#c0392b'};">${attachment ? 'Automatic delivery requested' : 'FAILED — send manually'}</td></tr>
-            </table>
-          </div>
-        `,
-        headers: { 'X-Entity-Ref-ID': messageId, 'X-NUMU-Website': 'contact', 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
-        tags: [{ name: 'request_type', value: 'investor_deck' }, { name: 'source', value: sourceTag }],
-      })
-
-      // Deck to requester
-      if (attachment) {
-        await sendEmail({
-          from: FOUNDER_FROM_EMAIL,
-          to: [email],
-          replyTo: CONTACT_TO_EMAIL,
-          subject: 'NUMU — Investor Deck',
-          text: deckEmailText(email),
-          html: deckEmailHtml(email),
-          attachments: [{ content: attachment.content, filename: attachment.filename }],
-          headers: { 'X-Entity-Ref-ID': randomUUID(), 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
-          tags: [{ name: 'request_type', value: 'investor_deck_outbound' }, { name: 'source', value: sourceTag }],
-        })
-      }
-    } else {
-      // Standard notification for project / samples
-      await sendEmail({
-        from: RESEND_FROM_EMAIL,
-        to: [CONTACT_TO_EMAIL],
-        ...(CONTACT_BCC_EMAIL ? { bcc: [CONTACT_BCC_EMAIL] } : {}),
-        replyTo: email,
-        subject: meta.subject,
-        text: `${meta.heading}\n\nFrom: ${email}\nType: ${requestType}\nSource: ${source || 'direct'}\n\n${meta.followUp}`,
-        html: `
-          <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1714;">
-            <p style="margin:0 0 16px;"><strong>${meta.heading}</strong></p>
-            <p style="margin:0 0 8px;">From: <a href="mailto:${email}">${email}</a></p>
-            <p style="margin:0 0 8px;">Type: ${requestType}</p>
-            <p style="margin:0 0 16px;">Source: ${source || 'direct'}</p>
-            <p style="margin:0;color:#6f6458;">${meta.followUp}</p>
-          </div>
-        `,
-        headers: { 'X-Entity-Ref-ID': messageId, 'X-NUMU-Website': 'contact', 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
-        tags: [{ name: 'request_type', value: requestType }, { name: 'source', value: sourceTag }],
-      })
-    }
+    await sendEmail({
+      from: RESEND_FROM_EMAIL,
+      to: [CONTACT_TO_EMAIL],
+      ...(CONTACT_BCC_EMAIL ? { bcc: [CONTACT_BCC_EMAIL] } : {}),
+      replyTo: email,
+      subject: meta.subject,
+      text: `${meta.heading}\n\nFrom: ${email}\nType: ${requestType}\nSource: ${sourceTag}\n\n${meta.followUp}`,
+      html: `
+        <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1714;">
+          <p style="margin:0 0 16px;"><strong>${meta.heading}</strong></p>
+          <p style="margin:0 0 8px;">From: <a href="mailto:${htmlEmail}">${htmlEmail}</a></p>
+          <p style="margin:0 0 8px;">Type: ${requestType}</p>
+          <p style="margin:0 0 16px;">Source: ${sourceTag}</p>
+          <p style="margin:0;color:#6f6458;">${meta.followUp}</p>
+        </div>
+      `,
+      headers: { 'X-Entity-Ref-ID': messageId, 'X-NUMU-Website': 'contact', 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
+      tags: [{ name: 'request_type', value: requestType }, { name: 'source', value: sourceTag }],
+    })
 
     return json({ ok: true })
   } catch {

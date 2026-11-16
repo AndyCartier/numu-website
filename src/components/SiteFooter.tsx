@@ -25,7 +25,6 @@ export default function SiteFooter() {
           <p className="font-sans uppercase tracking-[0.18em]" style={{ fontSize: '0.75rem', opacity: 0.68 }}>Contact & registered premises</p>
           <p className="font-sans mt-4" style={{ fontSize: '0.875rem', lineHeight: 1.7, opacity: 0.78 }}>{NUMU_NAP.legalName}</p>
           <p className="font-sans" style={{ fontSize: '0.875rem', lineHeight: 1.7, opacity: 0.68 }}>{NUMU_NAP.address}</p>
-          <p className="font-sans mt-3" style={{ fontSize: '0.75rem', lineHeight: 1.7, opacity: 0.5 }}>Licence No. {NUMU_NAP.licenceNumber} · Premises {NUMU_NAP.premises} · Makani {NUMU_NAP.makani}</p>
           <a href={`mailto:${NUMU_NAP.email}`} className="font-sans inline-block mt-4" style={{ fontSize: '0.875rem', color: 'inherit', opacity: 0.88 }}>{NUMU_NAP.email}</a>
         </address>
         <nav aria-label="Footer navigation" className="flex flex-wrap content-start gap-x-5 gap-y-3 md:justify-end">
@@ -66,7 +65,6 @@ function FooterClose() {
           <address className="numu-footer-address">
             <span>{NUMU_NAP.legalName}</span>
             <span>{NUMU_NAP.address}</span>
-            <span className="numu-footer-fine">Licence No. {NUMU_NAP.licenceNumber} · Premises {NUMU_NAP.premises} · Makani {NUMU_NAP.makani}</span>
           </address>
         </div>
         <p className="numu-footer-word" aria-hidden="true">NUMU<span lang="ar" dir="rtl">نُمُوّ</span></p>

@@ -3,9 +3,6 @@ export const NUMU_NAP = {
   legalName: 'NUMU BIOTECH - FZCO',
   email: 'andy@numu.bio',
   address: 'IFZA Business Park, Building A1, Dubai Digital Park, Dubai Silicon Oasis, Dubai, United Arab Emirates',
-  licenceNumber: '74923',
-  premises: '74923-001',
-  makani: 'A1-3641379065',
 } as const
 
 export const FAQ_ITEMS = [
@@ -34,3 +31,5 @@ export const FAQ_ITEMS = [
     answer: "Pricing varies by project scope and complexity. Contact us and we'll put together an offer suited to your project. Every NUMU product is offered on request: use the inquiry form on any product page under Objects & Surfaces.",
   },
 ] as const
+
+export const NUMU_SUMMARY = 'NUMU is a Dubai-based bio-composite materials company. PALMYCO is its proprietary material system: mycelium grown on regional agricultural fibre. FOLD, its first product built on PALMYCO, is an acoustic wall panel for interiors.'

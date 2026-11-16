@@ -1,27 +1,37 @@
-import { FAQ_ITEMS, NUMU_NAP } from '@/lib/siteFacts'
+import { buildAbsoluteUrl, SITE_URL } from '@/lib/site'
+import { FAQ_ITEMS, NUMU_NAP, NUMU_SUMMARY } from '@/lib/siteFacts'
 
 export const dynamic = 'force-static'
 
+const keyPages = [
+  ['/palmyco', 'PALMYCO material system', 'NUMU’s proprietary mycelium bio-composite.'],
+  ['/fold', 'FOLD acoustic wall panels', 'Interior panels grown and finished in Dubai.'],
+  ['/faq', 'PALMYCO and FOLD FAQ', 'Testing status, humidity, lead times and pricing.'],
+  ['/acoustic-panels-dubai', 'Acoustic panels in Dubai', 'Information for architects, interior designers and fit-out teams.'],
+  ['/case-studies', 'Case studies', 'NUMU projects and installations.'],
+  ['/shop', 'Objects & Surfaces', 'Inquiry-only catalogue featuring FOLD, PALMYCO Surfaces, Mushroomiya, Fungal Art Series and commissions. Physical products are priced on request.'],
+  ['/mushroomiya', 'Mushroomiya pendant', 'Made to order. Product images are visualisations.'],
+  ['/partnerships/titans-space', 'Titans Space Industries', 'Exploratory research partnership under a non-binding MoU signed 28 May 2026.'],
+  ['/connect', 'Contact NUMU', 'Project, sample and specification inquiries.'],
+] as const
+
 export function GET() {
+  const links = keyPages.map(([path, title, description]) =>
+    `- [${title}](${buildAbsoluteUrl(path)}): ${description}`,
+  ).join('\n')
+
   const content = `# NUMU
 
-> NUMU is a Dubai-based bio-composite materials company. PALMYCO is its proprietary material system: mycelium grown on regional agricultural fibre. FOLD is NUMU's first product built on PALMYCO.
+> ${NUMU_SUMMARY}
 
 ## Official information
-- Website: https://www.numu.bio
+- Website: ${SITE_URL}
 - Legal name: ${NUMU_NAP.legalName}
 - Address: ${NUMU_NAP.address}
 - Contact: ${NUMU_NAP.email}
 
 ## Key pages
-- https://www.numu.bio/palmyco — PALMYCO material system
-- https://www.numu.bio/fold — FOLD acoustic wall panels
-- https://www.numu.bio/faq — approved FAQ answers
-- https://www.numu.bio/acoustic-panels-dubai — acoustic-panel information
-- https://www.numu.bio/case-studies — projects and installations
-- https://www.numu.bio/shop — Objects & Surfaces: inquiry-only catalogue (FOLD, PALMYCO Surfaces, Mushroomiya, Fungal Art Series, commissions); all physical products are price on request
-- https://www.numu.bio/mushroomiya — Mushroomiya grown pendant (made to order; images are visualisations)
-- https://www.numu.bio/partnerships/titans-space — exploratory research partnership with Titans Space Industries (non-binding MoU, 28 May 2026)
+${links}
 
 ## Approved FAQ
 ${FAQ_ITEMS.map(({ question, answer }) => `- ${question}\n  ${answer}`).join('\n')}

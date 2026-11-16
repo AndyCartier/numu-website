@@ -35,6 +35,12 @@ export default function FaqPage() {
             </section>
           ))}
         </div>
+        <nav aria-label="Related NUMU pages" className="flex flex-wrap gap-x-6 gap-y-3 pt-8 font-sans">
+          <Link className="underline underline-offset-4" href="/palmyco">PALMYCO material system</Link>
+          <Link className="underline underline-offset-4" href="/fold">FOLD acoustic panels</Link>
+          <Link className="underline underline-offset-4" href="/case-studies">Projects and installations</Link>
+          <Link className="underline underline-offset-4" href="/shop">Objects &amp; Surfaces</Link>
+        </nav>
       </div>
     </main>
   )

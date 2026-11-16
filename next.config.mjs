@@ -20,17 +20,18 @@ const contentSecurityPolicy = [
 
 const nextConfig = {
   images: {
-    formats: ['image/avif', 'image/webp'],
+    // Keep the vulnerable built-in optimizer disabled until Next.js is upgraded.
+    unoptimized: true,
   },
   experimental: {
     optimizePackageImports: ['framer-motion'],
-    outputFileTracingIncludes: {
-      '/api/contact': ['./exports/NUMU_Investor_Deck_FINAL.pdf'],
-    },
   },
   // The image gallery was retired in October 2026; send any old links to the product catalogue.
   async redirects() {
-    return [{ source: '/collections', destination: '/shop', permanent: true }]
+    return [
+      { source: '/collections', destination: '/shop', permanent: true },
+      { source: '/investor-deck', destination: '/?mode=investor', permanent: false },
+    ]
   },
   async headers() {
     return [

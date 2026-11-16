@@ -2,180 +2,74 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   createInvestorAccessToken,
   hasInvestorAccessConfigured,
-  hasValidInvestorAccessToken,
+  investorPrivateHeaders,
   INVESTOR_ACCESS_COOKIE,
+  INVESTOR_SESSION_SECONDS,
   isValidInvestorCode,
 } from '@/lib/investorAccess'
-import { getAllowedOriginHosts, isLocalDevelopmentHost, shouldSecureCookies } from '@/lib/site'
+import { isLocalDevelopmentHost, shouldSecureCookies, SITE_HOST } from '@/lib/site'
 
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
-const RATE_LIMIT_MAX_REQUESTS = 10
+export const dynamic = 'force-dynamic'
 
-type RateBucket = {
-  count: number
-  resetAt: number
-}
+const WINDOW_MS = 10 * 60 * 1000
+const MAX_ATTEMPTS = 10
+const attempts = new Map<string, { count: number; expires: number }>()
 
-const globalRateLimitStore = globalThis as typeof globalThis & {
-  __numuInvestorRateLimit?: Map<string, RateBucket>
-}
-
-const investorRateLimit = globalRateLimitStore.__numuInvestorRateLimit ?? new Map<string, RateBucket>()
-globalRateLimitStore.__numuInvestorRateLimit = investorRateLimit
-
-function json(body: Record<string, unknown>, status = 200) {
-  return NextResponse.json(body, {
-    status,
-    headers: {
-      'Cache-Control': 'no-store',
-      'X-Robots-Tag': 'noindex, nofollow',
-    },
-  })
-}
-
-function getClientIp(req: Request) {
-  const forwardedFor = req.headers.get('x-forwarded-for')
-
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0]?.trim() || 'unknown'
-  }
-
-  return req.headers.get('x-real-ip') || 'unknown'
-}
-
-function extractRequestHost(req: Request) {
-  const candidates = [req.headers.get('origin'), req.headers.get('referer')]
-
-  for (const candidate of candidates) {
-    if (!candidate) continue
-
-    try {
-      return new URL(candidate).host
-    } catch {
-      continue
+function allowedOrigin(request: NextRequest) {
+  const origin = request.headers.get('origin')
+  if (!origin) return false
+  try {
+    const url = new URL(origin)
+    if (isLocalDevelopmentHost(url.host)) {
+      return isLocalDevelopmentHost(request.nextUrl.host) && url.origin === request.nextUrl.origin
     }
+    return url.protocol === 'https:' &&
+      (url.host === request.nextUrl.host || [SITE_HOST, 'numu.bio', 'www.numu.bio'].includes(url.host))
+  } catch {
+    return false
   }
-
-  return null
 }
 
-function isAllowedOrigin(req: Request) {
-  const originHost = extractRequestHost(req)
-  const requestHost = new URL(req.url).host
-
-  if (!originHost) {
-    return process.env.NODE_ENV !== 'production'
-  }
-
-  if (originHost === requestHost) {
-    return true
-  }
-
-  if (isLocalDevelopmentHost(originHost) && isLocalDevelopmentHost(requestHost)) {
-    return true
-  }
-
-  return getAllowedOriginHosts().has(originHost)
+function json(body: Record<string, unknown>, status: number, headers: Record<string, string> = investorPrivateHeaders) {
+  return NextResponse.json(body, { status, headers })
 }
 
-function takeRateLimit(key: string) {
+export async function POST(request: NextRequest) {
+  if (!allowedOrigin(request)) return json({ error: 'Forbidden' }, 403)
+  if (!hasInvestorAccessConfigured()) return json({ error: 'Investor access is temporarily unavailable.' }, 503)
+
   const now = Date.now()
-
-  for (const [storedKey, bucket] of investorRateLimit) {
-    if (bucket.resetAt <= now) {
-      investorRateLimit.delete(storedKey)
-    }
+  for (const [key, value] of attempts) if (value.expires <= now) attempts.delete(key)
+  const ip = request.headers.get('x-vercel-forwarded-for')?.split(',')[0].trim() || 'unknown'
+  const bucket = attempts.get(ip) ?? { count: 0, expires: now + WINDOW_MS }
+  if (bucket.count >= MAX_ATTEMPTS) {
+    return json({ error: 'Too many attempts. Please try again shortly.' }, 429, {
+      ...investorPrivateHeaders,
+      'Retry-After': String(Math.ceil((bucket.expires - now) / 1000)),
+    })
   }
 
-  const current = investorRateLimit.get(key)
-
-  if (!current) {
-    const next = { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS }
-    investorRateLimit.set(key, next)
-    return { allowed: true, resetAt: next.resetAt }
+  bucket.count++
+  attempts.set(ip, bucket)
+  if (Number(request.headers.get('content-length')) > 2048) return json({ error: 'Invalid request' }, 400)
+  const body = await request.json().catch(() => null)
+  const code = typeof body?.code === 'string' ? body.code : ''
+  if (!code || code.length > 256 || !isValidInvestorCode(code)) {
+    return json({ error: 'Code not recognised.' }, 401)
   }
 
-  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return { allowed: false, resetAt: current.resetAt }
-  }
-
-  current.count += 1
-  investorRateLimit.set(key, current)
-  return { allowed: true, resetAt: current.resetAt }
-}
-
-export async function GET(req: NextRequest) {
-  const token = req.cookies.get(INVESTOR_ACCESS_COOKIE)?.value
-
-  if (!hasValidInvestorAccessToken(token)) {
-    return json({ ok: false })
-  }
-
-  return json({ ok: true })
-}
-
-export async function POST(req: NextRequest) {
-  if (!hasInvestorAccessConfigured()) {
-    return json({ error: 'Investor access is unavailable' }, 503)
-  }
-
-  if (!isAllowedOrigin(req)) {
-    return json({ error: 'Forbidden' }, 403)
-  }
-
-  const rateLimit = takeRateLimit(`${getClientIp(req)}:${req.headers.get('user-agent') ?? 'unknown'}`)
-
-  if (!rateLimit.allowed) {
-    const retryAfterSeconds = Math.max(1, Math.ceil((rateLimit.resetAt - Date.now()) / 1000))
-
-    return NextResponse.json(
-      { error: 'Too many attempts' },
-      {
-        status: 429,
-        headers: {
-          'Cache-Control': 'no-store',
-          'Retry-After': String(retryAfterSeconds),
-          'X-Robots-Tag': 'noindex, nofollow',
-        },
-      },
-    )
-  }
-
-  const body = await req.json().catch(() => null)
-  const code = typeof body?.code === 'string' ? body.code.trim() : ''
-
-  if (!code || !isValidInvestorCode(code)) {
-    return json({ error: 'Invalid access code' }, 401)
-  }
-
-  const response = json({ ok: true })
-
+  const token = createInvestorAccessToken()
+  if (!token) return json({ error: 'Investor access is temporarily unavailable.' }, 503)
+  attempts.delete(ip)
+  const response = json({ ok: true }, 200)
   response.cookies.set({
     name: INVESTOR_ACCESS_COOKIE,
-    value: createInvestorAccessToken(),
+    value: token,
     httpOnly: true,
-    sameSite: 'lax',
-    secure: shouldSecureCookies(req),
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
+    secure: shouldSecureCookies(request),
+    sameSite: 'strict',
+    path: '/api/investor-content',
+    maxAge: INVESTOR_SESSION_SECONDS,
   })
-
-  return response
-}
-
-export async function DELETE(req: NextRequest) {
-  const response = json({ ok: true })
-
-  response.cookies.set({
-    name: INVESTOR_ACCESS_COOKIE,
-    value: '',
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: shouldSecureCookies(req),
-    path: '/',
-    expires: new Date(0),
-  })
-
   return response
 }
