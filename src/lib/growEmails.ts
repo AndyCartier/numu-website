@@ -28,18 +28,19 @@ function layout(paragraphs: string[], footerText: string) {
     .join('')
   return `<!doctype html>
 <html lang="en">
+<head><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
 <body style="margin:0;padding:0;background-color:#efe9dd;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#efe9dd;">
     <tr><td align="center" style="padding:28px 12px;">
       <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="width:100%;max-width:520px;background-color:#f5f1e8;border:1px solid #e2d9c8;">
-        <tr><td><img src="${HEADER_IMAGE}" width="520" alt="NUMU · نمو" style="display:block;width:100%;height:auto;border:0;"></td></tr>
+        <tr><td><img src="${HEADER_IMAGE}" width="520" height="150" alt="NUMU · نمو" style="display:block;width:100%;max-width:520px;height:auto;border:0;"></td></tr>
         <tr><td style="padding:32px 36px 8px;">${body}</td></tr>
         <tr><td style="padding:0 36px 28px;">
           <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:16px;color:#1a1714;">Andy Cartier</p>
           <p style="margin:2px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#4a3f34;">CEO &amp; Founder, NUMU</p>
           <p style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;"><a href="mailto:andy@numu.bio" style="color:#4a3f34;">andy@numu.bio</a></p>
         </td></tr>
-        <tr><td><img src="${FOOTER_IMAGE}" width="520" alt="" style="display:block;width:100%;height:auto;border:0;"></td></tr>
+        <tr><td><img src="${FOOTER_IMAGE}" width="520" height="24" alt="" style="display:block;width:100%;max-width:520px;height:auto;border:0;"></td></tr>
       </table>
       <p style="margin:14px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#8a7f72;">${footerText}</p>
     </td></tr>

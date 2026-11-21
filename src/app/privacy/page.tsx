@@ -48,27 +48,27 @@ export default function PrivacyPage() {
           Privacy for inquiry and investor requests.
         </h1>
         <p style={{ ...bodyStyle, maxWidth: 680, marginBottom: '3rem' }}>
-          Effective May 24, 2026. This site is operated by NUMU in Dubai, UAE. If you contact us through this website, we collect only the information needed to respond to your request and manage the relationship that follows.
+          Effective May 24, 2026. Updated 21 November 2026. This site is operated by NUMU in Dubai, UAE. If you contact us through this website, we collect only the information needed to respond to your request and manage the relationship that follows.
         </p>
 
         <section style={{ borderTop: '1px solid rgba(26,23,20,0.12)', paddingTop: '2rem', marginTop: '2rem' }}>
           <p style={sectionTitleStyle}>What We Collect</p>
           <p style={bodyStyle}>
-            We collect the email address you submit through our website contact forms, along with the request type you chose and the page or source that triggered the inquiry. We also collect limited technical information needed to protect the form, such as request headers, approximate network origin, and anti-spam signals.
+            We collect the email address you submit through our website contact forms, along with the request type you chose and the page or source that triggered the inquiry. We also collect limited technical information needed to protect the form, such as request headers, approximate network origin, and anti-spam signals. If you take the packaging test on numu.bio/grow, we also store your answers, your score and the product name you choose to enter.
           </p>
         </section>
 
         <section style={{ borderTop: '1px solid rgba(26,23,20,0.12)', paddingTop: '2rem', marginTop: '2rem' }}>
           <p style={sectionTitleStyle}>How We Use It</p>
           <p style={bodyStyle}>
-            We use submitted information to reply to project inquiries, sample requests, and investor deck requests, to prevent spam or abusive traffic, and to maintain basic operational records for business follow-up.
+            We use submitted information to reply to project inquiries, sample requests, and investor deck requests, to prevent spam or abusive traffic, and to maintain basic operational records for business follow-up. We also use your email to send the pilot guide and the two short follow-up emails you signed up for, and an automatic confirmation when you send a project or sample request.
           </p>
         </section>
 
         <section style={{ borderTop: '1px solid rgba(26,23,20,0.12)', paddingTop: '2rem', marginTop: '2rem' }}>
           <p style={sectionTitleStyle}>How It Is Processed</p>
           <p style={bodyStyle}>
-            Website requests are processed through our website infrastructure and email service providers. At the time of writing, this site is hosted on Vercel and contact-form notifications are delivered through Resend. We do not sell personal information or use submitted inquiry emails for unrelated advertising lists without further permission.
+            Website requests are processed through our website infrastructure and email service providers. At the time of writing, this site is hosted on Vercel, emails are delivered through Resend, and website requests and test results are stored in a database hosted by Supabase in the EU (Frankfurt region). We do not sell personal information or use submitted inquiry emails for unrelated advertising lists without further permission.
           </p>
         </section>
 
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
         <section style={{ borderTop: '1px solid rgba(26,23,20,0.12)', paddingTop: '2rem', marginTop: '2rem' }}>
           <p style={sectionTitleStyle}>Your Choices</p>
           <p style={bodyStyle}>
-            You may ask us to update or delete inquiry information you previously submitted, subject to any legal obligations that require retention. You can also choose not to use the website forms and contact us through other public NUMU channels instead.
+            You may ask us to update or delete inquiry information you previously submitted, subject to any legal obligations that require retention. You can also choose not to use the website forms and contact us through other public NUMU channels instead. You can stop the follow-up emails at any time by replying STOP, or by writing to andy@numu.bio.
           </p>
         </section>
 
