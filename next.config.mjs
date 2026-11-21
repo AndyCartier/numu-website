@@ -16,7 +16,8 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "connect-src 'self' ws: wss: https://vitals.vercel-insights.com",
   "worker-src 'self' blob:",
-  'upgrade-insecure-requests',
+  // Production only: Safari also upgrades http://localhost, which breaks local previews.
+  ...(process.env.NODE_ENV === 'production' ? ['upgrade-insecure-requests'] : []),
 ].join('; ')
 
 const nextConfig = {

@@ -2,8 +2,17 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'framer-motion'
 
 const CHARCOAL = '#1A1714'
 const CREAM = '#F5F1E8'
@@ -11,6 +20,11 @@ const WARM_MID = '#B29B7F'
 const WARM_DARK = '#4A3F34'
 const BORDER = '1px solid rgba(26,23,20,0.16)'
 const HERO_SRC = '/images/grow/mycelium-coffee-insert-concept.jpg'
+const EASE = [0.22, 1, 0.36, 1] as const
+
+// Film grain as an inline SVG (data: images are allowed by the site's CSP).
+const GRAIN =
+  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")"
 
 const QUESTIONS = [
   'Does this product ship or sit in a foam or plastic protective insert today?',
@@ -25,7 +39,6 @@ const QUESTIONS = [
   'Can this product wait 4 to 5 weeks for a made-to-order prototype?',
 ]
 
-// What a "yes" says in the brief (strongest fit signal), by question.
 const FIT_SIGNALS = [
   'It uses a foam or plastic insert today, so there is something to replace.',
   'The insert only holds and protects the product.',
@@ -39,7 +52,6 @@ const FIT_SIGNALS = [
   'The timeline allows a 4 to 5 week prototype.',
 ]
 
-// What a "no" leaves open (unknown) and the concrete next step, by question.
 const GAPS = [
   { unknown: 'Whether today’s insert is foam or plastic.', step: 'Pick a product that uses a foam or plastic insert today.' },
   { unknown: 'Whether the insert only protects the product.', step: 'Pick a product whose insert only holds and protects it.' },
@@ -58,39 +70,32 @@ const GAP_PRIORITY = [5, 8, 9, 1, 0, 2, 3, 4, 7, 6]
 
 const BANDS = [
   { min: 7, label: 'Ready to grow', text: 'A strong first candidate. Weigh today’s insert, name the owner, and request a sample box.' },
-  { min: 4, label: 'Sprouting', text: 'Promising. Turn your “no” answers into “yes” first, starting with the most important unknown below.' },
+  { min: 4, label: 'Sprouting', text: 'Promising. Turn your “no” answers into “yes” first, starting with the most important unknown in your brief.' },
   { min: 0, label: 'Still in the cupboard', text: 'Not the right first product. Try the test again with a gift set or a limited edition, where a small first run is easier.' },
 ]
 
 const HOTSPOTS = [
-  {
-    id: 'edge',
-    x: 30,
-    y: 47,
-    title: 'The fibrous edge',
-    text: 'PALMYCO is regional plant fibre bound by mycelium. This is the surface your team would touch in a sample box.',
-  },
-  {
-    id: 'recess',
-    x: 63,
-    y: 62,
-    title: 'The fitted recess',
-    text: 'In this concept the recess follows the curve of the tin, so the product sits snugly in one grown piece.',
-  },
+  { id: 'edge', x: 30, y: 47, title: 'The fibrous edge', text: 'PALMYCO is regional plant fibre bound by mycelium. This is the surface your team would touch in a sample box.' },
+  { id: 'recess', x: 63, y: 62, title: 'The fitted recess', text: 'In this concept the recess follows the curve of the tin, so the product sits snugly in one grown piece.' },
 ] as const
+
+const MARQUEE = ['Made in Dubai', 'Grown from regional agricultural waste', 'Shaped to fit one product', '5 free sample boxes a month', 'Prototype in 4 to 5 weeks']
 
 type Phase = 'signup' | 'test' | 'result'
 type Brief = { product: string; score: number; label: string; signal: string; unknown: string; step: string; timing: string | null }
 
+function bandFor(score: number) {
+  return BANDS.find(b => score >= b.min) ?? BANDS[2]
+}
+
 function buildBrief(product: string, answers: boolean[]): Brief {
   const score = answers.filter(Boolean).length
-  const band = BANDS.find(b => score >= b.min) ?? BANDS[2]
   const signalIndex = SIGNAL_PRIORITY.find(i => answers[i])
   const gapIndex = GAP_PRIORITY.find(i => !answers[i])
   return {
     product: product || 'One product (not named)',
     score,
-    label: band.label,
+    label: bandFor(score).label,
     signal: signalIndex !== undefined ? FIT_SIGNALS[signalIndex] : 'None yet: every answer was no.',
     unknown: gapIndex !== undefined ? GAPS[gapIndex].unknown : 'None from this test.',
     step: gapIndex !== undefined ? GAPS[gapIndex].step : 'Request a free sample box and weigh today’s insert.',
@@ -111,23 +116,132 @@ function briefText(b: Brief) {
   ].join('\n')
 }
 
-function CountUp({ to, instant }: { to: number; instant: boolean }) {
-  const [value, setValue] = useState(instant ? to : 0)
+/* ---------- Motion building blocks ---------- */
+
+function ScrollHairline() {
+  const { scrollYProgress } = useScroll()
+  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 })
+  return <motion.div className="fixed top-0 left-0 right-0 h-[2px] z-50 origin-left" style={{ scaleX, backgroundColor: WARM_DARK }} aria-hidden="true" />
+}
+
+function RevealWords({ text, className }: { text: string; className?: string }) {
+  const reduce = useReducedMotion()
+  const words = text.split(' ')
+  return (
+    <h1 className={className} aria-label={text}>
+      {words.map((w, i) => (
+        <span key={i} className="inline-block overflow-hidden align-bottom pb-[0.08em] -mb-[0.08em]" aria-hidden="true">
+          <motion.span
+            className="inline-block"
+            initial={{ y: '105%' }}
+            animate={{ y: '0%' }}
+            transition={reduce ? { duration: 0 } : { duration: 0.9, delay: 0.15 + i * 0.08, ease: EASE }}
+          >
+            {w}{i < words.length - 1 ? ' ' : ''}
+          </motion.span>
+        </span>
+      ))}
+    </h1>
+  )
+}
+
+// Fine ivory threads that grow across the hero: the mycelium metaphor.
+function MyceliumThreads() {
+  const reduce = useReducedMotion()
+  const paths = [
+    'M-20 120 C 180 60, 320 220, 520 140 S 860 40, 1120 160 S 1400 260, 1500 180',
+    'M-40 420 C 160 360, 300 520, 540 430 S 900 300, 1180 420 S 1420 520, 1520 470',
+    'M120 -20 C 160 160, 60 300, 180 460 S 380 700, 300 900',
+    'M1280 -30 C 1220 160, 1340 320, 1240 500 S 1120 760, 1220 920',
+    'M-30 700 C 220 640, 380 780, 620 700 S 980 580, 1240 720 S 1440 820, 1510 760',
+  ]
+  return (
+    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      {paths.map((d, i) => (
+        <motion.path
+          key={i}
+          d={d}
+          fill="none"
+          stroke={i % 2 ? WARM_MID : '#ffffff'}
+          strokeOpacity={i % 2 ? 0.35 : 0.7}
+          strokeWidth={1}
+          strokeLinecap="round"
+          initial={{ pathLength: reduce ? 1 : 0 }}
+          animate={{ pathLength: 1 }}
+          transition={reduce ? { duration: 0 } : { duration: 4.5 + i * 0.6, delay: 0.4 + i * 0.35, ease: 'easeInOut' }}
+        />
+      ))}
+    </svg>
+  )
+}
+
+function Marquee() {
+  const reduce = useReducedMotion()
+  const items = [...MARQUEE, ...MARQUEE]
+  return (
+    <div className="relative overflow-hidden py-4" style={{ borderTop: BORDER, borderBottom: BORDER }} aria-label={MARQUEE.join(', ')}>
+      <motion.div
+        className="flex gap-10 whitespace-nowrap w-max"
+        animate={reduce ? undefined : { x: ['0%', '-50%'] }}
+        transition={{ duration: 38, repeat: Infinity, ease: 'linear' }}
+        aria-hidden="true"
+      >
+        {items.map((t, i) => (
+          <span key={i} className="uppercase text-label tracking-[0.2em] flex items-center gap-10" style={{ opacity: 0.6 }}>
+            {t}
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="2" fill={WARM_MID} /></svg>
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  )
+}
+
+function ArrowButton({ children, onClick, type = 'button', disabled, dark = true, className = '' }: {
+  children: React.ReactNode; onClick?: () => void; type?: 'button' | 'submit'; disabled?: boolean; dark?: boolean; className?: string
+}) {
+  return (
+    <motion.button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      whileHover={disabled ? undefined : { y: -2 }}
+      whileTap={disabled ? undefined : { scale: 0.98 }}
+      className={`group relative overflow-hidden whitespace-nowrap justify-center uppercase tracking-[0.14em] text-xs px-7 py-4 inline-flex items-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${className}`}
+      style={dark ? { backgroundColor: CHARCOAL, color: CREAM, opacity: disabled ? 0.6 : 1 } : { border: BORDER, color: CHARCOAL }}
+    >
+      <span className="absolute inset-0 -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" style={{ backgroundColor: dark ? WARM_DARK : 'rgba(178,155,127,0.18)' }} aria-hidden="true" />
+      <span className="relative">{children}</span>
+      <span className="relative transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">→</span>
+    </motion.button>
+  )
+}
+
+function TypedText({ text, start, delay = 0 }: { text: string; start: boolean; delay?: number }) {
+  const reduce = useReducedMotion()
+  const [n, setN] = useState(reduce ? text.length : 0)
   useEffect(() => {
-    if (instant) { setValue(to); return }
-    let current = 0
-    const id = setInterval(() => {
-      current += 1
-      setValue(Math.min(current, to))
-      if (current >= to) clearInterval(id)
-    }, 80)
-    return () => clearInterval(id)
-  }, [to, instant])
-  return <>{value}</>
+    if (!start || reduce) { if (reduce) setN(text.length); return }
+    let i = 0
+    let id: ReturnType<typeof setInterval> | undefined
+    const t = setTimeout(() => {
+      id = setInterval(() => { i += 2; setN(Math.min(i, text.length)); if (i >= text.length && id) clearInterval(id) }, 22)
+    }, delay)
+    return () => { clearTimeout(t); if (id) clearInterval(id) }
+  }, [start, text, delay, reduce])
+  return (
+    <span>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">{text.slice(0, n)}{start && n < text.length ? <span style={{ opacity: 0.5 }}>|</span> : null}</span>
+    </span>
+  )
 }
 
 function BriefCard({ brief, example = false }: { brief: Brief | null; example?: boolean }) {
-  const rows = example
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-15% 0px' })
+  const reduce = useReducedMotion()
+  const rows: [string, string][] = example
     ? [
         ['Why consider it?', 'One simple shape in a seasonal gift set.'],
         ['What is missing?', 'The weight of the current foam insert.'],
@@ -140,23 +254,42 @@ function BriefCard({ brief, example = false }: { brief: Brief | null; example?: 
           ['Strongest fit signal', brief.signal],
           ['Most important unknown', brief.unknown],
           ['Next step', brief.step],
-          ...(brief.timing ? [['Timing', brief.timing]] : []),
+          ...(brief.timing ? [['Timing', brief.timing] as [string, string]] : []),
         ]
       : []
   return (
-    <div className="p-6 md:p-7" style={{ border: BORDER, backgroundColor: 'rgba(245,241,232,0.92)' }}>
-      <p className="uppercase text-label tracking-[0.18em] mb-4" style={{ color: WARM_DARK }}>
-        {example ? 'Example · coffee gift tin' : 'Your one-page brief'}
-      </p>
-      <dl className="space-y-3">
-        {rows.map(([k, v]) => (
-          <div key={k} className="grid grid-cols-[9.5rem_1fr] gap-3 text-sm max-sm:grid-cols-1 max-sm:gap-0.5">
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : undefined}
+      transition={{ duration: reduce ? 0 : 0.7, ease: EASE }}
+      className="relative p-6 md:p-8 shadow-[0_30px_60px_-30px_rgba(26,23,20,0.35)]"
+      style={{ border: BORDER, backgroundColor: 'rgba(250,247,240,0.94)' }}
+    >
+      <div className="flex items-center justify-between mb-5">
+        <p className="uppercase text-label tracking-[0.18em]" style={{ color: WARM_DARK }}>
+          {example ? 'Example · coffee gift tin' : 'Your one-page brief'}
+        </p>
+        <span className="uppercase text-[0.6rem] tracking-[0.2em] px-2 py-1" style={{ border: BORDER, opacity: 0.6 }}>
+          {example ? 'Sample' : 'Ready to share'}
+        </span>
+      </div>
+      <dl className="space-y-4">
+        {rows.map(([k, v], i) => (
+          <motion.div
+            key={k}
+            initial={{ opacity: 0, x: -10 }}
+            animate={inView ? { opacity: 1, x: 0 } : undefined}
+            transition={{ duration: reduce ? 0 : 0.5, delay: reduce ? 0 : 0.25 + i * 0.12, ease: EASE }}
+            className="grid grid-cols-[9.5rem_1fr] gap-3 text-sm max-sm:grid-cols-1 max-sm:gap-0.5 pb-4"
+            style={{ borderBottom: i < rows.length - 1 ? '1px dashed rgba(26,23,20,0.12)' : undefined }}
+          >
             <dt className="uppercase text-label tracking-[0.14em] pt-0.5" style={{ opacity: 0.55 }}>{k}</dt>
-            <dd style={{ lineHeight: 1.55 }}>{v}</dd>
-          </div>
+            <dd style={{ lineHeight: 1.55 }}>{example ? <TypedText text={v} start={inView} delay={400 + i * 650} /> : v}</dd>
+          </motion.div>
         ))}
       </dl>
-    </div>
+    </motion.div>
   )
 }
 
@@ -164,6 +297,17 @@ function MaterialImage() {
   const reduce = useReducedMotion()
   const [exploring, setExploring] = useState(false)
   const [active, setActive] = useState<(typeof HOTSPOTS)[number] | null>(null)
+  const frameRef = useRef<HTMLDivElement>(null)
+
+  // Gentle pointer tilt on devices with a fine pointer.
+  const rx = useMotionValue(0)
+  const ry = useMotionValue(0)
+  const tiltX = useSpring(rx, { stiffness: 120, damping: 18 })
+  const tiltY = useSpring(ry, { stiffness: 120, damping: 18 })
+
+  // Parallax drift as the page scrolls.
+  const { scrollYProgress } = useScroll({ target: frameRef, offset: ['start end', 'end start'] })
+  const drift = useTransform(scrollYProgress, [0, 1], reduce ? ['0%', '0%'] : ['-4%', '4%'])
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).get('demo') === 'explore') {
@@ -172,85 +316,176 @@ function MaterialImage() {
     }
   }, [])
 
-  const zoomTransition = reduce ? { duration: 0 } : { duration: 0.9, ease: [0.22, 1, 0.36, 1] as const }
+  function onMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (reduce || e.pointerType !== 'mouse' || active) return
+    const r = e.currentTarget.getBoundingClientRect()
+    ry.set(((e.clientX - r.left) / r.width - 0.5) * 6)
+    rx.set(-((e.clientY - r.top) / r.height - 0.5) * 6)
+  }
+  function onLeave() { rx.set(0); ry.set(0) }
 
   return (
-    <figure className="relative w-full">
-      <div className="relative w-full aspect-[16/10] overflow-hidden" style={{ border: BORDER }}>
-        <motion.div
-          className="absolute inset-0"
-          animate={{ scale: active ? 2.3 : 1 }}
-          transition={zoomTransition}
-          style={{ transformOrigin: active ? `${active.x}% ${active.y}%` : '50% 50%' }}
-        >
-          <Image
-            src={HERO_SRC}
-            alt="A coffee tin sitting in a grown, fibrous insert inside a cardboard box, next to an empty insert showing its curved recess"
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 55vw"
-            className="object-cover object-[70%_50%]"
-          />
+    <figure className="relative w-full" style={{ perspective: 1200 }}>
+      <motion.div
+        ref={frameRef}
+        onPointerMove={onMove}
+        onPointerLeave={onLeave}
+        style={{ rotateX: tiltX, rotateY: tiltY, border: BORDER, WebkitTransformStyle: 'preserve-3d' }}
+        className="relative w-full aspect-[16/10] overflow-hidden isolate shadow-[0_40px_80px_-40px_rgba(26,23,20,0.55)]"
+      >
+        <motion.div className="absolute -inset-[5%] z-0" style={{ y: drift }}>
+          <motion.div
+            className="absolute inset-0"
+            animate={{ scale: active ? 2.3 : 1 }}
+            transition={reduce ? { duration: 0 } : { duration: 1.1, ease: EASE }}
+            style={{ transformOrigin: active ? `${active.x}% ${active.y}%` : '50% 50%' }}
+          >
+            <Image
+              src={HERO_SRC}
+              alt="A coffee tin sitting in a grown, fibrous insert inside a cardboard box, next to an empty insert showing its curved recess"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 55vw"
+              className="object-cover object-[70%_50%]"
+            />
+          </motion.div>
         </motion.div>
 
-        {exploring && !active && HOTSPOTS.map(h => (
-          <button
-            key={h.id}
-            onClick={() => setActive(h)}
-            className="absolute -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center focus-visible:outline focus-visible:outline-2"
-            style={{ left: `${h.x}%`, top: `${h.y}%`, backgroundColor: 'rgba(245,241,232,0.88)', border: `1px solid ${WARM_DARK}` }}
-            aria-label={`Show ${h.title.toLowerCase()}`}
-          >
-            {!reduce && (
-              <motion.span
-                className="absolute inset-0 rounded-full"
-                style={{ border: `1px solid ${CREAM}` }}
-                animate={{ scale: [1, 1.7], opacity: [0.9, 0] }}
-                transition={{ duration: 1.8, repeat: Infinity }}
-              />
-            )}
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: WARM_DARK }} />
-          </button>
-        ))}
+        {/* Soft light that follows the zoom for depth */}
+        <div className="pointer-events-none absolute inset-0 z-[1]" style={{ background: 'radial-gradient(120% 80% at 80% 10%, rgba(255,248,235,0.22), transparent 60%)' }} aria-hidden="true" />
+
+        <AnimatePresence>
+          {exploring && !active && HOTSPOTS.map((h, i) => (
+            <motion.button
+              key={h.id}
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.6 }}
+              transition={{ duration: reduce ? 0 : 0.35, delay: reduce ? 0 : i * 0.12 }}
+              onClick={() => setActive(h)}
+              className="absolute z-10 -ml-[22px] -mt-[22px] w-11 h-11 rounded-full flex items-center justify-center focus-visible:outline focus-visible:outline-2"
+              style={{ left: `${h.x}%`, top: `${h.y}%`, backgroundColor: 'rgba(245,241,232,0.9)', border: `1px solid ${WARM_DARK}` }}
+              aria-label={`Show ${h.title.toLowerCase()}`}
+            >
+              {!reduce && (
+                <motion.span
+                  className="absolute inset-0 rounded-full"
+                  style={{ border: `1px solid ${CREAM}` }}
+                  animate={{ scale: [1, 1.8], opacity: [0.9, 0] }}
+                  transition={{ duration: 1.8, repeat: Infinity }}
+                />
+              )}
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: WARM_DARK }} />
+            </motion.button>
+          ))}
+        </AnimatePresence>
 
         <button
           onClick={() => { setExploring(!exploring); setActive(null) }}
-          className="absolute top-3 right-3 uppercase tracking-[0.14em] text-[0.65rem] px-3.5 py-2"
-          style={{ backgroundColor: exploring ? CHARCOAL : 'rgba(245,241,232,0.92)', color: exploring ? CREAM : CHARCOAL }}
+          className="absolute z-20 top-3 right-3 uppercase tracking-[0.14em] text-[0.65rem] px-3.5 py-2 inline-flex items-center gap-2 focus-visible:outline focus-visible:outline-2"
+          style={{ backgroundColor: exploring ? CHARCOAL : 'rgba(245,241,232,0.94)', color: exploring ? CREAM : CHARCOAL }}
           aria-pressed={exploring}
         >
+          {!exploring && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: WARM_DARK }} aria-hidden="true" />}
           {exploring ? 'Close' : 'Explore the material'}
         </button>
-      </div>
+      </motion.div>
 
-      <AnimatePresence>
-          {active && (
-            <motion.div
-              key={active.id}
-              initial={reduce ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduce ? undefined : { opacity: 0 }}
-              className="relative mt-3 md:mt-0 md:absolute md:left-4 md:bottom-10 md:max-w-xs p-4"
-              style={{ backgroundColor: 'rgba(245,241,232,0.95)', border: BORDER }}
-              aria-live="polite"
-            >
-              <p className="font-display text-lg mb-1">{active.title}</p>
-              <p className="text-xs mb-3" style={{ lineHeight: 1.6, opacity: 0.8 }}>{active.text}</p>
-              <div className="flex gap-4 text-xs">
-                {HOTSPOTS.filter(h => h.id !== active.id).map(h => (
-                  <button key={h.id} onClick={() => setActive(h)} className="underline">{h.title}</button>
-                ))}
-                <button onClick={() => setActive(null)} className="underline" style={{ opacity: 0.6 }}>Full view</button>
-              </div>
-            </motion.div>
-          )}
+      <AnimatePresence mode="wait">
+        {active && (
+          <motion.div
+            key={active.id}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? undefined : { opacity: 0, y: 6 }}
+            transition={{ duration: 0.4, ease: EASE }}
+            className="relative z-20 mt-3 md:mt-0 md:absolute md:left-4 md:bottom-10 md:max-w-xs p-5"
+            style={{ backgroundColor: 'rgba(250,247,240,0.96)', border: BORDER, WebkitBackdropFilter: 'blur(6px)', backdropFilter: 'blur(6px)' }}
+            aria-live="polite"
+          >
+            <p className="uppercase text-[0.6rem] tracking-[0.2em] mb-1" style={{ opacity: 0.55 }}>
+              {HOTSPOTS.findIndex(h => h.id === active.id) + 1} / {HOTSPOTS.length}
+            </p>
+            <p className="font-display text-xl mb-1.5">{active.title}</p>
+            <p className="text-xs mb-3" style={{ lineHeight: 1.65, opacity: 0.8 }}>{active.text}</p>
+            <div className="flex gap-4 text-xs">
+              {HOTSPOTS.filter(h => h.id !== active.id).map(h => (
+                <button key={h.id} onClick={() => setActive(h)} className="underline underline-offset-4">{h.title} →</button>
+              ))}
+              <button onClick={() => setActive(null)} className="underline underline-offset-4" style={{ opacity: 0.6 }}>Full view</button>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
-      <figcaption className="mt-2 text-[0.7rem] uppercase tracking-[0.16em]" style={{ opacity: 0.5 }}>
+
+      <figcaption className="mt-3 text-[0.68rem] uppercase tracking-[0.18em] flex items-center gap-2" style={{ opacity: 0.55 }}>
+        <span className="inline-block w-6 h-px" style={{ backgroundColor: CHARCOAL }} aria-hidden="true" />
         AI concept illustration
       </figcaption>
     </figure>
   )
 }
+
+function ProgressRing({ value, size = 56 }: { value: number; size?: number }) {
+  const reduce = useReducedMotion()
+  const r = size / 2 - 3
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" className="-rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(26,23,20,0.1)" strokeWidth={2} />
+      <motion.circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={WARM_DARK}
+        strokeWidth={2}
+        strokeLinecap="round"
+        initial={false}
+        animate={{ pathLength: value }}
+        transition={{ duration: reduce ? 0 : 0.6, ease: EASE }}
+      />
+    </svg>
+  )
+}
+
+function ScoreRing({ score }: { score: number }) {
+  const reduce = useReducedMotion()
+  const [shown, setShown] = useState(reduce ? score : 0)
+  useEffect(() => {
+    if (reduce) { setShown(score); return }
+    let current = 0
+    const id = setInterval(() => { current += 1; setShown(Math.min(current, score)); if (current >= score) clearInterval(id) }, 110)
+    return () => clearInterval(id)
+  }, [score, reduce])
+  return (
+    <div className="relative w-52 h-52 md:w-60 md:h-60">
+      <svg viewBox="0 0 200 200" className="absolute inset-0 -rotate-90" aria-hidden="true">
+        <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(26,23,20,0.08)" strokeWidth="3" />
+        {Array.from({ length: 10 }).map((_, i) => (
+          <line
+            key={i}
+            x1="100" y1="6" x2="100" y2="14"
+            transform={`rotate(${i * 36} 100 100)`}
+            stroke={i < score ? WARM_DARK : 'rgba(26,23,20,0.18)'}
+            strokeWidth="1.5"
+          />
+        ))}
+        <motion.circle
+          cx="100" cy="100" r="88" fill="none" stroke={WARM_DARK} strokeWidth="3" strokeLinecap="round"
+          initial={{ pathLength: reduce ? score / 10 : 0 }}
+          animate={{ pathLength: score / 10 }}
+          transition={{ duration: reduce ? 0 : 1.4, ease: EASE, delay: 0.2 }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-display text-6xl md:text-7xl leading-none">{shown}</span>
+        <span className="uppercase text-label tracking-[0.2em] mt-3" style={{ opacity: 0.5 }}>out of 10</span>
+      </div>
+    </div>
+  )
+}
+
+/* ---------- Page ---------- */
 
 export default function GrowClient() {
   const reduce = useReducedMotion()
@@ -261,11 +496,13 @@ export default function GrowClient() {
   const [errorText, setErrorText] = useState('')
   const [product, setProduct] = useState('')
   const [answers, setAnswers] = useState<boolean[]>([])
+  const [lastAnswer, setLastAnswer] = useState<boolean | null>(null)
   const [copied, setCopied] = useState(false)
   const [sampleStatus, setSampleStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
   const formRef = useRef<HTMLElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const guideRef = useRef<HTMLElement>(null)
+  const resultRef = useRef<HTMLElement>(null)
 
   const step = answers.length
   const brief = phase === 'result' ? buildBrief(product, answers) : null
@@ -279,13 +516,13 @@ export default function GrowClient() {
     }
   }, [])
 
-  function scrollTo(el: HTMLElement | null) {
+  const scrollTo = useCallback((el: HTMLElement | null) => {
     el?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
-  }
+  }, [reduce])
 
   function goToForm() {
     scrollTo(formRef.current)
-    setTimeout(() => emailRef.current?.focus({ preventScroll: true }), reduce ? 0 : 450)
+    setTimeout(() => emailRef.current?.focus({ preventScroll: true }), reduce ? 0 : 500)
   }
 
   async function handleSignup(e: React.FormEvent) {
@@ -314,31 +551,49 @@ export default function GrowClient() {
       }
       setStatus('idle')
       setPhase('test')
-      setTimeout(() => scrollTo(guideRef.current), 50)
+      setTimeout(() => scrollTo(guideRef.current), 60)
     } catch {
       setStatus('error')
       setErrorText('We could not send the guide just now. Please try again, or email andy@numu.bio.')
     }
   }
 
-  function answer(value: boolean) {
+  const answer = useCallback((value: boolean) => {
+    if (answers.length >= QUESTIONS.length) return
     const next = [...answers, value]
+    setLastAnswer(value)
     setAnswers(next)
     if (next.length === QUESTIONS.length) {
       setPhase('result')
+      setTimeout(() => scrollTo(resultRef.current), 80)
       fetch('/api/grow-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, score: next.filter(Boolean).length, answers: next, product }),
       }).catch(() => undefined)
     }
-  }
+  }, [answers, email, product, scrollTo])
+
+  // Keyboard shortcuts during the test: Y / N, Backspace to go back.
+  useEffect(() => {
+    if (phase !== 'test') return
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (e.key === 'y' || e.key === 'Y') answer(true)
+      if (e.key === 'n' || e.key === 'N') answer(false)
+      if (e.key === 'Backspace') setAnswers(a => a.slice(0, -1))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [phase, answer])
 
   async function copyBrief() {
     if (!brief) return
     try {
       await navigator.clipboard.writeText(briefText(brief))
       setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
     } catch {
       setCopied(false)
     }
@@ -359,59 +614,71 @@ export default function GrowClient() {
     }
   }
 
-  // Always animate to visible; reduced motion only removes the duration.
-  const fade = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { duration: reduce ? 0 : 0.6 } }
+  const fadeUp = (delay = 0) => ({
+    initial: { opacity: 0, y: 18 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: reduce ? 0 : 0.8, delay: reduce ? 0 : delay, ease: EASE },
+  })
 
   return (
     <main className="relative min-h-screen font-sans overflow-x-hidden" style={{ backgroundColor: CREAM, color: CHARCOAL }}>
-      {/* The photograph as a soft background, washed in ivory for readability */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[120vh] overflow-hidden" aria-hidden="true">
-        <Image src={HERO_SRC} alt="" fill sizes="100vw" className="object-cover object-[60%_40%] blur-[2px] scale-105" />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(245,241,232,0.86) 0%, rgba(245,241,232,0.93) 55%, #F5F1E8 100%)' }} />
-      </div>
+      <ScrollHairline />
 
-      <header className="relative flex items-center justify-between px-5 md:px-12 py-5" style={{ borderBottom: BORDER }}>
+      {/* Photograph as a soft background, washed in ivory, with growing threads and grain */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[115vh] overflow-hidden" aria-hidden="true">
+        <Image src={HERO_SRC} alt="" fill sizes="100vw" className="object-cover object-[60%_40%] scale-110 blur-[3px]" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(245,241,232,0.84) 0%, rgba(245,241,232,0.9) 50%, #F5F1E8 100%)' }} />
+        <MyceliumThreads />
+      </div>
+      <div className="pointer-events-none fixed inset-0 z-40 opacity-[0.07] mix-blend-multiply" style={{ backgroundImage: GRAIN }} aria-hidden="true" />
+
+      <motion.header {...fadeUp(0)} className="relative z-10 flex items-center justify-between px-5 md:px-12 py-5" style={{ borderBottom: BORDER }}>
         <Link href="/" className="font-display text-xl tracking-wide">NUMU</Link>
         <span className="uppercase text-label tracking-[0.18em]" style={{ opacity: 0.6 }}>PALMYCO · Packaging pilot</span>
-      </header>
+      </motion.header>
 
-      <section className="relative grid lg:grid-cols-[0.9fr_1.1fr] gap-8 lg:gap-14 px-5 md:px-12 pt-8 md:pt-14 pb-10 max-w-7xl mx-auto items-center">
-        <motion.div {...fade}>
-          <p className="uppercase text-label tracking-[0.18em] mb-4" style={{ color: WARM_DARK }}>A 5-minute pilot guide</p>
-          <h1 className="font-display text-[2.6rem] leading-[1.03] sm:text-6xl xl:text-7xl mb-5">Can your packaging be grown?</h1>
-          <p className="text-base sm:text-lg max-w-lg mb-7" style={{ opacity: 0.82, lineHeight: 1.6 }}>
+      <section className="relative z-10 grid lg:grid-cols-[0.92fr_1.08fr] gap-10 lg:gap-16 px-5 md:px-12 pt-8 md:pt-16 pb-14 max-w-7xl mx-auto items-center">
+        <div>
+          <motion.p {...fadeUp(0.05)} className="uppercase text-label tracking-[0.2em] mb-5 flex items-center gap-3" style={{ color: WARM_DARK }}>
+            <span className="inline-block w-8 h-px" style={{ backgroundColor: WARM_DARK }} aria-hidden="true" />
+            A 5-minute pilot guide
+          </motion.p>
+          <RevealWords text="Can your packaging be grown?" className="font-display text-[2.7rem] leading-[1.02] sm:text-6xl xl:text-[5.2rem] mb-6 tracking-[-0.01em]" />
+          <motion.p {...fadeUp(0.7)} className="text-base sm:text-lg max-w-lg mb-8" style={{ opacity: 0.82, lineHeight: 1.6 }}>
             Pick one product. In five minutes, build a brief your team can use to decide whether to explore a grown insert.
-          </p>
-          <div className="flex flex-wrap items-center gap-5">
-            <button
-              onClick={goToForm}
-              className="uppercase tracking-[0.14em] text-xs px-7 py-4 transition-transform hover:-translate-y-0.5"
-              style={{ backgroundColor: CHARCOAL, color: CREAM }}
-            >
-              Get the free pilot guide
-            </button>
-            <button onClick={() => scrollTo(formRef.current)} className="text-sm underline underline-offset-4" style={{ opacity: 0.75 }}>
+          </motion.p>
+          <motion.div {...fadeUp(0.85)} className="flex flex-wrap items-center gap-6">
+            <ArrowButton onClick={goToForm}>Get the free pilot guide</ArrowButton>
+            <button onClick={() => scrollTo(formRef.current)} className="group text-sm pb-1 relative" style={{ opacity: 0.8 }}>
               See an example brief
+              <span className="absolute left-0 right-0 bottom-0 h-px origin-left transition-transform duration-300 group-hover:scale-x-50" style={{ backgroundColor: CHARCOAL }} aria-hidden="true" />
             </button>
-          </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={reduce ? { duration: 0 } : { duration: 0.8, delay: 0.1 }}>
+          </motion.div>
+        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: reduce ? 0 : 1.1, delay: reduce ? 0 : 0.25, ease: EASE }}
+        >
           <MaterialImage />
         </motion.div>
       </section>
+
+      <div className="relative z-10"><Marquee /></div>
 
       <AnimatePresence mode="wait">
         {phase === 'signup' && (
           <motion.section
             key="signup"
             ref={formRef}
-            exit={reduce ? undefined : { opacity: 0, y: -10 }}
-            className="relative px-5 md:px-12 py-12 max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-14 items-start scroll-mt-6"
+            exit={reduce ? undefined : { opacity: 0, y: -16, transition: { duration: 0.35 } }}
+            className="relative z-10 px-5 md:px-12 py-16 md:py-24 max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-start scroll-mt-6"
           >
             <BriefCard brief={null} example />
             <div>
-              <h2 className="font-display text-3xl mb-3">Build your own brief</h2>
-              <p className="text-sm mb-6 max-w-md" style={{ opacity: 0.75, lineHeight: 1.6 }}>
+              <p className="uppercase text-label tracking-[0.2em] mb-3" style={{ color: WARM_DARK }}>Your turn</p>
+              <h2 className="font-display text-4xl md:text-5xl leading-tight mb-4">Build your own brief</h2>
+              <p className="text-sm mb-7 max-w-md" style={{ opacity: 0.75, lineHeight: 1.7 }}>
                 Ten yes-or-no questions about one product. Your answers fill in a brief like the example, ready to copy for your team.
               </p>
               <form onSubmit={handleSignup} noValidate className="flex flex-col sm:flex-row gap-3 max-w-lg">
@@ -429,6 +696,7 @@ export default function GrowClient() {
                   ref={emailRef}
                   id="grow-email"
                   type="email"
+                  inputMode="email"
                   autoComplete="email"
                   value={email}
                   onChange={e => { setEmail(e.target.value); if (status === 'error') setStatus('idle') }}
@@ -436,17 +704,12 @@ export default function GrowClient() {
                   disabled={status === 'loading'}
                   aria-invalid={status === 'error'}
                   aria-describedby="grow-email-help grow-email-error"
-                  className="flex-1 px-5 py-4 bg-transparent outline-none text-sm focus-visible:outline focus-visible:outline-1"
-                  style={{ border: status === 'error' ? '1px solid #8a3b2a' : BORDER, backgroundColor: 'rgba(245,241,232,0.9)' }}
+                  className="flex-1 px-5 py-4 outline-none text-base sm:text-sm transition-shadow focus:shadow-[0_0_0_1px_#4A3F34]"
+                  style={{ border: status === 'error' ? '1px solid #8a3b2a' : BORDER, backgroundColor: 'rgba(250,247,240,0.95)', borderRadius: 0, WebkitAppearance: 'none' }}
                 />
-                <button
-                  type="submit"
-                  disabled={status === 'loading'}
-                  className="uppercase tracking-[0.14em] text-xs px-7 py-4"
-                  style={{ backgroundColor: CHARCOAL, color: CREAM, opacity: status === 'loading' ? 0.6 : 1 }}
-                >
+                <ArrowButton type="submit" disabled={status === 'loading'}>
                   {status === 'loading' ? 'Opening…' : 'Get the free pilot guide'}
-                </button>
+                </ArrowButton>
               </form>
               <p id="grow-email-help" className="text-xs mt-3" style={{ opacity: 0.6 }}>
                 Get the guide now, then two short follow-ups. Reply STOP any time.
@@ -454,7 +717,22 @@ export default function GrowClient() {
               <p id="grow-email-error" className="text-sm mt-2 min-h-[1.25rem]" style={{ color: '#8a3b2a' }} role="alert">
                 {status === 'error' ? errorText : ''}
               </p>
-              <p className="text-xs mt-4 max-w-md" style={{ opacity: 0.5, lineHeight: 1.6 }}>
+              <ol className="mt-8 space-y-3 max-w-md">
+                {['Pick one product', 'Answer ten yes-or-no questions', 'Copy your brief for the team'].map((s, i) => (
+                  <motion.li
+                    key={s}
+                    initial={{ opacity: 0, x: -8 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: reduce ? 0 : 0.5, delay: reduce ? 0 : i * 0.12 }}
+                    className="flex items-center gap-4 text-sm"
+                  >
+                    <span className="w-7 h-7 rounded-full flex items-center justify-center text-[0.7rem]" style={{ border: BORDER }}>{i + 1}</span>
+                    {s}
+                  </motion.li>
+                ))}
+              </ol>
+              <p className="text-xs mt-8 max-w-md" style={{ opacity: 0.5, lineHeight: 1.6 }}>
                 A screening guide, not a product claim. NUMU&apos;s protective packaging is in development, made in Dubai from regional agricultural waste.
               </p>
             </div>
@@ -465,11 +743,13 @@ export default function GrowClient() {
           <motion.section
             key="test"
             ref={guideRef}
-            {...fade}
-            className="relative px-5 md:px-12 py-12 max-w-3xl mx-auto scroll-mt-6"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reduce ? 0 : 0.6, ease: EASE }}
+            className="relative z-10 px-5 md:px-12 py-14 md:py-20 max-w-3xl mx-auto scroll-mt-6"
             aria-labelledby="guide-title"
           >
-            <p id="guide-title" className="uppercase text-label tracking-[0.18em] mb-5" style={{ color: WARM_DARK }}>
+            <p id="guide-title" className="uppercase text-label tracking-[0.2em] mb-6" style={{ color: WARM_DARK }}>
               Your pilot guide · check your inbox too
             </p>
             {step === 0 && (
@@ -484,100 +764,148 @@ export default function GrowClient() {
                   onChange={e => setProduct(e.target.value)}
                   maxLength={120}
                   placeholder="For example: coffee gift tin"
-                  className="mt-2 w-full px-5 py-3 bg-transparent outline-none text-sm"
-                  style={{ border: BORDER }}
+                  className="mt-2 w-full px-5 py-3.5 outline-none text-base sm:text-sm focus:shadow-[0_0_0_1px_#4A3F34]"
+                  style={{ border: BORDER, backgroundColor: 'rgba(250,247,240,0.95)', borderRadius: 0, WebkitAppearance: 'none' }}
                 />
               </div>
             )}
-            <div className="flex gap-1.5 mb-6" aria-hidden="true">
-              {QUESTIONS.map((_, i) => (
-                <div key={i} className="h-1 flex-1 transition-colors duration-300" style={{ backgroundColor: i < step ? (answers[i] ? WARM_DARK : WARM_MID) : 'rgba(26,23,20,0.12)' }} />
-              ))}
-            </div>
-            <p className="uppercase text-label tracking-[0.18em] mb-3" style={{ opacity: 0.55 }} aria-live="polite">
-              Question {step + 1} of 10
-            </p>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={step}
-                initial={reduce ? false : { opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={reduce ? undefined : { opacity: 0, x: -24 }}
-                transition={{ duration: 0.25 }}
-                className="font-display text-2xl sm:text-4xl leading-tight mb-10 min-h-[6.5rem]"
-              >
-                {QUESTIONS[step]}
-              </motion.p>
-            </AnimatePresence>
-            <div className="flex flex-wrap gap-3">
-              <button onClick={() => answer(true)} className="uppercase tracking-[0.14em] text-xs px-10 py-4" style={{ backgroundColor: CHARCOAL, color: CREAM }}>Yes</button>
-              <button onClick={() => answer(false)} className="uppercase tracking-[0.14em] text-xs px-10 py-4" style={{ border: BORDER }}>No</button>
-              {step > 0 && (
-                <button onClick={() => setAnswers(answers.slice(0, -1))} className="text-xs underline ml-2" style={{ opacity: 0.6 }}>Back</button>
-              )}
+
+            <div className="relative p-6 md:p-10 shadow-[0_30px_70px_-35px_rgba(26,23,20,0.4)]" style={{ border: BORDER, backgroundColor: 'rgba(250,247,240,0.96)' }}>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative">
+                  <ProgressRing value={step / QUESTIONS.length} />
+                  <span className="absolute inset-0 flex items-center justify-center text-xs font-medium" aria-live="polite">
+                    {Math.min(step + 1, 10)}/10
+                  </span>
+                </div>
+                <div className="flex gap-1 flex-1" aria-hidden="true">
+                  {QUESTIONS.map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="h-1 flex-1 origin-left"
+                      animate={{ backgroundColor: i < step ? (answers[i] ? WARM_DARK : WARM_MID) : 'rgba(26,23,20,0.1)', scaleY: i === step ? 1.8 : 1 }}
+                      transition={{ duration: reduce ? 0 : 0.3 }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <AnimatePresence mode="wait" custom={lastAnswer}>
+                <motion.p
+                  key={step}
+                  custom={lastAnswer}
+                  initial={reduce ? false : { opacity: 0, y: 28 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduce ? undefined : { opacity: 0, x: lastAnswer ? 40 : -40, transition: { duration: 0.22 } }}
+                  transition={{ duration: 0.45, ease: EASE }}
+                  className="font-display text-2xl sm:text-[2.3rem] leading-tight mb-10 min-h-[7rem]"
+                >
+                  {QUESTIONS[Math.min(step, QUESTIONS.length - 1)]}
+                </motion.p>
+              </AnimatePresence>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => answer(true)} className="uppercase tracking-[0.14em] text-xs px-10 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" style={{ backgroundColor: CHARCOAL, color: CREAM }}>
+                  Yes
+                </motion.button>
+                <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => answer(false)} className="uppercase tracking-[0.14em] text-xs px-10 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" style={{ border: BORDER }}>
+                  No
+                </motion.button>
+                {step > 0 && (
+                  <button onClick={() => setAnswers(answers.slice(0, -1))} className="text-xs underline underline-offset-4 ml-2" style={{ opacity: 0.6 }}>Back</button>
+                )}
+                <span className="hidden md:inline ml-auto text-[0.7rem] uppercase tracking-[0.16em]" style={{ opacity: 0.4 }}>Keys: Y / N</span>
+              </div>
             </div>
           </motion.section>
         )}
 
         {phase === 'result' && brief && (
-          <motion.section key="result" {...fade} className="relative px-5 md:px-12 py-12 max-w-5xl mx-auto" aria-live="polite">
-            <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-8 lg:gap-12 items-start">
-              <div>
-                <p className="uppercase text-label tracking-[0.18em] mb-3" style={{ color: WARM_DARK }}>Your growability score</p>
-                <p className="font-display text-7xl md:text-8xl leading-none mb-2">
-                  <CountUp to={brief.score} instant={!!reduce} /><span className="text-3xl" style={{ opacity: 0.4 }}> / 10</span>
-                </p>
-                <p className="font-display text-3xl mb-4">{brief.label}</p>
-                <p className="text-sm" style={{ opacity: 0.8, lineHeight: 1.65 }}>
-                  {(BANDS.find(b => brief.score >= b.min) ?? BANDS[2]).text}
-                </p>
+          <motion.section
+            key="result"
+            ref={resultRef}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reduce ? 0 : 0.7, ease: EASE }}
+            className="relative z-10 px-5 md:px-12 py-14 md:py-20 max-w-6xl mx-auto scroll-mt-6"
+            aria-live="polite"
+          >
+            <div className="grid lg:grid-cols-[0.75fr_1.25fr] gap-10 lg:gap-16 items-start">
+              <div className="flex flex-col items-start">
+                <p className="uppercase text-label tracking-[0.2em] mb-5" style={{ color: WARM_DARK }}>Your growability score</p>
+                <ScoreRing score={brief.score} />
+                <motion.p {...fadeUp(1.3)} className="font-display text-4xl mt-6 mb-3">{brief.label}</motion.p>
+                <motion.p {...fadeUp(1.45)} className="text-sm max-w-sm" style={{ opacity: 0.8, lineHeight: 1.7 }}>
+                  {bandFor(brief.score).text}
+                </motion.p>
               </div>
               <div>
                 <BriefCard brief={brief} />
-                <div className="flex flex-wrap gap-4 items-center mt-4">
-                  <button onClick={copyBrief} className="uppercase tracking-[0.14em] text-xs px-6 py-3.5" style={{ backgroundColor: CHARCOAL, color: CREAM }}>
-                    {copied ? 'Brief copied' : 'Copy brief for my team'}
-                  </button>
-                  <button onClick={() => { setAnswers([]); setProduct(''); setCopied(false); setPhase('test') }} className="text-xs underline" style={{ opacity: 0.6 }}>
+                <div className="flex flex-wrap gap-5 items-center mt-5">
+                  <ArrowButton onClick={copyBrief}>{copied ? 'Brief copied' : 'Copy brief for my team'}</ArrowButton>
+                  <button
+                    onClick={() => { setAnswers([]); setProduct(''); setCopied(false); setLastAnswer(null); setPhase('test'); setTimeout(() => scrollTo(guideRef.current), 60) }}
+                    className="text-xs underline underline-offset-4"
+                    style={{ opacity: 0.6 }}
+                  >
                     Test another product
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4 mt-12">
-              <div className="p-6" style={{ border: BORDER }}>
-                <p className="font-display text-2xl mb-2">Free sample box</p>
-                <p className="text-sm mb-5" style={{ opacity: 0.75, lineHeight: 1.6 }}>Touch PALMYCO and judge it with your team. We send 5 boxes a month.</p>
-                <button
-                  onClick={requestSampleBox}
-                  className="uppercase tracking-[0.14em] text-xs px-6 py-3.5"
-                  style={{ backgroundColor: CHARCOAL, color: CREAM, opacity: sampleStatus === 'loading' ? 0.6 : 1 }}
+            <div className="grid md:grid-cols-2 gap-5 mt-16">
+              {[
+                {
+                  title: 'Free sample box',
+                  text: 'Touch PALMYCO and judge it with your team. We send 5 boxes a month.',
+                  action: (
+                    <ArrowButton onClick={requestSampleBox} disabled={sampleStatus === 'loading'}>
+                      {sampleStatus === 'sent' ? 'Sample box requested' : 'Request a free sample box'}
+                    </ArrowButton>
+                  ),
+                },
+                {
+                  title: 'Bespoke prototype · AED 500',
+                  text: 'One product, grown in Dubai in 4 to 5 weeks. Credited in full against your first order (subject to production capacity).',
+                  action: (
+                    <a
+                      href="mailto:andy@numu.bio?subject=Bespoke%20prototype%20request%20(AED%20500)"
+                      className="group inline-flex items-center gap-3 uppercase tracking-[0.14em] text-xs px-7 py-4 focus-visible:outline focus-visible:outline-2"
+                      style={{ border: BORDER }}
+                    >
+                      Request a prototype <span className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">→</span>
+                    </a>
+                  ),
+                },
+              ].map((card, i) => (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-10% 0px' }}
+                  whileHover={reduce ? undefined : { y: -4 }}
+                  transition={{ duration: reduce ? 0 : 0.6, delay: reduce ? 0 : i * 0.12, ease: EASE }}
+                  className="p-7 md:p-8 transition-shadow hover:shadow-[0_30px_60px_-35px_rgba(26,23,20,0.45)]"
+                  style={{ border: BORDER, backgroundColor: 'rgba(250,247,240,0.9)' }}
                 >
-                  {sampleStatus === 'sent' ? 'Sample box requested' : 'Request a free sample box'}
-                </button>
-                {sampleStatus === 'error' && <p className="text-xs mt-2" style={{ color: '#8a3b2a' }} role="alert">Please try again, or email andy@numu.bio.</p>}
-              </div>
-              <div className="p-6" style={{ border: BORDER }}>
-                <p className="font-display text-2xl mb-2">Bespoke prototype · AED 500</p>
-                <p className="text-sm mb-5" style={{ opacity: 0.75, lineHeight: 1.6 }}>
-                  One product, grown in Dubai in 4 to 5 weeks. Credited in full against your first order (subject to production capacity).
-                </p>
-                <a href="mailto:andy@numu.bio?subject=Bespoke%20prototype%20request%20(AED%20500)" className="inline-block uppercase tracking-[0.14em] text-xs px-6 py-3.5" style={{ border: BORDER }}>
-                  Request a prototype
-                </a>
-              </div>
+                  <p className="font-display text-3xl mb-3">{card.title}</p>
+                  <p className="text-sm mb-6" style={{ opacity: 0.75, lineHeight: 1.7 }}>{card.text}</p>
+                  {card.action}
+                </motion.div>
+              ))}
             </div>
-            <p className="text-sm mt-8 max-w-2xl" style={{ opacity: 0.7, lineHeight: 1.6 }}>
+            {sampleStatus === 'error' && <p className="text-sm mt-3" style={{ color: '#8a3b2a' }} role="alert">Please try again, or email andy@numu.bio.</p>}
+            <p className="text-sm mt-10 max-w-2xl" style={{ opacity: 0.7, lineHeight: 1.7 }}>
               Want to see your own product in a grown insert? Reply to our email with a photo and its dimensions, and Andy will create a concept illustration.
             </p>
           </motion.section>
         )}
       </AnimatePresence>
 
-      <footer className="relative px-5 md:px-12 py-8 text-xs flex justify-between" style={{ borderTop: BORDER, opacity: 0.6 }}>
-        <span>Grown, not manufactured. NUMU, Dubai.</span>
-        <Link href="/" className="underline">numu.bio</Link>
+      <footer className="relative z-10 px-5 md:px-12 py-10 text-xs flex flex-wrap gap-4 justify-between items-center" style={{ borderTop: BORDER }}>
+        <span className="font-display text-base">Grown, not manufactured.</span>
+        <span style={{ opacity: 0.6 }}>NUMU · Dubai, UAE · <Link href="/" className="underline underline-offset-4">numu.bio</Link></span>
       </footer>
     </main>
   )
