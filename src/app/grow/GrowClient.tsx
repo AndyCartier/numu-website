@@ -721,20 +721,20 @@ export default function GrowClient() {
         <span className="uppercase text-label tracking-[0.18em]" style={{ opacity: 0.6 }}>PALMYCO · Packaging pilot</span>
       </motion.header>
 
-      <section className="relative z-10 grid lg:grid-cols-[0.92fr_1.08fr] gap-10 lg:gap-16 px-5 md:px-12 pt-8 md:pt-16 pb-14 max-w-7xl mx-auto items-center">
+      <section className="relative z-10 grid lg:grid-cols-[0.92fr_1.08fr] gap-6 lg:gap-16 px-5 md:px-12 pt-8 md:pt-16 pb-14 max-w-7xl mx-auto items-center">
         <div>
           <motion.p {...fadeUp(0.05)} className="uppercase text-label tracking-[0.2em] mb-5 flex items-center gap-3" style={{ color: WARM_DARK }}>
             <span className="inline-block w-8 h-px" style={{ backgroundColor: WARM_DARK }} aria-hidden="true" />
-            A 5-minute pilot guide
+            Free packaging pilot brief · 5 minutes
           </motion.p>
-          <RevealWords text="Can your packaging be grown?" className="font-display text-[2.7rem] leading-[1.02] sm:text-6xl xl:text-[5.2rem] mb-6 tracking-[-0.01em]" />
-          <motion.p {...fadeUp(0.7)} className="text-base sm:text-lg max-w-lg mb-8" style={{ opacity: 0.82, lineHeight: 1.6 }}>
-            Pick one product. In five minutes, build a brief your team can use to decide whether to explore a grown insert.
+          <RevealWords text="Which product should you test first?" className="font-display text-[2.7rem] leading-[1.02] sm:text-6xl xl:text-[5.2rem] mb-6 tracking-[-0.01em]" />
+          <motion.p {...fadeUp(0.7)} className="text-base sm:text-lg max-w-lg mb-5 md:mb-8" style={{ opacity: 0.82, lineHeight: 1.6 }}>
+            Could a grown mycelium insert replace the foam or plastic around your product? Answer a few questions and get a one-page decision brief you can take to your team.
           </motion.p>
           <motion.div {...fadeUp(0.85)} className="flex flex-wrap items-center gap-6">
-            <ArrowButton onClick={goToForm}>Build my packaging brief</ArrowButton>
+            <ArrowButton onClick={goToForm}>Get my free brief</ArrowButton>
             <button onClick={() => scrollTo(formRef.current)} className="group text-sm pb-1 relative" style={{ opacity: 0.8 }}>
-              See an example brief
+              See the full example
               <span className="absolute left-0 right-0 bottom-0 h-px origin-left transition-transform duration-300 group-hover:scale-x-50" style={{ backgroundColor: CHARCOAL }} aria-hidden="true" />
             </button>
           </motion.div>
@@ -745,6 +745,12 @@ export default function GrowClient() {
           transition={{ duration: reduce ? 0 : 1.1, delay: reduce ? 0 : 0.25, ease: EASE }}
         >
           <MaterialImage />
+          <aside aria-label="Preview of an example packaging brief" className="relative mx-0 md:mx-4 mt-3 p-4 md:p-5"
+            style={{ border: BORDER, backgroundColor: '#faf7f0', boxShadow: '0 18px 42px -28px rgba(26,23,20,0.5)' }}>
+            <p className="uppercase text-label tracking-[0.16em] mb-2" style={{ color: WARM_DARK }}>Example brief · Coffee gift tin</p>
+            <p className="font-display text-xl md:text-2xl leading-tight">Promising for a small trial.</p>
+            <p className="mt-2 text-sm leading-relaxed">The simple shape makes it a candidate. Before pitching the switch, weigh the current foam insert so your team has a baseline.</p>
+          </aside>
         </motion.div>
       </section>
 
@@ -760,11 +766,15 @@ export default function GrowClient() {
           >
             <BriefCard brief={null} example />
             <div>
-              <p className="uppercase text-label tracking-[0.2em] mb-3" style={{ color: WARM_DARK }}>Your turn</p>
-              <h2 className="font-display text-4xl md:text-5xl leading-tight mb-4">Build your own brief</h2>
-              <p className="text-sm mb-7 max-w-md" style={{ opacity: 0.75, lineHeight: 1.7 }}>
-                Pick one product that uses a foam or plastic insert. In five minutes, get a one-page brief showing what makes it a pilot candidate, what to check and what to do next.
+              <h2 className="font-display text-4xl md:text-5xl leading-tight mb-4">Bring a recommendation to your next packaging meeting</h2>
+              <p className="text-sm mb-5 max-w-md leading-relaxed">
+                Pick one product that uses a foam or plastic insert. Your answers turn into a brief with three things your team can act on.
               </p>
+              <dl className="mb-7 max-w-md space-y-3 border-y border-current/15 py-4 text-sm">
+                <div><dt className="font-semibold">A fit recommendation</dt><dd>Start here, check a constraint first, or pick a better product.</dd></div>
+                <div><dt className="font-semibold">The biggest unknown</dt><dd>Find out what to resolve before committing to a prototype.</dd></div>
+                <div><dt className="font-semibold">One next action</dt><dd>Get a concrete step you can assign and a brief you can copy to your team.</dd></div>
+              </dl>
               <form onSubmit={handleSignup} noValidate className="flex flex-col sm:flex-row gap-3 max-w-lg">
                 <input
                   type="text"
@@ -792,33 +802,19 @@ export default function GrowClient() {
                   style={{ border: status === 'error' ? '1px solid #8a3b2a' : BORDER, backgroundColor: 'rgba(250,247,240,0.95)', borderRadius: 0, WebkitAppearance: 'none' }}
                 />
                 <ArrowButton type="submit" disabled={status === 'loading'} className="shrink-0">
-                  {status === 'loading' ? 'Building…' : 'Build my packaging brief'}
+                  {status === 'loading' ? 'Opening…' : 'Get my free brief'}
                 </ArrowButton>
               </form>
               <p id="grow-email-help" className="text-xs mt-3" style={{ opacity: 0.6 }}>
-                Get the guide now, then two short follow-ups. Reply STOP any time.
-              </p>
-              <p className="text-xs mt-2 max-w-md" style={{ opacity: 0.6, lineHeight: 1.6 }}>
-                Want to see the fit? Reply to the welcome email with a product photo and dimensions, and Andy will create a concept illustration.
+                Start immediately. We’ll email your access link and two short follow-ups. Reply STOP any time.
               </p>
               <p id="grow-email-error" className="text-sm mt-2 min-h-[1.25rem]" style={{ color: '#8a3b2a' }} role="alert">
                 {status === 'error' ? errorText : ''}
               </p>
-              <ol className="mt-8 space-y-3 max-w-md">
-                {['Pick one product', 'Answer ten yes-or-no questions', 'Copy your brief for the team'].map((s, i) => (
-                  <motion.li
-                    key={s}
-                    initial={{ opacity: 0, x: -8 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: reduce ? 0 : 0.5, delay: reduce ? 0 : i * 0.12 }}
-                    className="flex items-center gap-4 text-sm"
-                  >
-                    <span className="w-7 h-7 rounded-full flex items-center justify-center text-[0.7rem]" style={{ border: BORDER }}>{i + 1}</span>
-                    {s}
-                  </motion.li>
-                ))}
-              </ol>
+              <div className="mt-5 max-w-md border-l pl-4" style={{ borderColor: WARM_DARK }}>
+                <p className="font-display text-xl mb-1">See how it could fit your product</p>
+                <p className="text-sm leading-relaxed">Reply to the welcome email with a photo and dimensions. Andy will create an AI concept illustration of a grown insert shaped around it.</p>
+              </div>
               <p className="text-xs mt-8 max-w-md" style={{ opacity: 0.5, lineHeight: 1.6 }}>
                 A screening guide, not a product claim. NUMU&apos;s protective packaging is in development, made in Dubai from regional agricultural waste.
               </p>
