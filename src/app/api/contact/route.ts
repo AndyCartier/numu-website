@@ -4,8 +4,9 @@ import { join } from 'path'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getAllowedOriginHosts, isLocalDevelopmentHost } from '@/lib/site'
-import { recordLead, type LeadSource } from '@/lib/leads'
-import { growDelays, growEmailOne, growEmailThree, growEmailTwo, requestAutoReply } from '@/lib/growEmails'
+import { findOrCreateGrowLead, growSequenceSent, recordGrowSequence, recordLead, type LeadSource } from '@/lib/leads'
+import { growDelays, growEmailOne, growEmailThree, growEmailTwo, guideUrl, requestAutoReply } from '@/lib/growEmails'
+import { createGuideToken } from '@/lib/guideLink'
 
 const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL || 'andy@numu.bio'
 const CONTACT_BCC_EMAIL = process.env.CONTACT_BCC_EMAIL || ''
@@ -46,6 +47,80 @@ const LEAD_SOURCE: Record<keyof typeof REQUEST_META, LeadSource> = {
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, ch => `&#${ch.charCodeAt(0)};`)
+}
+
+// One grow signup per email at a time on this instance, so double submits cannot race.
+const growLocks = new Set<string>()
+
+// Grow test signup: success means the lead is saved. Email 1 is sent once; emails 2 and 3
+// are scheduled once. Retries and returning visitors never restart the sequence.
+async function handleGrowSignup(email: string, source: string) {
+  const token = createGuideToken(email)
+  if (growLocks.has(email)) return json({ ok: true, emailSent: true, pending: true, token })
+  growLocks.add(email)
+  try {
+    const signupAt = new Date()
+    const lead = await findOrCreateGrowLead(
+      email,
+      `Website request: grow_test. Page source tag: ${source || 'direct'}. Submitted ${signupAt.toISOString()}.`,
+    )
+    if (!lead) return json({ error: 'Could not save your request' }, 503)
+
+    if (!lead.created && (await growSequenceSent(lead.id))) {
+      return json({ ok: true, returning: true, emailSent: true, token })
+    }
+    if (!process.env.RESEND_API_KEY) return json({ ok: true, emailSent: false, token })
+
+    const resend = getResend()
+    const delays = growDelays(email)
+    const sequence = [
+      { email: growEmailOne(guideUrl(token)), sendAt: null, tag: 'grow_email_1' },
+      { email: growEmailTwo(), sendAt: new Date(signupAt.getTime() + delays.second), tag: 'grow_email_2' },
+      { email: growEmailThree(signupAt), sendAt: new Date(signupAt.getTime() + delays.third), tag: 'grow_email_3' },
+    ]
+    const outcomes: string[] = []
+    let welcomeSent = false
+    for (const step of sequence) {
+      const result = await resend.emails
+        .send({
+          from: FOUNDER_FROM_EMAIL,
+          to: [email],
+          replyTo: CONTACT_TO_EMAIL,
+          subject: step.email.subject,
+          text: step.email.text,
+          html: step.email.html,
+          ...(step.sendAt ? { scheduledAt: step.sendAt.toISOString() } : {}),
+          headers: { 'X-Entity-Ref-ID': randomUUID() },
+          tags: [{ name: 'request_type', value: step.tag }, { name: 'source', value: sanitizeSourceTag(source) }],
+        })
+        .catch((e: unknown) => ({ data: null, error: { message: String(e) } }))
+      const sent = !result.error
+      if (step.tag === 'grow_email_1') welcomeSent = sent
+      outcomes.push(`${step.tag} ${sent ? (step.sendAt ? `scheduled ${step.sendAt.toISOString()}` : 'sent') : 'FAILED'}`)
+      if (!welcomeSent) break // never schedule follow-ups without the welcome email
+    }
+    if (welcomeSent) {
+      await recordGrowSequence(lead.id, `${outcomes.join('; ')}${delays.fast ? ' (fast test timing)' : ''}`)
+    }
+
+    const safeEmail = escapeHtml(email)
+    await resend.emails
+      .send({
+        from: RESEND_FROM_EMAIL,
+        to: [CONTACT_TO_EMAIL],
+        replyTo: email,
+        subject: `Growability test sign-up — ${email}`,
+        text: `New growability test sign-up\n\nFrom: ${email}\nSource: ${source || 'direct'}\nTime: ${signupAt.toUTCString()}\nLead saved: yes\nSequence: ${outcomes.join('; ')}`,
+        html: `<div style="font-family:Arial,sans-serif;color:#1a1714;"><p style="margin:0 0 12px;"><strong>New growability test sign-up</strong></p><p style="margin:0 0 6px;">From: ${safeEmail}</p><p style="margin:0 0 6px;">Lead saved: yes</p><p style="margin:0;color:#6f6458;">Sequence: ${escapeHtml(outcomes.join('; '))}</p></div>`,
+        headers: { 'X-Entity-Ref-ID': randomUUID() },
+        tags: [{ name: 'request_type', value: 'grow_test' }, { name: 'source', value: sanitizeSourceTag(source) }],
+      })
+      .catch(() => undefined)
+
+    return json({ ok: true, emailSent: welcomeSent, token })
+  } finally {
+    growLocks.delete(email)
+  }
 }
 
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
@@ -218,6 +293,8 @@ export async function POST(req: Request) {
   const meta = REQUEST_META[requestType as keyof typeof REQUEST_META]
   if (!meta) return json({ error: 'Invalid request type' }, 400)
 
+  if (requestType === 'grow_test') return handleGrowSignup(email, source)
+
   // Store every request in the NUMU pipeline first; storage never blocks email.
   const storedInPipeline = await recordLead({
     email,
@@ -274,43 +351,6 @@ export async function POST(req: Request) {
           headers: { 'X-Entity-Ref-ID': randomUUID(), 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
           tags: [{ name: 'request_type', value: 'investor_deck_outbound' }, { name: 'source', value: sourceTag }],
         })
-      }
-    } else if (requestType === 'grow_test') {
-      const signupAt = new Date()
-      const delays = growDelays()
-      const sequence = [
-        { email: growEmailOne(), sendAt: null, tag: 'grow_email_1' },
-        { email: growEmailTwo(), sendAt: new Date(signupAt.getTime() + delays.second), tag: 'grow_email_2' },
-        { email: growEmailThree(signupAt), sendAt: new Date(signupAt.getTime() + delays.third), tag: 'grow_email_3' },
-      ]
-      const safeEmail = escapeHtml(email)
-
-      // Notification to Andy
-      await resend.emails.send({
-        from: RESEND_FROM_EMAIL,
-        to: [CONTACT_TO_EMAIL],
-        replyTo: email,
-        subject: `Growability test sign-up — ${email}`,
-        text: `${meta.heading}\n\nFrom: ${email}\nSource: ${source || 'direct'}\nTime: ${timestamp}\nStored in pipeline: ${storedInPipeline ? 'yes' : 'NO'}\n\n${meta.followUp}`,
-        html: `<div style="font-family:Arial,sans-serif;color:#1a1714;"><p style="margin:0 0 12px;"><strong>${meta.heading}</strong></p><p style="margin:0 0 6px;">From: ${safeEmail}</p><p style="margin:0 0 6px;">Stored in pipeline: ${storedInPipeline ? 'yes' : 'NO'}</p><p style="margin:0;color:#6f6458;">${meta.followUp}</p></div>`,
-        headers: { 'X-Entity-Ref-ID': messageId },
-        tags: [{ name: 'request_type', value: 'grow_test' }, { name: 'source', value: sourceTag }],
-      })
-
-      // Sequence to the visitor: email 1 now, emails 2 and 3 scheduled
-      for (const step of sequence) {
-        const result = await resend.emails.send({
-          from: FOUNDER_FROM_EMAIL,
-          to: [email],
-          replyTo: CONTACT_TO_EMAIL,
-          subject: step.email.subject,
-          text: step.email.text,
-          html: step.email.html,
-          ...(step.sendAt ? { scheduledAt: step.sendAt.toISOString() } : {}),
-          headers: { 'X-Entity-Ref-ID': randomUUID() },
-          tags: [{ name: 'request_type', value: step.tag }, { name: 'source', value: sourceTag }],
-        })
-        if (result.error && !step.sendAt) throw new Error(result.error.message)
       }
     } else {
       // Standard notification for project / samples

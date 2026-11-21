@@ -8,8 +8,13 @@ import { SITE_URL } from '@/lib/site'
 const TRUE_RESULT_LINE = ''
 
 // Images are served from the live site, so they appear once this branch is deployed.
-const HEADER_IMAGE = `${SITE_URL}/email/numu-email-header.jpg`
-const FOOTER_IMAGE = `${SITE_URL}/email/numu-email-footer.jpg`
+const EMAIL_ASSET_BASE = process.env.EMAIL_ASSET_BASE || 'https://www.numu.bio'
+const HEADER_IMAGE = `${EMAIL_ASSET_BASE}/email/numu-email-header.jpg`
+const FOOTER_IMAGE = `${EMAIL_ASSET_BASE}/email/numu-email-footer.jpg`
+
+export function guideUrl(token: string | null) {
+  return token ? `${SITE_URL}/grow?guide=${encodeURIComponent(token)}` : `${SITE_URL}/grow`
+}
 
 const SIGN_OFF_TEXT = 'Andy Cartier\nCEO & Founder, NUMU\nandy@numu.bio'
 const GROW_FOOTER_TEXT = 'You signed up at numu.bio/grow. Reply STOP to unsubscribe. NUMU, Dubai, UAE.'
@@ -47,9 +52,15 @@ function plain(paragraphs: string[], footerText: string) {
   return [...paragraphs.map(p => p.replace(/<[^>]+>/g, '')), SIGN_OFF_TEXT, footerText].join('\n\n')
 }
 
-export function growDelays() {
-  const unitMs = process.env.GROW_EMAIL_DELAY_UNIT === 'minutes' ? 60_000 : 86_400_000
-  return { second: 2 * unitMs, third: 4 * unitMs }
+// Day 2 and day 4 by default. Minute timing (screenshot evidence) applies only to the
+// addresses listed in GROW_FAST_SEQUENCE_EMAILS, so real subscribers always get days.
+export function growDelays(email: string) {
+  const fast = (process.env.GROW_FAST_SEQUENCE_EMAILS ?? '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+  const unitMs = fast.includes(email.toLowerCase()) ? 60_000 : 86_400_000
+  return { second: 2 * unitMs, third: 4 * unitMs, fast: unitMs === 60_000 }
 }
 
 export function deadlineLabel(signupAt: Date) {
@@ -59,18 +70,17 @@ export function deadlineLabel(signupAt: Date) {
   })
 }
 
-export function growEmailOne(): Email {
-  const guideUrl = `${SITE_URL}/grow`
+export function growEmailOne(link: string): Email {
   const paragraphs = [
     'Hello,',
-    `Thanks for signing up. Your pilot guide is here: <a href="${guideUrl}" style="color:#4a3f34;">${guideUrl.replace(/^https?:\/\//, '')}</a>`,
+    `Thanks for signing up. <a href="${link}" style="color:#4a3f34;font-weight:bold;">Open your pilot guide</a>. The link is yours: it opens the guide on any device, without signing up again.`,
     'Pick one product, answer ten yes-or-no questions, and you get a one-page brief your team can use to decide whether to explore a grown insert.',
     'Who we are: NUMU is a Dubai company. We are developing protective packaging grown from PALMYCO, our material made from regional agricultural waste, shaped to fit your product.',
     'Want to see your own product in a grown insert? Reply with a photo and its dimensions, and I’ll create a concept illustration.',
   ]
   return {
     subject: 'Your pilot guide is ready',
-    text: plain(paragraphs, GROW_FOOTER_TEXT).replace(guideUrl.replace(/^https?:\/\//, ''), guideUrl),
+    text: plain(paragraphs, GROW_FOOTER_TEXT).replace('Open your pilot guide.', `Open your pilot guide: ${link}`),
     html: layout(paragraphs, GROW_FOOTER_TEXT),
   }
 }

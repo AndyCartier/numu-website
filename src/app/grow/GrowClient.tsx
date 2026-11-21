@@ -19,7 +19,8 @@ const CREAM = '#F5F1E8'
 const WARM_MID = '#B29B7F'
 const WARM_DARK = '#4A3F34'
 const BORDER = '1px solid rgba(26,23,20,0.16)'
-const HERO_SRC = '/images/grow/mycelium-coffee-insert-concept.jpg'
+const HERO_SRC = '/images/grow/mycelium-collection-floor-concept.jpg'
+const EXAMPLE_SRC = '/images/grow/mycelium-coffee-insert-concept.jpg'
 const EASE = [0.22, 1, 0.36, 1] as const
 
 // Film grain as an inline SVG (data: images are allowed by the site's CSP).
@@ -75,14 +76,20 @@ const BANDS = [
 ]
 
 const HOTSPOTS = [
-  { id: 'edge', x: 30, y: 47, title: 'The fibrous edge', text: 'PALMYCO is regional plant fibre bound by mycelium. This is the surface your team would touch in a sample box.' },
-  { id: 'recess', x: 63, y: 62, title: 'The fitted recess', text: 'In this concept the recess follows the curve of the tin, so the product sits snugly in one grown piece.' },
+  { id: 'edge', x: 19.5, y: 47.5, title: 'The fibrous edge', text: 'PALMYCO is regional plant fibre bound by mycelium. This is the surface your team would touch in a sample box.' },
+  { id: 'recess', x: 49.5, y: 48, title: 'The fitted recess', text: 'In this concept each recess follows its product: here, three jars sit apart in their own pockets.' },
 ] as const
 
 const MARQUEE = ['Made in Dubai', 'Grown from regional agricultural waste', 'Shaped to fit one product', '5 free sample boxes a month', 'Prototype in 4 to 5 weeks']
 
 type Phase = 'signup' | 'test' | 'result'
-type Brief = { product: string; score: number; label: string; signal: string; unknown: string; step: string; timing: string | null }
+type Brief = { product: string; score: number; label: string; text: string; signal: string; unknown: string; step: string; timing: string | null }
+
+// Without a foam or plastic insert today there is nothing to compare, whatever the score.
+const NO_INSERT = {
+  label: 'Choose another product',
+  text: 'This guide compares a grown insert with a foam or plastic one. This product has no foam or plastic insert today, so choose another product for this comparison.',
+}
 
 function bandFor(score: number) {
   return BANDS.find(b => score >= b.min) ?? BANDS[2]
@@ -90,12 +97,14 @@ function bandFor(score: number) {
 
 function buildBrief(product: string, answers: boolean[]): Brief {
   const score = answers.filter(Boolean).length
+  const noInsert = answers[0] === false
   const signalIndex = SIGNAL_PRIORITY.find(i => answers[i])
-  const gapIndex = GAP_PRIORITY.find(i => !answers[i])
+  const gapIndex = noInsert ? 0 : GAP_PRIORITY.find(i => !answers[i])
   return {
     product: product || 'One product (not named)',
     score,
-    label: bandFor(score).label,
+    label: noInsert ? NO_INSERT.label : bandFor(score).label,
+    text: noInsert ? NO_INSERT.text : bandFor(score).text,
     signal: signalIndex !== undefined ? FIT_SIGNALS[signalIndex] : 'None yet: every answer was no.',
     unknown: gapIndex !== undefined ? GAPS[gapIndex].unknown : 'None from this test.',
     step: gapIndex !== undefined ? GAPS[gapIndex].step : 'Request a free sample box and weigh today’s insert.',
@@ -274,6 +283,20 @@ function BriefCard({ brief, example = false }: { brief: Brief | null; example?: 
           {example ? 'Sample' : 'Ready to share'}
         </span>
       </div>
+      {example && (
+        <div className="relative w-full aspect-[16/9] overflow-hidden mb-6" style={{ border: BORDER }}>
+          <Image
+            src={EXAMPLE_SRC}
+            alt="Example product: a coffee tin in a fitted, fibrous insert inside a cardboard gift box"
+            fill
+            sizes="(max-width: 1024px) 100vw, 40vw"
+            className="object-cover object-[70%_50%]"
+          />
+          <span className="absolute left-2 bottom-2 uppercase text-[0.55rem] tracking-[0.18em] px-2 py-1" style={{ backgroundColor: 'rgba(245,241,232,0.92)' }}>
+            AI concept illustration
+          </span>
+        </div>
+      )}
       <dl className="space-y-4">
         {rows.map(([k, v], i) => (
           <motion.div
@@ -307,7 +330,7 @@ function MaterialImage() {
 
   // Parallax drift as the page scrolls.
   const { scrollYProgress } = useScroll({ target: frameRef, offset: ['start end', 'end start'] })
-  const drift = useTransform(scrollYProgress, [0, 1], reduce ? ['0%', '0%'] : ['-4%', '4%'])
+  const drift = useTransform(scrollYProgress, [0, 1], reduce ? ['0%', '0%'] : ['-2%', '2%'])
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).get('demo') === 'explore') {
@@ -331,9 +354,9 @@ function MaterialImage() {
         onPointerMove={onMove}
         onPointerLeave={onLeave}
         style={{ rotateX: tiltX, rotateY: tiltY, border: BORDER, WebkitTransformStyle: 'preserve-3d' }}
-        className="relative w-full aspect-[16/10] overflow-hidden isolate shadow-[0_40px_80px_-40px_rgba(26,23,20,0.55)]"
+        className="relative w-full aspect-[16/9] overflow-hidden isolate shadow-[0_40px_80px_-40px_rgba(26,23,20,0.55)]"
       >
-        <motion.div className="absolute -inset-[5%] z-0" style={{ y: drift }}>
+        <motion.div className="absolute -inset-[2.5%] z-0" style={{ y: drift }}>
           <motion.div
             className="absolute inset-0"
             animate={{ scale: active ? 2.3 : 1 }}
@@ -342,11 +365,11 @@ function MaterialImage() {
           >
             <Image
               src={HERO_SRC}
-              alt="A coffee tin sitting in a grown, fibrous insert inside a cardboard box, next to an empty insert showing its curved recess"
+              alt="A collection of products, including a bottle, jars, cups, a tin, a vase and a candle, each sitting in its own fitted, fibrous insert on a stone floor"
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 55vw"
-              className="object-cover object-[70%_50%]"
+              className="object-cover object-center"
             />
           </motion.div>
         </motion.div>
@@ -399,7 +422,7 @@ function MaterialImage() {
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? undefined : { opacity: 0, y: 6 }}
             transition={{ duration: 0.4, ease: EASE }}
-            className="relative z-20 mt-3 md:mt-0 md:absolute md:left-4 md:bottom-10 md:max-w-xs p-5"
+            className={`relative z-20 mt-3 md:mt-0 md:absolute md:bottom-10 md:max-w-xs p-5 ${active.x < 50 ? 'md:right-4' : 'md:left-4'}`}
             style={{ backgroundColor: 'rgba(250,247,240,0.96)', border: BORDER, WebkitBackdropFilter: 'blur(6px)', backdropFilter: 'blur(6px)' }}
             aria-live="polite"
           >
@@ -499,6 +522,9 @@ export default function GrowClient() {
   const [lastAnswer, setLastAnswer] = useState<boolean | null>(null)
   const [copied, setCopied] = useState(false)
   const [sampleStatus, setSampleStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
+  const [token, setToken] = useState<string | null>(null)
+  const [notice, setNotice] = useState('')
+  const [resendStatus, setResendStatus] = useState<'hidden' | 'idle' | 'loading'>('hidden')
   const formRef = useRef<HTMLElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const guideRef = useRef<HTMLElement>(null)
@@ -514,6 +540,30 @@ export default function GrowClient() {
       setAnswers([true, true, true, true, true, false, true, true, false, false])
       setPhase('result')
     }
+  }, [])
+
+  // Existing subscribers open the guide from the emailed link, on any device.
+  // This only reads: no new signup, no email sent, no sequence restarted.
+  useEffect(() => {
+    const linkToken = new URLSearchParams(window.location.search).get('guide')
+    if (!linkToken) return
+    fetch('/api/grow-access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: linkToken }),
+    })
+      .then(res => (res.ok ? res.json() : Promise.reject(new Error('invalid'))))
+      .then((data: { email: string }) => {
+        setEmail(data.email)
+        setToken(linkToken)
+        setNotice('Welcome back. Your guide is open, and nothing new has been sent.')
+        setPhase('test')
+        setTimeout(() => guideRef.current?.scrollIntoView({ block: 'start' }), 150)
+      })
+      .catch(() => {
+        setStatus('error')
+        setErrorText('This guide link is not valid. Enter your email to get a new one.')
+      })
   }, [])
 
   const scrollTo = useCallback((el: HTMLElement | null) => {
@@ -545,16 +595,50 @@ export default function GrowClient() {
         setErrorText(
           res.status === 400 ? 'Please enter a valid email address.'
             : res.status === 429 ? 'Too many attempts from this browser. Please wait a few minutes.'
-              : 'We could not send the guide just now. Please try again, or email andy@numu.bio.',
+              : 'We could not save your request just now. Please try again, or email andy@numu.bio.',
         )
         return
       }
+      applySignupResult(await res.json().catch(() => ({})))
       setStatus('idle')
       setPhase('test')
       setTimeout(() => scrollTo(guideRef.current), 60)
     } catch {
       setStatus('error')
-      setErrorText('We could not send the guide just now. Please try again, or email andy@numu.bio.')
+      setErrorText('We could not save your request just now. Please try again, or email andy@numu.bio.')
+    }
+  }
+
+  function applySignupResult(data: { token?: string; returning?: boolean; emailSent?: boolean }) {
+    if (data.token) {
+      setToken(data.token)
+      window.history.replaceState(null, '', `?guide=${encodeURIComponent(data.token)}`)
+    }
+    if (data.emailSent === false) {
+      setResendStatus('idle')
+      setNotice('Your request is saved, but the welcome email did not send.')
+    } else {
+      setResendStatus('hidden')
+      setNotice(data.returning
+        ? 'Welcome back. You are already signed up, so the emails were not sent again.'
+        : 'Your guide is open. The welcome email with your personal link is on its way.')
+    }
+  }
+
+  // Safe to repeat: the server keeps one lead per email and sends the sequence once.
+  async function resendWelcome() {
+    setResendStatus('loading')
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, website: '', requestType: 'grow_test', source: 'grow-resend' }),
+      })
+      if (!res.ok) throw new Error('failed')
+      applySignupResult(await res.json().catch(() => ({})))
+    } catch {
+      setResendStatus('idle')
+      setNotice('The welcome email still did not send. Please try again shortly, or email andy@numu.bio.')
     }
   }
 
@@ -569,10 +653,10 @@ export default function GrowClient() {
       fetch('/api/grow-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, score: next.filter(Boolean).length, answers: next, product }),
+        body: JSON.stringify({ token, score: next.filter(Boolean).length, answers: next, product }),
       }).catch(() => undefined)
     }
-  }, [answers, email, product, scrollTo])
+  }, [answers, token, product, scrollTo])
 
   // Keyboard shortcuts during the test: Y / N, Backspace to go back.
   useEffect(() => {
@@ -648,7 +732,7 @@ export default function GrowClient() {
             Pick one product. In five minutes, build a brief your team can use to decide whether to explore a grown insert.
           </motion.p>
           <motion.div {...fadeUp(0.85)} className="flex flex-wrap items-center gap-6">
-            <ArrowButton onClick={goToForm}>Get the free pilot guide</ArrowButton>
+            <ArrowButton onClick={goToForm}>Build my packaging brief</ArrowButton>
             <button onClick={() => scrollTo(formRef.current)} className="group text-sm pb-1 relative" style={{ opacity: 0.8 }}>
               See an example brief
               <span className="absolute left-0 right-0 bottom-0 h-px origin-left transition-transform duration-300 group-hover:scale-x-50" style={{ backgroundColor: CHARCOAL }} aria-hidden="true" />
@@ -679,7 +763,7 @@ export default function GrowClient() {
               <p className="uppercase text-label tracking-[0.2em] mb-3" style={{ color: WARM_DARK }}>Your turn</p>
               <h2 className="font-display text-4xl md:text-5xl leading-tight mb-4">Build your own brief</h2>
               <p className="text-sm mb-7 max-w-md" style={{ opacity: 0.75, lineHeight: 1.7 }}>
-                Ten yes-or-no questions about one product. Your answers fill in a brief like the example, ready to copy for your team.
+                Pick one product that uses a foam or plastic insert. In five minutes, get a one-page brief showing what makes it a pilot candidate, what to check and what to do next.
               </p>
               <form onSubmit={handleSignup} noValidate className="flex flex-col sm:flex-row gap-3 max-w-lg">
                 <input
@@ -704,15 +788,18 @@ export default function GrowClient() {
                   disabled={status === 'loading'}
                   aria-invalid={status === 'error'}
                   aria-describedby="grow-email-help grow-email-error"
-                  className="flex-1 px-5 py-4 outline-none text-base sm:text-sm transition-shadow focus:shadow-[0_0_0_1px_#4A3F34]"
+                  className="flex-1 min-w-0 px-5 py-4 outline-none text-base sm:text-sm transition-shadow focus:shadow-[0_0_0_1px_#4A3F34]"
                   style={{ border: status === 'error' ? '1px solid #8a3b2a' : BORDER, backgroundColor: 'rgba(250,247,240,0.95)', borderRadius: 0, WebkitAppearance: 'none' }}
                 />
-                <ArrowButton type="submit" disabled={status === 'loading'}>
-                  {status === 'loading' ? 'Opening…' : 'Get the free pilot guide'}
+                <ArrowButton type="submit" disabled={status === 'loading'} className="shrink-0">
+                  {status === 'loading' ? 'Building…' : 'Build my packaging brief'}
                 </ArrowButton>
               </form>
               <p id="grow-email-help" className="text-xs mt-3" style={{ opacity: 0.6 }}>
                 Get the guide now, then two short follow-ups. Reply STOP any time.
+              </p>
+              <p className="text-xs mt-2 max-w-md" style={{ opacity: 0.6, lineHeight: 1.6 }}>
+                Want to see the fit? Reply to the welcome email with a product photo and dimensions, and Andy will create a concept illustration.
               </p>
               <p id="grow-email-error" className="text-sm mt-2 min-h-[1.25rem]" style={{ color: '#8a3b2a' }} role="alert">
                 {status === 'error' ? errorText : ''}
@@ -752,6 +839,16 @@ export default function GrowClient() {
             <p id="guide-title" className="uppercase text-label tracking-[0.2em] mb-6" style={{ color: WARM_DARK }}>
               Your pilot guide · check your inbox too
             </p>
+            {notice && (
+              <div className="mb-6 px-4 py-3 text-sm flex flex-wrap items-center gap-3" style={{ border: BORDER, backgroundColor: 'rgba(178,155,127,0.12)' }} role="status">
+                <span>{notice}</span>
+                {resendStatus !== 'hidden' && (
+                  <button onClick={resendWelcome} disabled={resendStatus === 'loading'} className="underline underline-offset-4">
+                    {resendStatus === 'loading' ? 'Sending…' : 'Resend the welcome email'}
+                  </button>
+                )}
+              </div>
+            )}
             {step === 0 && (
               <div className="mb-8">
                 <label htmlFor="grow-product" className="uppercase text-label tracking-[0.18em]" style={{ opacity: 0.6 }}>
@@ -836,7 +933,7 @@ export default function GrowClient() {
                 <ScoreRing score={brief.score} />
                 <motion.p {...fadeUp(1.3)} className="font-display text-4xl mt-6 mb-3">{brief.label}</motion.p>
                 <motion.p {...fadeUp(1.45)} className="text-sm max-w-sm" style={{ opacity: 0.8, lineHeight: 1.7 }}>
-                  {bandFor(brief.score).text}
+                  {brief.text}
                 </motion.p>
               </div>
               <div>
