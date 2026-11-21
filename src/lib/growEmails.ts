@@ -3,28 +3,27 @@ import { SITE_URL } from '@/lib/site'
 // Copy for the "Can Your Packaging Be Grown?" sequence and the request auto-replies.
 // Drafts approved in outline by Andy (21 Nov); every line must stay true.
 
-// Email 2 needs one true result. Left empty until Andy chooses the line;
-// when empty, the sentence is omitted rather than invented.
-const TRUE_RESULT_LINE = ''
-
-// Images are served from the live site, so they appear once this branch is deployed.
 const EMAIL_ASSET_BASE = process.env.EMAIL_ASSET_BASE || 'https://www.numu.bio'
-const HEADER_IMAGE = `${EMAIL_ASSET_BASE}/email/numu-email-header.jpg`
+const LOGO_IMAGE = `${EMAIL_ASSET_BASE}/branding/logo-black-numu.png`
+const TEXTURE_HEADER = `${EMAIL_ASSET_BASE}/email/numu-email-texture-lockup.jpg`
 const FOOTER_IMAGE = `${EMAIL_ASSET_BASE}/email/numu-email-footer.jpg`
 
 export function guideUrl(token: string | null) {
   return token ? `${SITE_URL}/grow?guide=${encodeURIComponent(token)}` : `${SITE_URL}/grow`
 }
 
-const SIGN_OFF_TEXT = 'Andy Cartier\nCEO & Founder, NUMU\nandy@numu.bio'
+const SIGN_OFF_TEXT = 'Andy Cartier\nFounder & CEO, NUMU · Dubai, UAE\nandy@numu.bio · www.numu.bio'
 const GROW_FOOTER_TEXT = 'You signed up at numu.bio/grow. Reply STOP to unsubscribe. NUMU, Dubai, UAE.'
 const REQUEST_FOOTER_TEXT = 'You contacted NUMU through numu.bio. NUMU, Dubai, UAE.'
 
 type Email = { subject: string; text: string; html: string }
 
-function layout(paragraphs: string[], footerText: string) {
+function layout(paragraphs: string[], footerText: string, texturedHeader = false) {
+  const header = texturedHeader
+    ? `<a href="https://www.numu.bio"><img src="${TEXTURE_HEADER}" width="560" height="228" alt="NUMU · نمو" style="display:block;width:100%;max-width:560px;height:auto;border:0;"></a>`
+    : `<a href="https://www.numu.bio"><img src="${LOGO_IMAGE}" width="56" height="70" alt="NUMU" style="display:block;margin:20px 28px 0;border:0;"></a>`
   const body = paragraphs
-    .map(p => `<p style="margin:0 0 18px;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.7;color:#1a1714;">${p}</p>`)
+    .map(p => `<p style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.55;color:#1a1714;">${p}</p>`)
     .join('')
   return `<!doctype html>
 <html lang="en">
@@ -32,15 +31,15 @@ function layout(paragraphs: string[], footerText: string) {
 <body style="margin:0;padding:0;background-color:#efe9dd;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#efe9dd;">
     <tr><td align="center" style="padding:28px 12px;">
-      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="width:100%;max-width:520px;background-color:#f5f1e8;border:1px solid #e2d9c8;">
-        <tr><td><img src="${HEADER_IMAGE}" width="520" height="150" alt="NUMU · نمو" style="display:block;width:100%;max-width:520px;height:auto;border:0;"></td></tr>
-        <tr><td style="padding:32px 36px 8px;">${body}</td></tr>
-        <tr><td style="padding:0 36px 28px;">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background-color:#fbf8f2;">
+        <tr><td>${header}</td></tr>
+        <tr><td style="padding:22px 28px 2px;">${body}</td></tr>
+        <tr><td style="padding:0 28px 18px;">
           <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:16px;color:#1a1714;">Andy Cartier</p>
-          <p style="margin:2px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#4a3f34;">CEO &amp; Founder, NUMU</p>
-          <p style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;"><a href="mailto:andy@numu.bio" style="color:#4a3f34;">andy@numu.bio</a></p>
+          <p style="margin:2px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#4a3f34;">Founder &amp; CEO, NUMU · Dubai, UAE</p>
+          <p style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;"><a href="mailto:andy@numu.bio" style="color:#4a3f34;">andy@numu.bio</a> · <a href="https://www.numu.bio" style="color:#4a3f34;">numu.bio</a></p>
         </td></tr>
-        <tr><td><img src="${FOOTER_IMAGE}" width="520" height="24" alt="" style="display:block;width:100%;max-width:520px;height:auto;border:0;"></td></tr>
+        <tr><td><img src="${FOOTER_IMAGE}" width="560" height="26" alt="" style="display:block;width:100%;max-width:560px;height:auto;border:0;"></td></tr>
       </table>
       <p style="margin:14px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#8a7f72;">${footerText}</p>
     </td></tr>
@@ -73,46 +72,44 @@ export function deadlineLabel(signupAt: Date) {
 
 export function growEmailOne(link: string): Email {
   const paragraphs = [
-    'Hello,',
-    `Thanks for signing up. <a href="${link}" style="color:#4a3f34;font-weight:bold;">Open your pilot guide</a>. The link is yours: it opens the guide on any device, without signing up again.`,
-    'Pick one product, answer ten yes-or-no questions, and you get a one-page brief your team can use to decide whether to explore a grown insert.',
-    'Who we are: NUMU is a Dubai company. We are developing protective packaging grown from PALMYCO, our material made from regional agricultural waste, shaped to fit your product.',
-    'Want to see your own product in a grown insert? Reply with a photo and its dimensions, and I’ll create a concept illustration.',
+    'Hi, thanks for signing up.',
+    'Pick one product with a foam or plastic insert. In five minutes, get a fit score and a brief you can share with your team.',
+    `<a href="${link}" style="color:#4a3f34;font-weight:bold;">Open my packaging assessment</a>`,
+    'Keep this link to return on another device.',
   ]
   return {
-    subject: 'Your pilot guide is ready',
-    text: plain(paragraphs, GROW_FOOTER_TEXT).replace('Open your pilot guide.', `Open your pilot guide: ${link}`),
-    html: layout(paragraphs, GROW_FOOTER_TEXT),
+    subject: 'Your packaging assessment is ready',
+    text: plain(paragraphs, GROW_FOOTER_TEXT).replace('Open my packaging assessment', `Open my packaging assessment: ${link}`),
+    html: layout(paragraphs, GROW_FOOTER_TEXT, true),
   }
 }
 
 export function growEmailTwo(): Email {
   const paragraphs = [
-    'Hello,',
-    'One useful tip: weigh today’s insert. Grams per unit, times units per year, gives your yearly foam or plastic baseline. With that one number you can measure any alternative honestly, ours included.',
-    ...(TRUE_RESULT_LINE ? [TRUE_RESULT_LINE] : []),
-    'If your score was 4 or more, reply with that product’s photo and dimensions, and I’ll create a concept illustration.',
+    'Hi,',
+    'To cut single-use plastic, start with one insert. A seasonal gift set with a simple shape is a good first candidate.',
+    'Check what the insert protects today. Does it keep the product from shifting or protect a fragile edge?',
+    'Reply with a photo you can share and your product’s dimensions. I’ll create a bespoke visual showing how a grown insert could fit your product, with your branding.',
   ]
   return {
-    subject: 'One number every packaging team needs',
+    subject: 'Which insert could you replace first?',
     text: plain(paragraphs, GROW_FOOTER_TEXT),
-    html: layout(paragraphs, GROW_FOOTER_TEXT),
+    html: layout(paragraphs, GROW_FOOTER_TEXT, true),
   }
 }
 
 export function growEmailThree(signupAt: Date): Email {
   const deadline = deadlineLabel(signupAt)
   const paragraphs = [
-    'Hello,',
-    'Here is the offer, plainly.',
-    '<strong>Free sample box:</strong> touch PALMYCO and judge it with your team. We send only 5 a month.',
-    '<strong>Bespoke prototype for one product: AED 500,</strong> credited in full against your first order (subject to production capacity). Made in Dubai in 4 to 5 weeks.',
-    `To keep one of this month’s free boxes, reply by ${deadline}. After that date, the box goes to the next brand on the list.`,
+    'Hi,',
+    '<strong>Free PALMYCO sample box.</strong> Score 4/10 or higher on a product with a foam or plastic insert to request one. Five are available per month, subject to confirmation.',
+    '<strong>Fit Sprint · AED 500.</strong> A bespoke prototype for one product in 4–5 weeks. The fee is credited in full against your first order, subject to production capacity.',
+    `Reply by ${deadline} with your product and tell me if you’d like a sample box or a prototype.`,
   ]
   return {
-    subject: `Your free sample box, until ${deadline}`,
+    subject: 'Ready to try a grown insert?',
     text: plain(paragraphs, GROW_FOOTER_TEXT),
-    html: layout(paragraphs, GROW_FOOTER_TEXT),
+    html: layout(paragraphs, GROW_FOOTER_TEXT, true),
   }
 }
 

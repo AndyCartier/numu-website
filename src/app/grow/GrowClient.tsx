@@ -33,7 +33,7 @@ const QUESTIONS = [
   'Is the product’s shape fairly simple: a bottle, jar, box or tin, not a fragile tangle of parts?',
   'Is the product stored and displayed indoors?',
   'Is there a line where a small first run makes sense: a launch, gift set, seasonal or limited edition?',
-  'Do you know roughly what today’s insert weighs, or could you weigh one this week?',
+  'Can you identify what the current insert must protect during packing and delivery?',
   'Would a material grown in the UAE from local agricultural waste add to this product’s story?',
   'Does your team have a plastic-reduction or sustainability goal this product could count towards?',
   'Is there one named person who could approve a small paid prototype?',
@@ -46,7 +46,7 @@ const FIT_SIGNALS = [
   'Its shape is simple enough for a fitted recess.',
   'It is stored and displayed indoors.',
   'A small first run fits a launch, gift set or limited edition.',
-  'The team knows today’s insert weight, so a result can be measured.',
+  'Your team knows what the insert needs to protect.',
   'A material grown in the UAE would add to the product’s story.',
   'There is a plastic-reduction goal it could count towards.',
   'One person can approve a small paid prototype.',
@@ -59,7 +59,7 @@ const GAPS = [
   { unknown: 'Whether the shape suits a fitted recess.', step: 'Try a product with a simpler shape: a bottle, jar, box or tin.' },
   { unknown: 'Where the product is stored and displayed.', step: 'Pick a product that is stored and displayed indoors.' },
   { unknown: 'Which line could take a small first run.', step: 'Look for a launch, gift set or limited edition where a small first run fits.' },
-  { unknown: 'The weight of the current insert.', step: 'Weigh one empty insert so the team has a baseline for comparison.' },
+  { unknown: 'What the insert needs to protect during packing and delivery.', step: 'Identify where the product moves or could be damaged in transit.' },
   { unknown: 'Whether a UAE-grown story fits the brand.', step: 'Ask the brand team whether a UAE-grown material fits this product’s story.' },
   { unknown: 'Whether a plastic-reduction goal applies.', step: 'Check whether this product could count towards a plastic-reduction goal.' },
   { unknown: 'Who could approve a small paid prototype.', step: 'Name one person who could approve a small paid prototype.' },
@@ -69,9 +69,11 @@ const GAPS = [
 const SIGNAL_PRIORITY = [4, 6, 7, 0, 2, 5, 8, 1, 3, 9]
 const GAP_PRIORITY = [5, 8, 9, 1, 0, 2, 3, 4, 7, 6]
 
+const SAMPLE_SCORE_MIN = 4
+
 const BANDS = [
-  { min: 7, label: 'Ready to grow', text: 'A strong first candidate. Weigh today’s insert, name the owner, and request a sample box.' },
-  { min: 4, label: 'Sprouting', text: 'Promising. Turn your “no” answers into “yes” first, starting with the most important unknown in your brief.' },
+  { min: 7, label: 'Ready to grow', text: 'A strong first candidate. Name the person who can review a prototype and request a sample box.' },
+  { min: SAMPLE_SCORE_MIN, label: 'Sprouting', text: 'Promising. Turn your “no” answers into “yes” first, starting with the most important unknown in your brief.' },
   { min: 0, label: 'Still in the cupboard', text: 'Not the right first product. Try the test again with a gift set or a limited edition, where a small first run is easier.' },
 ]
 
@@ -107,7 +109,7 @@ function buildBrief(product: string, answers: boolean[]): Brief {
     text: noInsert ? NO_INSERT.text : bandFor(score).text,
     signal: signalIndex !== undefined ? FIT_SIGNALS[signalIndex] : 'None yet: every answer was no.',
     unknown: gapIndex !== undefined ? GAPS[gapIndex].unknown : 'None from this test.',
-    step: gapIndex !== undefined ? GAPS[gapIndex].step : 'Request a free sample box and weigh today’s insert.',
+    step: gapIndex !== undefined ? GAPS[gapIndex].step : 'Request a free sample box and note what the insert needs to protect.',
     timing: answers[9] === false ? 'A made-to-order prototype takes 4 to 5 weeks. Check this against your launch date.' : null,
   }
 }
@@ -253,8 +255,8 @@ function BriefCard({ brief, example = false }: { brief: Brief | null; example?: 
   const rows: [string, string][] = example
     ? [
         ['Why consider it?', 'One simple shape in a seasonal gift set.'],
-        ['What is missing?', 'The weight of the current foam insert.'],
-        ['First step', 'Weigh one empty insert so the team has a baseline for comparison.'],
+        ['What is missing?', 'Whether the tin shifts in transit.'],
+        ['First step', 'Identify where the product moves or could be damaged in transit.'],
       ]
     : brief
       ? [
@@ -725,14 +727,29 @@ export default function GrowClient() {
         <div>
           <motion.p {...fadeUp(0.05)} className="uppercase text-label tracking-[0.2em] mb-5 flex items-center gap-3" style={{ color: WARM_DARK }}>
             <span className="inline-block w-8 h-px" style={{ backgroundColor: WARM_DARK }} aria-hidden="true" />
-            Free packaging pilot brief · 5 minutes
+            Circular protective packaging · Made in the UAE
           </motion.p>
-          <RevealWords text="Which product should you test first?" className="font-display text-[2.7rem] leading-[1.02] sm:text-6xl xl:text-[5.2rem] mb-6 tracking-[-0.01em]" />
+          <RevealWords text="See your product in a grown insert" className="font-display text-[2.7rem] leading-[1.02] sm:text-6xl xl:text-[5.2rem] mb-6 tracking-[-0.01em]" />
           <motion.p {...fadeUp(0.7)} className="text-base sm:text-lg max-w-lg mb-5 md:mb-8" style={{ opacity: 0.82, lineHeight: 1.6 }}>
-            Could a grown mycelium insert replace the foam or plastic around your product? Answer a few questions and get a one-page decision brief you can take to your team.
+            Pick one product that uses a foam or plastic insert. Find out if it’s a good candidate for a mycelium insert made in the UAE from regional agricultural waste.
           </motion.p>
+          <dl aria-label="What you can get" className="mb-6 max-w-lg divide-y divide-current/15 border-y border-current/15">
+            <div className="grid grid-cols-[6.5rem_1fr] gap-3 py-3">
+              <dt className="font-display text-lg leading-tight">Free<br />5 minutes</dt>
+              <dd className="text-sm leading-snug"><strong className="block">Your packaging assessment</strong> Get a fit score, the biggest thing to check, and one next step to share with your team.</dd>
+            </div>
+            <div className="grid grid-cols-[6.5rem_1fr] gap-3 py-3">
+              <dt className="font-display text-lg leading-tight">Free<br />5 per month</dt>
+              <dd className="text-sm leading-snug"><strong className="block">A PALMYCO sample box</strong> Score {SAMPLE_SCORE_MIN}/10 or higher on a product with a foam or plastic insert to request one of five boxes for your team, while available.</dd>
+            </div>
+            <div className="grid grid-cols-[6.5rem_1fr] gap-3 py-3">
+              <dt className="font-display text-lg leading-tight">AED 500</dt>
+              <dd className="text-sm leading-snug"><strong className="block">A bespoke prototype for one product</strong> Grown to fit your product in 4–5 weeks. Credited in full against your first order, subject to production capacity.</dd>
+            </div>
+          </dl>
+          <p className="mb-4 max-w-lg text-sm leading-relaxed">Want to see the fit? After signing up, reply to our email with a photo and dimensions to request an AI concept illustration.</p>
           <motion.div {...fadeUp(0.85)} className="flex flex-wrap items-center gap-6">
-            <ArrowButton onClick={goToForm}>Get my free brief</ArrowButton>
+            <ArrowButton onClick={goToForm}>Unlock my free assessment</ArrowButton>
             <button onClick={() => scrollTo(formRef.current)} className="group text-sm pb-1 relative" style={{ opacity: 0.8 }}>
               See the full example
               <span className="absolute left-0 right-0 bottom-0 h-px origin-left transition-transform duration-300 group-hover:scale-x-50" style={{ backgroundColor: CHARCOAL }} aria-hidden="true" />
@@ -749,7 +766,7 @@ export default function GrowClient() {
             style={{ border: BORDER, backgroundColor: '#faf7f0', boxShadow: '0 18px 42px -28px rgba(26,23,20,0.5)' }}>
             <p className="uppercase text-label tracking-[0.16em] mb-2" style={{ color: WARM_DARK }}>Example brief · Coffee gift tin</p>
             <p className="font-display text-xl md:text-2xl leading-tight">Promising for a small trial.</p>
-            <p className="mt-2 text-sm leading-relaxed">The simple shape makes it a candidate. Before pitching the switch, weigh the current foam insert so your team has a baseline.</p>
+            <p className="mt-2 text-sm leading-relaxed">The simple shape makes it a candidate. First, check where the tin moves so a grown insert can be designed to hold it in place.</p>
           </aside>
         </motion.div>
       </section>
@@ -802,11 +819,11 @@ export default function GrowClient() {
                   style={{ border: status === 'error' ? '1px solid #8a3b2a' : BORDER, backgroundColor: 'rgba(250,247,240,0.95)', borderRadius: 0, WebkitAppearance: 'none' }}
                 />
                 <ArrowButton type="submit" disabled={status === 'loading'} className="shrink-0">
-                  {status === 'loading' ? 'Opening…' : 'Get my free brief'}
+                  {status === 'loading' ? 'Opening…' : 'Unlock my free assessment'}
                 </ArrowButton>
               </form>
               <p id="grow-email-help" className="text-xs mt-3" style={{ opacity: 0.6 }}>
-                Start immediately. We’ll email your access link and two short follow-ups. Reply STOP any time.
+                Sign up to unlock the quiz and get your brief on screen. We’ll email a private return link and two short follow-ups. Reply STOP any time.
               </p>
               <p id="grow-email-error" className="text-sm mt-2 min-h-[1.25rem]" style={{ color: '#8a3b2a' }} role="alert">
                 {status === 'error' ? errorText : ''}
@@ -951,15 +968,17 @@ export default function GrowClient() {
               {[
                 {
                   title: 'Free sample box',
-                  text: 'Touch PALMYCO and judge it with your team. We send 5 boxes a month.',
-                  action: (
+                  text: brief.score >= SAMPLE_SCORE_MIN && answers[0]
+                    ? 'Touch PALMYCO and judge it with your team. We send five boxes per month, subject to availability.'
+                    : 'Choose a product with an existing foam or plastic insert and score at least 4/10 to request one of five free boxes per month.',
+                  action: brief.score >= SAMPLE_SCORE_MIN && answers[0] ? (
                     <ArrowButton onClick={requestSampleBox} disabled={sampleStatus === 'loading'}>
                       {sampleStatus === 'sent' ? 'Sample box requested' : 'Request a free sample box'}
                     </ArrowButton>
-                  ),
+                  ) : null,
                 },
                 {
-                  title: 'Bespoke prototype · AED 500',
+                  title: 'Fit Sprint · AED 500',
                   text: 'One product, grown in Dubai in 4 to 5 weeks. Credited in full against your first order (subject to production capacity).',
                   action: (
                     <a
@@ -995,6 +1014,22 @@ export default function GrowClient() {
           </motion.section>
         )}
       </AnimatePresence>
+
+      {phase === 'signup' && (
+        <section className="relative z-10 max-w-3xl mx-auto px-5 md:px-12 pb-16" aria-labelledby="grow-faq">
+          <h2 id="grow-faq" className="font-display text-3xl mb-5">Before you start</h2>
+          {[
+            ['What do I get straight away?', 'Signup unlocks the assessment on this page. Answer ten questions to get your score and shareable brief. The welcome email gives you a private link to return.'],
+            ['How do I get an illustration of my own product?', 'Reply to the welcome email with its dimensions and a photo you can share. We’ll create an AI concept illustration for your team.'],
+            ['How do the sample box and prototype differ?', 'A free box lets your team inspect the material. You can request one with a qualifying score of 4/10 or higher, while this month’s five boxes are available. The AED 500 Fit Sprint develops a physical insert around one product.'],
+          ].map(([question, answer]) => (
+            <details key={question} className="border-t border-current/15 py-4">
+              <summary className="cursor-pointer font-semibold">{question}</summary>
+              <p className="text-sm mt-2 leading-relaxed">{answer}</p>
+            </details>
+          ))}
+        </section>
+      )}
 
       <footer className="relative z-10 px-5 md:px-12 py-10 text-xs flex flex-wrap gap-4 justify-between items-center" style={{ borderTop: BORDER }}>
         <span className="font-display text-base">Grown, not manufactured.</span>
