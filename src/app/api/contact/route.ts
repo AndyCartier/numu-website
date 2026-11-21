@@ -4,6 +4,8 @@ import { join } from 'path'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getAllowedOriginHosts, isLocalDevelopmentHost } from '@/lib/site'
+import { recordLead, type LeadSource } from '@/lib/leads'
+import { growDelays, growEmailOne, growEmailThree, growEmailTwo, requestAutoReply } from '@/lib/growEmails'
 
 const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL || 'andy@numu.bio'
 const CONTACT_BCC_EMAIL = process.env.CONTACT_BCC_EMAIL || ''
@@ -28,7 +30,23 @@ const REQUEST_META = {
     heading: 'New samples request',
     followUp: 'Reply directly with sample and specification next steps.',
   },
+  grow_test: {
+    subject: 'New growability test sign-up — NUMU',
+    heading: 'New growability test sign-up',
+    followUp: 'Email 1 sent now; emails 2 and 3 are scheduled.',
+  },
 } as const
+
+const LEAD_SOURCE: Record<keyof typeof REQUEST_META, LeadSource> = {
+  investor_deck: 'website-investor-deck',
+  project: 'website-project',
+  samples: 'website-samples',
+  grow_test: 'website-grow-test',
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, ch => `&#${ch.charCodeAt(0)};`)
+}
 
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
 const RATE_LIMIT_MAX_REQUESTS = 5
@@ -200,7 +218,16 @@ export async function POST(req: Request) {
   const meta = REQUEST_META[requestType as keyof typeof REQUEST_META]
   if (!meta) return json({ error: 'Invalid request type' }, 400)
 
-  if (!process.env.RESEND_API_KEY) return json({ error: 'Email service unavailable' }, 503)
+  // Store every request in the NUMU pipeline first; storage never blocks email.
+  const storedInPipeline = await recordLead({
+    email,
+    source: LEAD_SOURCE[requestType as keyof typeof REQUEST_META],
+    notes: `Website request: ${requestType}. Page source tag: ${source || 'direct'}. Submitted ${new Date().toISOString()}.`,
+  })
+
+  if (!process.env.RESEND_API_KEY) {
+    return storedInPipeline ? json({ ok: true }) : json({ error: 'Email service unavailable' }, 503)
+  }
 
   const resend = getResend()
   const messageId = randomUUID()
@@ -248,6 +275,43 @@ export async function POST(req: Request) {
           tags: [{ name: 'request_type', value: 'investor_deck_outbound' }, { name: 'source', value: sourceTag }],
         })
       }
+    } else if (requestType === 'grow_test') {
+      const signupAt = new Date()
+      const delays = growDelays()
+      const sequence = [
+        { email: growEmailOne(), sendAt: null, tag: 'grow_email_1' },
+        { email: growEmailTwo(), sendAt: new Date(signupAt.getTime() + delays.second), tag: 'grow_email_2' },
+        { email: growEmailThree(signupAt), sendAt: new Date(signupAt.getTime() + delays.third), tag: 'grow_email_3' },
+      ]
+      const safeEmail = escapeHtml(email)
+
+      // Notification to Andy
+      await resend.emails.send({
+        from: RESEND_FROM_EMAIL,
+        to: [CONTACT_TO_EMAIL],
+        replyTo: email,
+        subject: `Growability test sign-up — ${email}`,
+        text: `${meta.heading}\n\nFrom: ${email}\nSource: ${source || 'direct'}\nTime: ${timestamp}\nStored in pipeline: ${storedInPipeline ? 'yes' : 'NO'}\n\n${meta.followUp}`,
+        html: `<div style="font-family:Arial,sans-serif;color:#1a1714;"><p style="margin:0 0 12px;"><strong>${meta.heading}</strong></p><p style="margin:0 0 6px;">From: ${safeEmail}</p><p style="margin:0 0 6px;">Stored in pipeline: ${storedInPipeline ? 'yes' : 'NO'}</p><p style="margin:0;color:#6f6458;">${meta.followUp}</p></div>`,
+        headers: { 'X-Entity-Ref-ID': messageId },
+        tags: [{ name: 'request_type', value: 'grow_test' }, { name: 'source', value: sourceTag }],
+      })
+
+      // Sequence to the visitor: email 1 now, emails 2 and 3 scheduled
+      for (const step of sequence) {
+        const result = await resend.emails.send({
+          from: FOUNDER_FROM_EMAIL,
+          to: [email],
+          replyTo: CONTACT_TO_EMAIL,
+          subject: step.email.subject,
+          text: step.email.text,
+          html: step.email.html,
+          ...(step.sendAt ? { scheduledAt: step.sendAt.toISOString() } : {}),
+          headers: { 'X-Entity-Ref-ID': randomUUID() },
+          tags: [{ name: 'request_type', value: step.tag }, { name: 'source', value: sourceTag }],
+        })
+        if (result.error && !step.sendAt) throw new Error(result.error.message)
+      }
     } else {
       // Standard notification for project / samples
       await resend.emails.send({
@@ -268,6 +332,19 @@ export async function POST(req: Request) {
         `,
         headers: { 'X-Entity-Ref-ID': messageId, 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
         tags: [{ name: 'request_type', value: requestType }, { name: 'source', value: sourceTag }],
+      })
+
+      // Automatic reply to the requester (new: there was none for project / samples)
+      const reply = requestAutoReply(requestType as 'project' | 'samples')
+      await resend.emails.send({
+        from: FOUNDER_FROM_EMAIL,
+        to: [email],
+        replyTo: CONTACT_TO_EMAIL,
+        subject: reply.subject,
+        text: reply.text,
+        html: reply.html,
+        headers: { 'X-Entity-Ref-ID': randomUUID(), 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
+        tags: [{ name: 'request_type', value: `${requestType}_autoreply` }, { name: 'source', value: sourceTag }],
       })
     }
 
