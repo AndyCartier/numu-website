@@ -2,12 +2,17 @@ import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getAllowedOriginHosts, isLocalDevelopmentHost } from '@/lib/site'
-import { NOTIFY_FROM, logEmailError } from '@/lib/email'
+import { NOTIFY_FROM, logEmailError, notificationHeaders, notificationHtml } from '@/lib/email'
+import { findOrCreateGrowLead, growSequenceSent, recordGrowSequence, recordLead, type LeadSource } from '@/lib/leads'
+import { growDelays, growEmailOne, growEmailThree, growEmailTwo, guideUrl, requestAutoReply } from '@/lib/growEmails'
+import { createGuideToken } from '@/lib/guideLink'
 
 const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL || 'andy@numu.bio'
 const CONTACT_BCC_EMAIL = process.env.CONTACT_BCC_EMAIL || ''
 // Notifications to NUMU come from the dedicated sender.
 const RESEND_FROM_EMAIL = NOTIFY_FROM
+// Emails to visitors (grow sequence, auto-replies) come from Andy, so replies reach him.
+const FOUNDER_FROM_EMAIL = process.env.FOUNDER_FROM_EMAIL || 'Andy Cartier — NUMU <andy@numu.bio>'
 
 
 const REQUEST_META = {
@@ -26,7 +31,19 @@ const REQUEST_META = {
     heading: 'New samples request',
     followUp: 'Reply directly with sample and specification next steps.',
   },
+  grow_test: {
+    subject: 'New growability test sign-up — NUMU',
+    heading: 'New growability test sign-up',
+    followUp: 'Email 1 sent now; emails 2 and 3 are scheduled.',
+  },
 } as const
+
+const LEAD_SOURCE: Record<keyof typeof REQUEST_META, LeadSource> = {
+  investor_deck: 'website-investor-deck',
+  project: 'website-project',
+  samples: 'website-samples',
+  grow_test: 'website-grow-test',
+}
 
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
 const RATE_LIMIT_MAX_REQUESTS = 5
@@ -107,6 +124,82 @@ function sanitizeSourceTag(source?: string) {
   return cleaned || fallback
 }
 
+// One grow signup per email at a time on this instance, so double submits cannot race.
+const growLocks = new Set<string>()
+
+// Grow test signup: success means the lead is saved. Email 1 is sent once; emails 2 and 3
+// are scheduled once. Retries and returning visitors never restart the sequence.
+async function handleGrowSignup(email: string, source: string) {
+  const token = createGuideToken(email)
+  if (growLocks.has(email)) return json({ ok: true, emailSent: true, pending: true, token })
+  growLocks.add(email)
+  try {
+    const signupAt = new Date()
+    const sourceTag = sanitizeSourceTag(source)
+    const lead = await findOrCreateGrowLead(
+      email,
+      `Website request: grow_test. Page source tag: ${sourceTag}. Submitted ${signupAt.toISOString()}.`,
+    )
+    if (!lead) return json({ error: 'Could not save your request' }, 503)
+
+    if (!lead.created && (await growSequenceSent(lead.id))) {
+      return json({ ok: true, returning: true, emailSent: true, token })
+    }
+    if (!process.env.RESEND_API_KEY) return json({ ok: true, emailSent: false, token })
+
+    const resend = getResend()
+    const delays = growDelays(email)
+    const sequence = [
+      { email: growEmailOne(guideUrl(token)), sendAt: null, tag: 'grow_email_1' },
+      { email: growEmailTwo(), sendAt: new Date(signupAt.getTime() + delays.second), tag: 'grow_email_2' },
+      { email: growEmailThree(signupAt), sendAt: new Date(signupAt.getTime() + delays.third), tag: 'grow_email_3' },
+    ]
+    const outcomes: string[] = []
+    let welcomeSent = false
+    for (const step of sequence) {
+      const result = await resend.emails
+        .send({
+          from: FOUNDER_FROM_EMAIL,
+          to: [email],
+          replyTo: CONTACT_TO_EMAIL,
+          subject: step.email.subject,
+          text: step.email.text,
+          html: step.email.html,
+          ...(step.sendAt ? { scheduledAt: step.sendAt.toISOString() } : {}),
+          headers: { 'X-Entity-Ref-ID': randomUUID() },
+          tags: [{ name: 'request_type', value: step.tag }, { name: 'source', value: sourceTag }],
+        })
+        .catch((e: unknown) => ({ data: null, error: { message: String(e) } }))
+      const sent = !result.error
+      if (!sent) logEmailError(`grow ${step.tag}`, result.error)
+      if (step.tag === 'grow_email_1') welcomeSent = sent
+      outcomes.push(`${step.tag} ${sent ? (step.sendAt ? `scheduled ${step.sendAt.toISOString()}` : 'sent') : 'FAILED'}`)
+      if (!welcomeSent) break // never schedule follow-ups without the welcome email
+    }
+    if (welcomeSent) {
+      await recordGrowSequence(lead.id, `${outcomes.join('; ')}${delays.fast ? ' (fast test timing)' : ''}`)
+    }
+
+    const meta = REQUEST_META.grow_test
+    await resend.emails
+      .send({
+        from: RESEND_FROM_EMAIL,
+        to: [CONTACT_TO_EMAIL],
+        replyTo: email,
+        subject: `Growability test sign-up — ${email}`,
+        text: `${meta.heading}\n\nFrom: ${email}\nSource: ${sourceTag}\nTime: ${signupAt.toUTCString()}\nLead saved: yes\nSequence: ${outcomes.join('; ')}`,
+        html: notificationHtml(meta.heading, [['From', email], ['Source', sourceTag], ['Lead saved', 'yes'], ['Sequence', outcomes.join('; ')]]),
+        headers: notificationHeaders(randomUUID(), 'grow'),
+        tags: [{ name: 'request_type', value: 'grow_test' }, { name: 'source', value: sourceTag }],
+      })
+      .catch(() => undefined)
+
+    return json({ ok: true, emailSent: welcomeSent, token })
+  } finally {
+    growLocks.delete(email)
+  }
+}
+
 export async function POST(req: Request) {
   if (!isAllowedSubmissionOrigin(req)) return json({ error: 'Forbidden' }, 403)
 
@@ -154,7 +247,18 @@ export async function POST(req: Request) {
   if (!Object.hasOwn(REQUEST_META, requestType)) return json({ error: 'Invalid request type' }, 400)
   const meta = REQUEST_META[requestType as keyof typeof REQUEST_META]
 
-  if (!process.env.RESEND_API_KEY) return json({ error: 'Email service unavailable' }, 503)
+  if (requestType === 'grow_test') return handleGrowSignup(email, source)
+
+  // Store every request in the NUMU pipeline first; storage never blocks email.
+  const storedInPipeline = await recordLead({
+    email,
+    source: LEAD_SOURCE[requestType as keyof typeof REQUEST_META],
+    notes: `Website request: ${requestType}. Page source tag: ${sanitizeSourceTag(source)}. Submitted ${new Date().toISOString()}.`,
+  })
+
+  if (!process.env.RESEND_API_KEY) {
+    return storedInPipeline ? json({ ok: true }) : json({ error: 'Email service unavailable' }, 503)
+  }
 
   const resend = getResend()
   async function sendEmail(message: Parameters<typeof resend.emails.send>[0]) {
@@ -187,6 +291,24 @@ export async function POST(req: Request) {
       headers: { 'X-Entity-Ref-ID': messageId, 'X-NUMU-Website': 'contact', 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
       tags: [{ name: 'request_type', value: requestType }, { name: 'source', value: sourceTag }],
     })
+
+    // Automatic reply to the requester for project and samples requests (deck requests stay manual).
+    if (requestType === 'project' || requestType === 'samples') {
+      const reply = requestAutoReply(requestType)
+      const replyResult = await resend.emails
+        .send({
+          from: FOUNDER_FROM_EMAIL,
+          to: [email],
+          replyTo: CONTACT_TO_EMAIL,
+          subject: reply.subject,
+          text: reply.text,
+          html: reply.html,
+          headers: { 'X-Entity-Ref-ID': randomUUID(), 'X-Auto-Response-Suppress': 'OOF, AutoReply' },
+          tags: [{ name: 'request_type', value: `${requestType}_autoreply` }, { name: 'source', value: sourceTag }],
+        })
+        .catch((e: unknown) => ({ data: null, error: { message: String(e) } }))
+      if (replyResult.error) logEmailError(`${requestType} auto-reply`, replyResult.error)
+    }
 
     return json({ ok: true })
   } catch {
